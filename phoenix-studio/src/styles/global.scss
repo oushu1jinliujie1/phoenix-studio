@@ -1,0 +1,62 @@
+$color-primary: #336CFF;
+$color-primary-hover: #4344FF;
+$color-text: #282B2E;
+$color-error: #D74472;
+$color-text-light: #b1b2b5;
+
+@mixin font-normal {
+  font-size: 14px;
+  color: $color-text;
+  font-weight: normal;
+}
+
+@mixin font-title {
+  font-size: 18px;
+  color: $color-text-light;
+  font-weight: lighter;
+}
+
+@mixin font-nav {
+  font-size: 14px;
+  color: $color-text;
+  font-weight: normal;
+
+  &:hover {
+    color: $color-primary;
+  }
+}
+
+@mixin font-sub-title {
+  font-size: 12px;
+  color: $color-text-light;
+  font-weight: normal;
+}
+
+@mixin font-module-title {
+  font-size: 18px;
+  color: $color-text;
+  font-weight: bold;
+}
+
+@mixin font-module-content {
+  font-size: 14px;
+  color: $color-text;
+  font-weight: normal;
+}
+
+@mixin font-module-content-large {
+  font-size: 32px;
+  color: $color-text;
+  font-weight: normal;
+}
+
+@mixin font-num-large {
+  font-size: 36px;
+  color: $color-text;
+  font-weight: bold;
+}
+
+@mixin font-height-shadow {
+  height: 60px;
+  box-shadow: 1px 1px 4px rgba(102, 97, 91, 0.3);
+}
