@@ -1,31 +1,14 @@
 <template>
   <div class="logon-container">
-    <div v-if="setPwdStatus" class="logon-main">
+    <div class="logon-main">
       <div class="logon-left">
-        <!-- <Icon class="oushu-title"  image name='login/oushu-title' /> -->
         <div class="title">欢迎</div>
         <div class="logon-title">登录{{ hideOushuMarksRef ? '' : 'PHOENIX数据平台' }}</div>
         <div class="login-container">
-          <FormPwd @autofill='autofill' @sendParams="sendParams" @keydown.enter='enterLogin'/>
-          <!-- <x-tabs v-model:activeKey="activeKey" class="tabs-list">
-            <a-tab-pane key="1" tab="密码登录">
-              <FormPwd @autofill='autofill' @sendParams="sendParams" @keydown.enter='enterLogin'/>
-            </a-tab-pane>
-            <a-tab-pane key="2" tab="验证码登录" v-if="!isPremise">
-              <FormCode type="LOGIN" @info="info" @keydown.enter='enterLogin'/>
-            </a-tab-pane>
-          </x-tabs> -->
+          <FormPwd @autofill='autofill' @sendParams="sendParams" @keydown.enter='confirmLogin' />
           <div class="logon-buttom">
-            <x-button
-                :class="!disabledBoolean ? '' : 'activeBtn'"
-                :disabled="disabledBoolean"
-                :loading="loginLoadding"
-                block
-                class="logon-btn"
-                type="primary"
-                @click="confirmLogin"
-                data-comp-id="BTN-LOGON"
-            >
+            <x-button :class="!disabledBoolean ? '' : 'activeBtn'" :disabled="disabledBoolean" :loading="loginLoadding"
+              block class="logon-btn" type="primary" @click="confirmLogin" data-comp-id="BTN-LOGON">
               <div v-if="!loginLoadding">登录</div>
               <div v-else>
                 <!-- <a-spin class="raw login-spin"></a-spin> -->
@@ -33,50 +16,15 @@
               </div>
             </x-button>
           </div>
-          <!-- <div class="logon-new" v-if="!isPremise">
-            <x-button class="btn-register" type="link"><span @click="toRouter('register')">注册</span></x-button>
-            <x-divider type="vertical"></x-divider>
-            <x-button class="btn-forget" type="link"><span @click="toRouter('forget')">忘记密码</span></x-button>
-          </div> -->
         </div>
-        <Icon class="left-top" image name='login/left-top'/>
-        <Icon class="left-bottom" image name='login/left-bottom'/>
-        <Icon class="top-center" image name='login/bottom-center'/>
-        <Icon class="bottom-center" image name='login/bottom-center'/>
-        <Icon class="right-top" image name='login/right-top'/>
-        <Icon class="right-bottom" image name='login/right-bottom'/>
+        <Icon class="left-top" image name='login/left-top' />
+        <Icon class="left-bottom" image name='login/left-bottom' />
+        <Icon class="top-center" image name='login/bottom-center' />
+        <Icon class="bottom-center" image name='login/bottom-center' />
+        <Icon class="right-top" image name='login/right-top' />
+        <Icon class="right-bottom" image name='login/right-bottom' />
       </div>
-      <SecureVerifyModal
-          v-if="showModal"
-          :showModalStatus="showModal"
-          @showModalStatus="showModalStatus"
-      />
-      <AccountLockedModal
-          v-if="showModalLocked"
-          :showModalStatusLock="showModalLocked"
-          @closeModal="closeModal"
-      />
-      <x-modal class="account-locked-modal" :visible="showModalStatusLockSub" title="安全验证" @cancel="cancel" :maskClosable="maskClosable">
-        <div class="content">
-          <p class="desc">由于您密码输入错误次数过多，该账户已锁定，暂时无法登录。请联系主账号修改密码解锁账户。</p>
-        </div>
-        <template #footer>
-          <x-button key="back" block @click="showModalStatusLockSub = false">我知道了</x-button>
-        </template>
-      </x-modal>
-    </div>
-    <div v-if="!setPwdStatus" class="setSunPwd">
-      <reset-password>
-        <ConfirmPwd @info="sunInfo"/>
-        <x-button
-            :class="!sunDisabledBoolean ? '' : 'activeBtn'"
-            :disabled="sunDisabledBoolean"
-            class="sun-submit-button"
-            @click="sunSubmit"
-        >
-          完成
-        </x-button>
-      </reset-password>
+      <SecureVerifyModal v-if="showModal" :showModalStatus="showModal" @showModalStatus="showModalStatus" />
     </div>
     <div class="oushu-id" v-if="!hideOushuMarksRef">
       © 2021 cloud.oushu.com 版权所有 京ICP备20028197号 京公网安备 11010802032740号
@@ -86,89 +34,41 @@
 <script>
 import { useRouter } from 'vue-router'
 import { reactive, ref, computed, onMounted } from 'vue'
-// import FormCode from './FormCode'
-import FormPwd from './FormPwd'
-import AccountLockedModal from './AccountLockedModal'
-import SecureVerifyModal from './SecureVerifyModal'
-import { message, notification } from 'ant-design-vue-3'
-// import CommonFuncFrame from '../CommonFuncFrame'
-import ConfirmPwd from '../ConfirmPwd'
-import XButton from '../../smart-ui-vue/XButton.vue'
-// import XTabs from '../../smart-ui-vue/XTabs.vue'
-// import XTabPane from '../../smart-ui-vue/XTabPane.vue'
-// import XCard from '../../smart-ui-vue/XCard.vue'
-import ResetPassword from './resetPassword.vue'
-import Icon from '../Icon.vue'
-// import XTabs from '../../smart-ui-vue/XTabs'
-// import XDivider from '../../smart-ui-vue/XDivider'
+import { message } from 'ant-design-vue-3'
+import { useStore } from 'vuex'
 import { useI18n } from 'vue-i18n'
 import { translateErrorMessage } from 'lava-fe-lib/lib-common/i18n'
-import { login, resetPassword, toGetInitialPasswordFormat, logout } from '../../api/login'
-import XModal from '../../smart-ui-vue/XModal'
-import { useStore } from 'vuex'
+import { login, toGetInitialPasswordFormat } from '../../api/login'
+import XButton from '../../smart-ui-vue/XButton.vue'
+import Icon from '../Icon.vue'
+import FormPwd from './FormPwd'
+import SecureVerifyModal from './SecureVerifyModal'
 
 export default {
   name: 'Logon',
   components: {
-    XModal,
-    // XDivider,
-    // XTabs,
-    FormPwd,
-    AccountLockedModal,
-    SecureVerifyModal,
-    ResetPassword,
-    ConfirmPwd,
-    // FormCode,
     XButton,
     Icon,
+    FormPwd,
+    SecureVerifyModal,
   },
   setup() {
-    const isPremise = process.env.VUE_APP_LAVA_MODE === 'premise'
     const store = useStore()
     const router = useRouter()
     const { t } = useI18n()
-    const activeKey = ref('1')
-    const mess = ref('')
-    const accountLockedModalVisible = ref(false)
     const showModal = ref(false)
-    const showModalLocked = ref(false)
     const disabledBoolean = ref(true)
-    const sunDisabledBoolean = ref(true)
     const loginErroe = ref(0)
-    const setPwdStatus = ref(true)
-    const showModalStatusLockSub = ref(false)
-    const reg = /^((?!@).)*$/
-    const setSunPwd = reactive({
-      pwdParams: {
-        name: '',
-        oldpwd: '',
-        newpwd: '',
-      },
-    })
     const logonParams = reactive({
       params: {
         login_type: 1,
         name: '',
         password: '',
-      },
-      verParams: {
-        login_type: 2,
-        phone: '',
-        verify_code: '',
-      },
+      }
     })
     // 登录中
     const loginLoadding = ref(false)
     const hideOushuMarksRef = computed(() => store.state.settings.hideOushuMarks)
-    const toRouter = (item) => {
-      if (item === 'register') {
-        router.push('/settings/register')
-        // sessionStorage.setItem('activeKey', 2)
-      } else if (item === 'forget') {
-        router.push('/settings/findpwd')
-        // sessionStorage.setItem('activeKey', 3)
-      }
-    }
     const reset401Status = () => {
       window.sessionStorage.removeItem('is401')
     }
@@ -176,123 +76,42 @@ export default {
     const confirmLogin = () => {
       loginLoadding.value = true
       disabledBoolean.value = true
-      if (activeKey.value === '1') {
-        login(logonParams.params).then(resp => {
-          loginLoadding.value = false
-          disabledBoolean.value = false
-          if (resp.meta.success) {
-            reset401Status()
+      login(logonParams.params).then(resp => {
+        loginLoadding.value = false
+        disabledBoolean.value = false
+        if (resp.meta.success) {
+          reset401Status()
+          window.localStorage.setItem('userId', resp.data.id)
+          window.localStorage.setItem('userInfo', JSON.stringify(resp.data))
+          // 将用户信息同步到 GlobalState
+          store.commit('setGlobalState', { userInfo: resp.data })
+          router.push(store.state.settings.routeAfterLogin || '/main')
+          return
+        }
+        if (resp.meta.success === false) {
+          message.error({
+            content: translateErrorMessage(t)(resp),
+            duration: 3,
+          })
+          if (resp.meta.params !== null) loginErroe.value = resp.meta.params[0]
+          if (loginErroe.value >= 3) showModal.value = true
+          if (resp.meta.status_code === 'lava.error.login.passwordReset') {
             window.localStorage.setItem('userId', resp.data.id)
-            window.localStorage.setItem('userInfo', JSON.stringify(resp.data))
-            // 将用户信息同步到 GlobalState
-            store.commit('setGlobalState', { userInfo: resp.data })
-            if (resp.data.userType === 'subuser') {
-              if (resp.data.resetpassword) {
-                setPwdStatus.value = false
-                return
-              }
-            }
-            console.log('store.state', store.state)
-            router.push(store.state.settings.routeAfterLogin || '/main')
-            return
           }
-          if (resp.meta.success === false) {
-            message.error({
-              content: translateErrorMessage(t)(resp),
-              duration: 3,
-            })
-            if (resp.meta.params !== null) loginErroe.value = resp.meta.params[0]
-            if (loginErroe.value >= 3 && loginErroe.value < 5) showModal.value = true
-            if (loginErroe.value >= 5) {
-              const regstatus = reg.test(logonParams.params.name)
-              if (regstatus) {
-                showModalLocked.value = true
-              } else {
-                showModalStatusLockSub.value = true
-              }
-            }
-            if (resp.meta.status_code === 'lava.error.login.passwordReset') {
-              window.localStorage.setItem('userId', resp.data.id)
-              setPwdStatus.value = false
-            }
-          }
-        })
-      } else if (activeKey.value === '2') {
-        login(logonParams.logonParams.verParams).then(resp => {
-          loginLoadding.value = false
-          disabledBoolean.value = false
-          if (resp.meta.success) {
-            reset401Status()
-            window.localStorage.setItem('userId', resp.data.id)
-            window.localStorage.setItem('userInfo', JSON.stringify(resp.data))
-            console.log('store.state', store.state)
-            router.push(store.state.settings.routeAfterLogin || '/main')
-          } else {
-            // message.error(resp.meta.status_code)
-            message.error({
-              content: resp.meta.status_code,
-            })
-          }
-        })
-      }
-    }
-    // 回车登录
-    const enterLogin = () => {
-      confirmLogin()
+        }
+      })
+
     }
     // 接收组件传递来的账号密码
     const sendParams = (item) => {
       disabledBoolean.value = item.status
       logonParams.params.name = item.value.name
       logonParams.params.password = item.value.password
-      setSunPwd.pwdParams.oldpwd = item.value.password
-    }
-    // 接收组件传递来的账号密码
-    const info = (item) => {
-      // console.log(item, 'item')
-      disabledBoolean.value = item.status
-      logonParams.verParams.phone = item.phone
-      logonParams.verParams.verify_code = item.verify
     }
 
     const showModalStatus = (item) => {
       showModal.value = item
     }
-
-    const closeModal = (item) => {
-      showModalLocked.value = item
-    }
-
-    const sunInfo = (item) => {
-      if (item.value !== null) {
-        sunDisabledBoolean.value = false
-        setSunPwd.pwdParams.newpwd = item.password
-      } else {
-        sunDisabledBoolean.value = true
-      }
-    }
-
-    const sunSubmit = () => {
-      const userId = window.localStorage.getItem('userId')
-      resetPassword(userId, { password: setSunPwd.pwdParams.newpwd }).then((resp) => {
-        if (resp.meta.success) {
-          logout().then((res) => {
-            if (res.meta.success) {
-              setPwdStatus.value = true
-              window.localStorage.clear()
-            }
-          })
-        } else {
-          notification.error({
-            message: 'Notification Title',
-            description: resp.meta.status_code,
-          })
-        }
-      })
-    }
-    const marginTop = computed(() => {
-      return document.body.clientHeight > 900 ? '150px' : '20px'
-    })
     // 是否自动填充
     const autofill = (value) => {
       disabledBoolean.value = value.status
@@ -309,32 +128,16 @@ export default {
     onMounted(initialPasswordFormat())
 
     return {
-      isPremise,
-      toRouter,
       autofill,
       confirmLogin,
       sendParams,
-      info,
       showModalStatus,
-      closeModal,
-      sunInfo,
-      sunSubmit,
-      activeKey,
       showModal,
       loginErroe,
-      accountLockedModalVisible,
-      mess,
       disabledBoolean,
       logonParams,
-      showModalLocked,
-      setPwdStatus,
-      sunDisabledBoolean,
-      setSunPwd,
-      marginTop,
-      enterLogin,
       loginLoadding,
       hideOushuMarksRef,
-      showModalStatusLockSub,
     }
   },
 }
@@ -344,12 +147,10 @@ export default {
   position: absolute;
   width: 100vw;
   height: calc(100% - 60px);
-  background-image: linear-gradient(
-          0deg,
-          #f1f1f1 58%,
-          #ffffff 93%,
-          #ffffff 95%
-  );
+  background-image: linear-gradient(0deg,
+      #f1f1f1 58%,
+      #ffffff 93%,
+      #ffffff 95%);
 
   .activeBtn {
     background: #336CFF;
@@ -399,7 +200,6 @@ export default {
     display: flex;
     align-items: center;
     width: 1300px;
-    // padding-top: v-bind('marginTop');
     height: 100%;
     margin: 0 auto;
 
@@ -590,35 +390,6 @@ export default {
           align-items: flex-end;
           height: 30px;
           margin: 20px 0 0 !important;
-        }
-      }
-    }
-  }
-
-  .setSunPwd {
-    width: 100%;
-    height: 100%;
-
-    .sun-submit-button {
-      width: 100%;
-      height: 30px;
-      margin-top: 30px;
-      color: #ffffff;
-      background: #336CFF;
-      border-radius: 4px;
-      box-shadow: 0 10px 15px 0 rgba(0, 0, 0, 0.1);
-
-      &[disabled] {
-        color: #FFF;
-        background-color: #336CFF;
-        border-color: #336CFF;
-        opacity: 0.3;
-
-        &:hover {
-          color: #FFF;
-          background-color: #336CFF;
-          border-color: #336CFF;
-          opacity: 0.3;
         }
       }
     }

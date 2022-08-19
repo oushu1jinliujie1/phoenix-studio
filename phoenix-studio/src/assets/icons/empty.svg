@@ -1,0 +1,35 @@
+<svg width="181" height="173" viewBox="0 0 181 173" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g filter="url(#filter0_d_7_40271)">
+        <rect x="33.4084" y="37.0825" width="115.11" height="115.11" rx="57.5551" fill="white"/>
+    </g>
+    <path d="M107.756 84.7235V108.758C107.756 112.551 104.682 115.626 100.889 115.626H80.2878C76.4952 115.626 73.4207 112.551 73.4207 108.758V74.4229" stroke="#336CFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M69.9873 74.4229H111.19" stroke="#336CFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M79.4688 93.0469L86.4338 100.012C86.8243 100.402 87.4575 100.402 87.848 100.012L101.708 86.1516" stroke="#F5991B" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="39.9706" cy="45.5807" rx="1.5451" ry="1.5451" fill="#B1B2B5"/>
+    <ellipse cx="9.84109" cy="30.9021" rx="2.31766" ry="2.31765" fill="#B1B2B5"/>
+    <ellipse cx="127.269" cy="3.86258" rx="2.31765" ry="2.31766" fill="#B1B2B5"/>
+    <ellipse cx="178.257" cy="41.7176" rx="2.31765" ry="2.31765" fill="#B1B2B5"/>
+    <circle cx="57.7393" cy="162.236" r="2.31766" fill="#B1B2B5"/>
+    <ellipse cx="162.806" cy="88.071" rx="1.5451" ry="1.5451" fill="#B1B2B5"/>
+    <circle cx="147.355" cy="142.15" r="1.5451" fill="#B1B2B5"/>
+    <path d="M64.5107 3.86276C64.5107 5.44382 63.229 6.72552 61.6479 6.72552C60.0669 6.72552 58.7852 5.44382 58.7852 3.86276C58.7852 2.2817 60.0669 1 61.6479 1C63.229 1 64.5107 2.2817 64.5107 3.86276Z" stroke="#B1B2B5" stroke-width="2"/>
+    <path d="M7.6845 76.4824C7.6845 78.0635 6.4028 79.3452 4.82174 79.3452C3.24069 79.3452 1.95898 78.0635 1.95898 76.4824C1.95898 74.9013 3.24069 73.6196 4.82174 73.6196C6.4028 73.6196 7.6845 74.9013 7.6845 76.4824Z" stroke="#B1B2B5" stroke-width="2"/>
+    <path d="M179.959 115.883C179.959 117.464 178.677 118.746 177.096 118.746C175.515 118.746 174.233 117.464 174.233 115.883C174.233 114.302 175.515 113.02 177.096 113.02C178.677 113.02 179.959 114.302 179.959 115.883Z" stroke="#B1B2B5" stroke-width="2"/>
+    <path d="M130.178 27.812C130.178 29.393 128.896 30.6747 127.315 30.6747C125.734 30.6747 124.452 29.393 124.452 27.812C124.452 26.2309 125.734 24.9492 127.315 24.9492C128.896 24.9492 130.178 26.2309 130.178 27.812Z" stroke="#B1B2B5" stroke-width="2"/>
+    <ellipse cx="89.4597" cy="20.8591" rx="1.5451" ry="1.5451" fill="#B1B2B5"/>
+    <ellipse cx="21.4753" cy="138.287" rx="1.5451" ry="1.5451" fill="#B1B2B5"/>
+    <path d="M43.4463 1.15869C51.5581 15.0646 70.7174 28.9706 97.9112 28.9706C131.903 28.9706 127.268 11.5881 118.77 13.9058C110.272 16.2234 112.59 34.3784 126.496 42.4902" stroke="#336CFF" stroke-width="2" stroke-linecap="round"/>
+    <path d="M44.6052 19.314C47.1804 22.4042 54.2621 29.1254 61.9876 31.2885" stroke="#336CFF" stroke-width="2" stroke-linecap="round"/>
+    <defs>
+        <filter id="filter0_d_7_40271" x="18.4084" y="27.0825" width="145.11" height="145.11" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+            <feOffset dy="5"/>
+            <feGaussianBlur stdDeviation="7.5"/>
+            <feComposite in2="hardAlpha" operator="out"/>
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"/>
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_7_40271"/>
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_7_40271" result="shape"/>
+        </filter>
+    </defs>
+</svg>

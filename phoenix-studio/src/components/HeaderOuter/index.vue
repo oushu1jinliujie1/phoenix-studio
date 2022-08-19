@@ -9,13 +9,6 @@
         <Icon v-else class="logo-icon" image name="login/logo" @click='handleGoHome'/>
       </div>
       <div class="logon-header-right">
-        <!-- <div :class="[activeNavNum==1?'header-main-active':'header-main-list']" @click="router.push('/login')">登录</div>
-        <div class="register" v-if="!isPremise">
-          <span class="separate-line"></span>
-          <div :class="[activeNavNum==2?'header-main-active':'header-main-list']" @click="router.push('/settings/register')">注册</div>
-          <span class="separate-line"></span>
-          <div :class="[activeNavNum==3?'header-main-active':'header-main-list']" style="width: 56px" @click="router.push('/settings/findpwd')">找回密码</div>
-        </div> -->
       </div>
     </div>
   </div>
@@ -27,7 +20,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { ref, watch } from 'vue'
 import Icon from '../Icon.vue'
 import { useLogo, LOGO_TYPE_OUSHU, LOGO_TYPE_CUSTOM } from '../../hooks/useLogo'
-const loginRouter = new Map().set('/login', 1).set('/settings/register', 2).set('/settings/findpwd', 3)
 export default {
   name: 'HeaderOuter',
   components: {
@@ -37,17 +29,12 @@ export default {
     const isPremise = process.env.VUE_APP_LAVA_MODE === 'premise'
     const router = useRouter()
     const route = useRoute()
-    const activeNavNum = ref(1)
-    activeNavNum.value = loginRouter.get(route.path)
 
     const { logoType, logoPath } = useLogo()
 
-    watch(() => route.path, () => {
-      activeNavNum.value = loginRouter.get(route.path)
-    })
 
     // 用户没登录，点击 Logo 时会被路由守卫拦截，仍定向到当前路由，所以页面看起来没反应
-    const handleGoHome = () => router.push('/main')
+    const handleGoHome = () => router.push('/')
 
     return {
       LOGO_TYPE_OUSHU,
@@ -55,7 +42,6 @@ export default {
       isPremise,
       router,
       handleGoHome,
-      activeNavNum,
       logoType,
       logoPath
     }

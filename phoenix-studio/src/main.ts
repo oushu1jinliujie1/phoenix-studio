@@ -4,7 +4,7 @@ import App from './App.vue'
 import 'normalize.css'
 import router from './routes'
 // @ts-ignore
-import store from './store/index.ts'
+import store from './store'
 import {
   Avatar,
   Card,
