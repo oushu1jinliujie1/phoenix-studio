@@ -187,7 +187,7 @@
               <a-checkbox v-model:checked="record.isPrimary" @change="(event: any) => columnSelectChange(event, record)"/>
             </template>
             <!-- 操作区域 -->
-            <template #action="{ record, index }">
+            <template #action="{ record }">
               <x-tooltip placement="topLeft" title="编辑">
                 <x-button
                   icon-name="worksheet/edit"
@@ -202,8 +202,8 @@
                 ok-text="确认"
                 title="该列作用于分布键，确认删除？"
                 @cancel="() => record.columnDeletePopConfirmVisible = false"
-                @confirm="() => handleDeleteColumn(index)"
-                @visibleChange="(visible: any) => handleDeleteVisibleChange(visible, record, index)"
+                @confirm="() => handleDeleteColumn(record)"
+                @visibleChange="(visible: any) => handleDeleteVisibleChange(visible, record)"
               >
                 <x-tooltip placement="topLeft" title="删除">
                   <x-button icon-name="worksheet/transverse_line" type="text"/>
@@ -268,7 +268,7 @@ import smartUUI from '@/smart-ui-vue/index.js'
 import Icon from '@/components/Icon.vue'
 import { RuleObject } from 'ant-design-vue/es/form/interface'
 import { message } from 'ant-design-vue-3'
-import { debounce, throttle } from 'lodash'
+import { debounce, last, throttle } from 'lodash'
 import * as monaco from 'monaco-editor'
 import useClipboard from 'vue-clipboard3'
 // @ts-ignore
@@ -671,24 +671,23 @@ export default defineComponent({
      * 选择主键列
      */
     const columnSelectChange = (event: any, column: any) => {
-      let arr = [...sortable?.toArray()]
-      const index = arr.findIndex((value) => Number(value) === column.id)
+      const table = state.table.columnList
+      const index = table.findIndex((item) => item.id === column.id)
       if (event.target.checked) {
-        const i = state.table.columnList.findIndex((value) => !value.isPrimary)
-        console.log(index, i)
-        if (index === i) return
-        arr = [...arr.slice(0,i), arr[index], ...arr.slice(i, index), ...arr.slice(index + 1)]
-        const table = state.table.columnList
+        const i = table.findIndex((value) => !value.isPrimary)
+        if (index + 1 === i || i === -1) return
         state.table.columnList = [...table.slice(0,i), table[index], ...table.slice(i, index), ...table.slice(index + 1)]
-        sortable.sort(arr, true)
       } else {
-        const i = state.table.columnList.findIndex((value, idx) => !value.isPrimary && idx > index)
-        console.log(index, i)
-        if (index === i) return
-        arr = [...arr.slice(0,index), ...arr.slice(index + 1, i + 1), arr[index], ...arr.slice(i + 1)]
-        const table = state.table.columnList
+        const lastPrimary = table.map((item: any, idx: number) => {
+          return {
+            ...item,
+            idx
+          }
+        }).filter((value: any) => value.isPrimary).slice(-1)[0]
+        if (!lastPrimary) return
+        const i = lastPrimary.idx
+        if (index === i + 1) return
         state.table.columnList = [...table.slice(0,index), ...table.slice(index + 1, i + 1), table[index], ...table.slice(i + 1)]
-        sortable.sort(arr, true)
       }
     }
 
@@ -715,11 +714,13 @@ export default defineComponent({
     /**
      * column 删除
      */
-    const handleDeleteColumn = (index: number) => {
-      state.table.columnList.splice(index, 1)
+    const handleDeleteColumn = (column: any) => {
+      const table = state.table.columnList
+      const index = table.findIndex((item) => item.id === column.id)
+      state.table.columnList = [...table.slice(0, index), ...table.slice(index + 1)]
     }
 
-    const handleDeleteVisibleChange = (visible: boolean, column: any, index: number) => {
+    const handleDeleteVisibleChange = (visible: boolean, column: any) => {
       if (!visible) {
         column.columnDeletePopConfirmVisible = false
         return
@@ -728,7 +729,7 @@ export default defineComponent({
       if (column.isDistributionKey) {
         column.columnDeletePopConfirmVisible = true
       } else {
-        handleDeleteColumn(index)
+        handleDeleteColumn(column)
       }
     }
 
@@ -761,6 +762,11 @@ export default defineComponent({
         dataIdAttr: 'data-row-key',
         // @ts-ignore
         onEnd({ newIndex, oldIndex }) {
+          const oldPrimary = state.table.columnList[oldIndex].isPrimary
+          const newPrimary = state.table.columnList[newIndex].isPrimary
+          if (oldPrimary !== newPrimary) {
+            state.table.columnList[oldIndex].isPrimary = state.table.columnList[newIndex].isPrimary
+          }
           // @ts-ignore
           const currRow = state.table.columnList.splice(oldIndex, 1)[0]
           // @ts-ignore
@@ -1006,6 +1012,10 @@ export default defineComponent({
     // 单元格
     .v-oushudb-add-table-basic-info-table-cell {
       width: 100%;
+
+      .antv-input-number {
+        width: auto;
+      }
 
       .smartui-input:not(.raw).#{$ant-prefix}-input:not(:hover):not(:focus) {
         border-bottom-color: transparent;

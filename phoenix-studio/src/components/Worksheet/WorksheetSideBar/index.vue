@@ -19,8 +19,7 @@
                 </template>
               </x-select>
               <a-dropdown>
-                <x-button data-test-id="oushudb-worksheet-resource-database-extra-dropdown" icon-name="worksheet/ellipsis"
-                          type="text"/>
+                <x-button data-test-id="oushudb-worksheet-resource-database-extra-dropdown" icon-name="worksheet/ellipsis" type="text"/>
                 <template #overlay>
                   <x-menu class="work-sheet-schema-ellipsis-overlay">
                     <x-menu-item
@@ -150,11 +149,15 @@
                             <icon name="worksheet/table_add"/>{{ _table.name }}
                           </span>
                           <span @click.stop="()=>{}">
-                            <x-tooltip placement="bottomLeft" title="复制表名">
-                              <x-button icon-name="worksheet/copy" type="text"
-                                        @click="() => handleCopyTableName(_table.name)"/>
+                            <x-tooltip placement="topLeft" title="编辑">
+                              <x-button icon-name="worksheet/edit" type="text"
+                                        @click="() => handleEditTableIconClick(_table)"/>
                             </x-tooltip>
-                            <a-dropdown @visibleChange="(visible: boolean)=>handleTableDropdownVisibleChange(visible, _table)">
+                            <x-tooltip placement="topLeft" title="删除">
+                              <x-button icon-name="worksheet/delete" type="text"
+                                        @click="() => handleDeleteTableIconClick(_table)"/>
+                            </x-tooltip>
+                            <a-dropdown :key="_table.oid" @visibleChange="(visible: boolean)=>handleTableDropdownVisibleChange(visible, _table)">
                               <x-button icon-name="worksheet/ellipsis" type="text"/>
                               <template #overlay>
                                 <x-menu @click="_table.ellipsisHover = false">
@@ -165,18 +168,13 @@
                                     刷新列
                                   </x-menu-item>
                                   <x-menu-item
-                                    :disabled="schemaSelectedName === undefined "
-                                    @click="() => handleEditTableIconClick(_table)"
+                                    :disabled="schemaSelectedName === undefined"
+                                    @click="() => handleCopyTableName(_table.name)"
                                   >
-                                    <icon image name="worksheet/edit_black"/>
-                                    编辑表
+                                    <icon color="black" name="worksheet/copy"/>
+                                    复制表名
                                   </x-menu-item>
-                                  <x-menu-item
-                                    @click="() => handleDeleteTableIconClick(_table)"
-                                  >
-                                    <icon name="worksheet/delete_black"/>
-                                    删除表
-                                  </x-menu-item>
+                                  <x-menu-divider/>
                                   <x-menu-item
                                     :disabled="schemaSelectedName === undefined"
                                     @click="() => handleAddColumnIconClick(_table)"
@@ -184,20 +182,19 @@
                                     <icon color="black" image name="worksheet/column_add"/>
                                     新建列
                                   </x-menu-item>
-                                  <x-menu-divider/>
                                   <x-menu-item
                                     :disabled="schemaSelectedName === undefined"
-                                    @click="() => handleShowTableStructureIconClick(_table)"
+                                    @click="() => handleShowTableSecondaryIndexClick(_table)"
                                   >
-                                    <icon color="black" name="worksheet/structure"/>
-                                    显示表结构
+                                    <icon color="black" image name="worksheet/secondary_index"/>
+                                    二级索引
                                   </x-menu-item>
                                   <x-menu-item
                                     :disabled="schemaSelectedName === undefined"
-                                    @click="() => handlePreviewTableDataClick(_table)"
+                                    @click="() => handleConnectionInfoClick(_table)"
                                   >
-                                    <icon color="black" name="worksheet/preview"/>
-                                    预览数据
+                                    <icon color="black" image name="worksheet/connect"/>
+                                    关联信息
                                   </x-menu-item>
                                 </x-menu>
                               </template>
@@ -221,7 +218,7 @@
                                       @click="() => handleEditColumnIconClick(_table, column)"/>
                           </x-tooltip>
                           <x-tooltip placement="bottomLeft" title="删除列">
-                            <x-button icon-name="cluster-management/delete" type="text"
+                            <x-button icon-name="worksheet/delete" type="text"
                                       @click="() => handleDeleteColumnIconClick(_table, column)"/>
                           </x-tooltip>
                         </span>
@@ -266,7 +263,7 @@
                         @click="handleAddTableIconClick"
                       >
                         <icon color="inherit" name="worksheet/table_add"/>
-                        新建表
+                        新建基础表
                       </x-menu-item>
                     </template>
                     <template v-if="activeTabKey === 'searchTable'">
@@ -305,7 +302,7 @@
     width="800"
     @close="() => { addOrEditDatabaseDrawerVisible = false }"
   >
-    <add-or-update-schema
+    <addOrUpdateSchema
       :init-already-exist-name-list="isAddSchemaDrawer ? schemaList.map(schema => schema.name) : undefined"
       :init-comment="isAddSchemaDrawer ? undefined : schemaList.find(schema => schema.name === schemaSelectedName)?.comment"
       :initSchemaName="isAddSchemaDrawer ? undefined : schemaSelectedName"
@@ -332,7 +329,7 @@
                   @click="windowOpen('http://www.oushu.com/docs/ch/data-definition-tables.html', '_blank')"/>
       </x-tooltip>
     </template>
-    <add-or-update-table
+    <AddOrUpdateTable
       :init-already-exist-name-list="table.list.map(item => item.name)"
       :init-table="tableToEdit"
       :is-add="isAddTable"
@@ -348,7 +345,7 @@
     />
   </x-drawer>
   <!-- 字段（新建｜编辑） -->
-  <!-- <add-or-update-column-for-exist-table
+  <AddOrUpdateColumnForExistTable
     v-model:visible="addOrEditColumnDrawerVisible"
     :init-already-exist-name-list="tableInWhichColumnToOperateReside?.columns?.filter(item => item.name !== columnToEdit?.name).map(item => item.name)"
     :initial-column="columnToEdit"
@@ -356,7 +353,7 @@
     :schema-name="schemaSelectedName"
     :table="tableInWhichColumnToOperateReside"
     @success="() => { handleRefreshColumnsClick(tableInWhichColumnToOperateReside) }"
-  /> -->
+  />
 
   <!-- 删除模式 -->
   <x-modal v-model:visible="schemaDeleteModalVisible">
@@ -397,14 +394,18 @@
     </template>
   </x-modal>
 
-  <!-- 表详情抽屉 -->
-  <!-- <worksheet-table-detail
-    v-model:tabActiveKey="tableDetailActiveKey"
-    v-model:visible="showTableDetail"
+  <!-- 表二级索引抽屉 -->
+  <TableSecondaryIndex
+    v-model:visible="showTableSecondaryIndex"
     :schema="schemaSelectedName"
     :table="detailTableData"
-    @close="() => { detailTableData.ellipsisHover = false; }"
-  /> -->
+  />
+  <!-- 表关联信息抽屉 -->
+  <TableConnectionInfo
+    v-model:visible="showTableConnectionInfo"
+    :schema="schemaSelectedName"
+    :table="detailTableData"
+  />
 </template>
 <script lang="ts">
 
@@ -428,8 +429,9 @@ import {
 import { CollectTable, ColumnResData, DBFunction, Schema, Table } from '@/components/Worksheet/type'
 import addOrUpdateSchema from '@/components/Worksheet/WorksheetSideBar/addOrUPdateSchema.vue'
 import AddOrUpdateTable from '@/components/Worksheet/WorksheetSideBar/addOrUpdateTable.vue'
-// import AddOrUpdateColumnForExistTable from '@/components/Worksheet/WorksheetSideBar/addOrUpdateColumnForExistTable.vue'
-// import WorksheetTableDetail from '@/components/Worksheet/TableDetail/index.vue'
+import AddOrUpdateColumnForExistTable from '@/components/Worksheet/WorksheetSideBar/addOrUpdateColumnForExistTable.vue'
+import TableSecondaryIndex from '@/components/Worksheet/WorksheetSideBar/TableDetails/tableSecondaryIndex.vue'
+import TableConnectionInfo from '@/components/Worksheet/WorksheetSideBar/TableDetails/tableConnectionInfo.vue'
 
 // @ts-ignore
 function renderVNode(_, { attrs: { vnode } }) {
@@ -441,8 +443,9 @@ export default defineComponent({
   components: {
     addOrUpdateSchema,
     AddOrUpdateTable,
-    // AddOrUpdateColumnForExistTable,
-    // WorksheetTableDetail,
+    AddOrUpdateColumnForExistTable,
+    TableSecondaryIndex,
+    TableConnectionInfo,
     ...smartUI,
     Icon,
     renderVNode,
@@ -498,12 +501,12 @@ export default defineComponent({
       // 每次操作都会重新赋值
       // 选择 schema 时，table 应处于 loading 状态
       tabsLoading: false,
-      // 是否显示表详情
-      showTableDetail: false,
+      // 是否显示表二级索引
+      showTableSecondaryIndex: false,
+      // 是否显示表关联信息
+      showTableConnectionInfo: false,
       // 当前表数据
       detailTableData: {} as any,
-      // 表详情显示tab
-      tableDetailActiveKey: '',
     })
 
     const recourseIconName = computed(() => {
@@ -719,26 +722,19 @@ export default defineComponent({
     }
 
     /**
-     * 显示表详情
+     * 二级索引
      */
-    const handleShowTableDetail = async(table: any, activeKey: string) => {
+    const handleShowTableSecondaryIndexClick = (table: any) => {
       state.detailTableData = table
-      state.tableDetailActiveKey = activeKey
-      state.showTableDetail = true
+      state.showTableSecondaryIndex = true
     }
 
     /**
-     * 展示表结构
+     * 关联信息
      */
-    const handleShowTableStructureIconClick = (table: any) => {
-      handleShowTableDetail(table, 'table_struct')
-    }
-
-    /**
-     * 预览表数据
-     */
-    const handlePreviewTableDataClick = (table: any) => {
-      handleShowTableDetail(table, 'table_data_preview')
+    const handleConnectionInfoClick = (table: any) => {
+      state.detailTableData = table
+      state.showTableConnectionInfo = true
     }
 
     /**
@@ -894,8 +890,8 @@ export default defineComponent({
       handleAddTableIconClick,
       handleEditTableIconClick,
       handleDeleteTableIconClick,
-      handleShowTableStructureIconClick,
-      handlePreviewTableDataClick,
+      handleShowTableSecondaryIndexClick,
+      handleConnectionInfoClick,
       handleTablePaginationChange,
       handleTableJumpToFirstPage,
       handleTableJumpToLastPage,

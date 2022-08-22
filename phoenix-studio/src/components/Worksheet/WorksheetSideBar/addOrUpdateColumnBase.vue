@@ -7,16 +7,17 @@
         </template>
         <template #suffix>
           <x-tooltip placement="bottomLeft" title="复制">
-            <!--            <x-button-->
-            <!--              :style=" { color: COLOR_PRIMARY_BLUE}"-->
-            <!--              icon-name="worksheet/copy"-->
-            <!--              type="text"-->
-            <!--              @click="() => handleCopyValue(name)"-->
-            <!--            />-->
             <icon color="primary" name="worksheet/copy" @click="() => handleCopyValue(name)"/>
           </x-tooltip>
         </template>
       </x-input>
+    </x-form-item>
+    <x-form-item label="中文名（选填）">
+      <x-textarea v-model:value="comment" autoSize placeholder="请填写备注">
+        <template #prefixIcon>
+          <icon image name="worksheet/column_comment_two_color"/>
+        </template>
+      </x-textarea>
     </x-form-item>
     <x-form-item label="列类型">
       <x-select v-model:value="type" :options="TYPE_OPTION_LIST" is-in-form show-search>
@@ -28,34 +29,12 @@
         </template>
       </x-select>
     </x-form-item>
-<!--    <x-form-item :label-disabled="disabledRef" label="默认值（选填）">-->
-    <x-form-item label="默认值（选填）">
-      <x-select
-        v-if="['date'].includes(type)"
-        v-model:value="defaultValueType"
-        :options="TIME_DEFAULT_TYPE_LIST"
-        is-in-form
-        show-search
-      >
-        <template #prefixIcon>
-          <icon
-            image
-            name="worksheet/column_two_color"
-          />
-        </template>
-      </x-select>
-      <x-input v-else v-model:value="defaultValue">
+    <x-form-item label="列族（选填）">
+      <x-input v-model:value="columnFamily">
         <template #prefix>
           <icon image name="worksheet/column_two_color"/>
         </template>
       </x-input>
-    </x-form-item>
-    <x-form-item label="列备注（选填）">
-      <x-textarea v-model:value="comment" autoSize placeholder="请填写备注">
-        <template #prefixIcon>
-          <icon image name="worksheet/column_comment_two_color"/>
-        </template>
-      </x-textarea>
     </x-form-item>
     <x-form-item
       v-if="['numeric','varchar','char','bit','time','timestamp'].includes(type)"
@@ -70,8 +49,8 @@
     <x-form-item v-if="['numeric'].includes(type)" label="精度">
       <x-input-number v-model:value="scale" :max="length - 1" :min='0'/>
     </x-form-item>
-    <x-form-item label="非空">
-      <x-switch v-model:checked="isNotNull"/>
+    <x-form-item label="主键">
+      <x-switch v-model:checked="isPrimary"/>
     </x-form-item>
   </x-form>
   <!-- 提交、取消按钮组 -->
@@ -102,7 +81,6 @@ import useClipboard from 'vue-clipboard3'
 
 import { TIME_DEFAULT_TYPE_LIST, TYPE_OPTION_LIST } from './constant'
 import { COLOR_PRIMARY_BLUE } from 'lava-fe-lib/lib-common/constant'
-import { Dayjs } from 'dayjs'
 
 /**
  * 表单验证先不做
@@ -143,9 +121,9 @@ export default defineComponent({
     const formState = reactive({
       name: props.initialColumn.name,
       type: props.initialColumn.type,
-      defaultValue: props.initialColumn.defaultValue,
+      columnFamily: props.initialColumn.columnFamily,
       comment: props.initialColumn.comment,
-      isNotNull: props.initialColumn.isNotNull,
+      isPrimary: props.initialColumn.isPrimary,
       isDistributionKey: props.initialColumn.isDistributionKey,
       length: props.initialColumn.length,
       scale: props.initialColumn.scale,
@@ -154,19 +132,13 @@ export default defineComponent({
     watch(() => props.initialColumn, () => {
       formState.name = props.initialColumn.name
       formState.type = props.initialColumn.type
-      formState.defaultValue = props.initialColumn.defaultValue
+      formState.columnFamily = props.initialColumn.columnFamily
       formState.comment = props.initialColumn.comment
-      formState.isNotNull = props.initialColumn.isNotNull
+      formState.isPrimary = props.initialColumn.isPrimary
       formState.isDistributionKey = props.initialColumn.isDistributionKey
       formState.length = props.initialColumn.length
       formState.scale = props.initialColumn.scale
     })
-
-    // type 为 date 时，默认值的类型
-    const defaultValueType = ref('当前日期')
-
-    const defaultTimeValueType = ref<Dayjs>()
-
 
     const validatePass = (rule: RuleObject, value: string) => {
       if (value === '') {
@@ -203,9 +175,6 @@ export default defineComponent({
      * 提交表单
      */
     const handleConfirm = () => {
-      if (formState.type === 'date') {
-        formState.defaultValue = defaultTimeValueType.value?.format('YYYY/MM/DD')
-      }
       context.emit('confirm', {
         ...formState,
       })
@@ -223,8 +192,6 @@ export default defineComponent({
       isSubmitDisabled: false,
 
       ...toRefs(formState),
-      defaultValueType,
-      defaultTimeValueType,
 
       columnNameRules,
 
