@@ -61,16 +61,20 @@ export default defineComponent({
       {
         title: '查询表名',
         dataIndex: 'name',
+        width: '320px',
         key: 'name',
       },
       {
         title: '关联列数',
         dataIndex: 'count',
+        width: '320px',
         key: 'count',
       },
       {
         title: '操作',
         key: 'action',
+        align: 'center',
+        width: '60px',
         slots: {
           customRender: 'action'
         }

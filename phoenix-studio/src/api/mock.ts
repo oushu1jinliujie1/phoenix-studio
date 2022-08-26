@@ -943,3 +943,166 @@ export const getColumnList = (...args: any): Promise<any> => {
     }, 500)
   })
 }
+
+
+export const getViewList = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': {
+      'data': [
+        {
+          'oid': '17217',
+          'name': 'tag_run_census_735ad432e97f4788b98c8728002860fd',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17172',
+          'name': 'tag_run_census_787c55fb20b4484a980ea4828c9c16b2',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17024',
+          'name': 'tag_run_census_a08f53a4a68743cbadf22babb5582c5b',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '16739',
+          'name': 'tag_run_census_b937ab45b3044fe0b06953eb510fd300',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17019',
+          'name': 'tag_run_census_b9bf0a0af6d7407893c654a2f77c6fc6',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17222',
+          'name': 'tag_run_census_d338dcc91b454776a07f30e51372f2ff',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17009',
+          'name': 'tag_run_census_d8ee05060c6b4b95b3fdccc1a6e81ff7',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '16996',
+          'name': 'tag_run_res_219b16475ec0413288b86f626329f146',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17001',
+          'name': 'tag_run_res_40f7ab9e06944651b6015aaeac889ddf',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17011',
+          'name': 'tag_run_res_4476af4a25194edb9977081b4899c77b',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17477',
+          'name': 'tag_run_res_508fde4c7016443d9781b32d2009355a',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '16849',
+          'name': 'tag_run_res_5356618bd2734604ba9f8309295c7a6f',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '16823',
+          'name': 'tag_run_res_5d7c094434354fcb97573d87cf29fb33',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17036',
+          'name': 'tag_run_res_6680116d9d5144418acade8db7fe0d12',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17164',
+          'name': 'tag_run_res_6e40a8a961224750bfdd8f5213be6821',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17214',
+          'name': 'tag_run_res_735ad432e97f4788b98c8728002860fd',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17169',
+          'name': 'tag_run_res_787c55fb20b4484a980ea4828c9c16b2',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17021',
+          'name': 'tag_run_res_a08f53a4a68743cbadf22babb5582c5b',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '16736',
+          'name': 'tag_run_res_b937ab45b3044fe0b06953eb510fd300',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        },
+        {
+          'oid': '17016',
+          'name': 'tag_run_res_b9bf0a0af6d7407893c654a2f77c6fc6',
+          'schema': 'public',
+          'comment': '',
+          'connection': ''
+        }
+      ],
+      'totalCount': 49
+    }
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+

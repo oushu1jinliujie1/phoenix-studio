@@ -13,7 +13,7 @@
       </x-input>
     </x-form-item>
     <x-form-item label="中文名（选填）">
-      <x-textarea v-model:value="comment" autoSize placeholder="请填写备注">
+      <x-textarea v-model:value="comment" autoSize placeholder="请填写中文名">
         <template #prefixIcon>
           <icon image name="worksheet/column_comment_two_color"/>
         </template>

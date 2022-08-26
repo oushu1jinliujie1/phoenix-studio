@@ -33,14 +33,6 @@ import { ColumnResData, Table } from '@/components/Worksheet/type'
 export default defineComponent({
   name: 'addOrUpdateColumnForExistTable',
   props: {
-    worksheetId: {
-      type: Number,
-      required: true,
-    },
-    databaseName: {
-      type: String,
-      required: true,
-    },
     schemaName: {
       type: String,
       required: true,
@@ -82,10 +74,6 @@ export default defineComponent({
     const localVisibleRef = (typeof props.visible === 'boolean' && typeof props['onUpdate:visible'] === 'function')
       ? useModel('visible', props, context)
       : ref(false)
-
-    const worksheetInfoRef = computed(() => {
-      return store.state.worksheet.worksheetList.find((item: any) => item.worksheetId === props.worksheetId)
-    })
 
     const initColumnRef = ref({})
     const execLoadingRef = ref(false)
