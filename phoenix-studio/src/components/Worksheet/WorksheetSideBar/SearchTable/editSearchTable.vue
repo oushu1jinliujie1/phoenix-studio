@@ -56,7 +56,7 @@
       class="v-oushudb-add-search-table-drawer"
       destroyOnClose
       title="设置关联表"
-      width="800"
+      width="1000"
       @close="() => { connectionTableDrawerVisible = false }"
     >
       <div class="search-data-edit-drawer-content">

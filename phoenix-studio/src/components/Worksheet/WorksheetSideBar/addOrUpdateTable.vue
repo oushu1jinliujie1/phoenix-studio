@@ -108,19 +108,26 @@
             <template #name="{ record }">
               <!-- 根据 hover 控制 display 来切换编辑状态 -->
               <icon
-                v-if="isAdd"
                 class="v-oushudb-add-table-form-column-table-handle"
                 color="primary"
                 name="worksheet/sort"
                 style="cursor: grab; margin-right: 8px;"/>
               <div>
-                <x-input
-                  v-model:value="record.name"
-                  :rules="fieldNameRules"
-                  no-underline
-                  origin-form
-                  placeholder="请输入列名"
-                />
+                <x-tooltip
+                  :visible="validateColumnName(record.name)?undefined:false"
+                  :overlayStyle="{ 'pointer-events': 'none' }"
+                >
+                  <template #title>
+                    <div style="color: #D74472;">{{ validateColumnName(record.name) }}</div>
+                  </template>
+                  <x-input
+                    v-model:value="record.name"
+                    :rules="columnNameRules"
+                    no-underline
+                    origin-form
+                    placeholder="请输入列名"
+                  />
+                </x-tooltip>
               </div>
             </template>
             <!-- 中文名（备注） -->
@@ -149,14 +156,21 @@
             <!-- 列族 -->
             <template #columnFamily="{ record }">
               <!-- 根据 hover 控制 display 来切换编辑状态 -->
-              <div>
+              <x-tooltip
+                :visible="validateColumnFamily(record.columnFamily)?undefined:false"
+                :overlayStyle="{ 'pointer-events': 'none' }"
+              >
+                <template #title>
+                  <div style="color: #D74472;text-align: justify;">{{ validateColumnFamily(record.columnFamily) }}</div>
+                </template>
                 <x-input
                   v-model:value="record.columnFamily"
+                  :rules="columnFamilyRules"
                   no-underline
                   origin-form
                   placeholder="--"
                 />
-              </div>
+              </x-tooltip>
             </template>
             <!-- 长度 -->
             <template #length="{ record }">
@@ -285,6 +299,7 @@ import { useI18n } from 'vue-i18n'
 import { translateErrorMessage } from 'lava-fe-lib/lib-common/i18n'
 import { windowOpen } from '@/smart-ui-vue/utils'
 import { getColumnList } from '@/api/mock'
+import { checkIsInstanceName, CHECK_INSTANCE_NAME_RULE_DESCRIPTION } from '@/lib/regexp'
 
 import('monaco-themes/themes/Tomorrow.json')
   .then(data => {
@@ -390,14 +405,6 @@ export default defineComponent({
       // 新增
     })
 
-    const fieldNameRules = [{ required: true, message: '请输入列名' }]
-
-    const partitionNameRules = [{ required: true, message: '分区名不能为空' }]
-    const partitionBeginRules = [{ required: true, message: '分区开始值不能为空' }]
-    const partitionEndRules = [{ required: true, message: '分区结束值不能为空' }]
-    const partitionRangeRules = [{ required: true, message: '分区区间不能为空' }]
-    const intervalRules = [{ required: true, message: 'interval不能为空' }]
-
     onMounted(() => {
       // 阻止默认行为
       document.body.ondrop = function(event) {
@@ -405,9 +412,8 @@ export default defineComponent({
         event.stopPropagation()
       }
 
-      if (props.isAdd) {
-        columnTableSortDrop()
-      } else {
+      columnTableSortDrop()
+      if (!props.isAdd) {
         // 往后推一下
         setTimeout(() => {
           initTableTransfer()
@@ -455,15 +461,27 @@ export default defineComponent({
      * @param value
      */
     const columnNameValidator = (rule: RuleObject, value: string) => {
-      // if (value === '') {
-      //   return Promise.reject('请输入列名')
-      // }
-      //
-      // if (state.table.columnList.some(column => column.name === value)) {
-      //   return Promise.reject('该列名已存在，请检查后重新填写')
-      // }
+      if (value === '') {
+        return Promise.reject('')
+      }
+      
+      if (state.table.columnList.filter(column => column.name === value).length > 1) {
+        return Promise.reject('')
+      }
 
       return Promise.resolve('')
+    }
+
+    const validateColumnName = (value: string) => {
+      if (value === '') {
+        return '请输入列名'
+      }
+      
+      if (state.table.columnList.filter(column => column.name === value).length > 1) {
+        return '该列名已存在，请检查后重新填写'
+      }
+
+      return ''
     }
 
     /**
@@ -471,6 +489,37 @@ export default defineComponent({
      */
     const columnNameRules = [
       { required: true, validator: columnNameValidator },
+    ]
+
+    /**
+     * 列族验证
+     * @param rule
+     * @param value
+     */
+    const columnFamilyValidator = (rule: RuleObject, value: string) => {
+      if (value === '') return Promise.resolve('')
+      if (!checkIsInstanceName(value)) {
+        return Promise.reject('')
+      }
+
+      return Promise.resolve('')
+    }
+
+    const validateColumnFamily = (value: string) => {
+      if (value === '') return ''
+      
+      if (!checkIsInstanceName(value)) {
+        return '请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的列族名'
+      }
+
+      return ''
+    }
+
+    /**
+     * 列名规则
+     */
+    const columnFamilyRules = [
+      { required: false, validator: columnFamilyValidator },
     ]
 
     /**
@@ -650,10 +699,17 @@ export default defineComponent({
       deep: true,
     })
     const format = (val: string, preVal: string) => {
-      const reg = /^-?\d*(\.\d*)?$/;
+      // const reg = /^-?\d*(\.\d*)?$/;
+      const reg = /^\d*$/
 
-      if ((!isNaN(+val) && reg.test(val)) || val === '' || val === '-') {
-        state.table.salt_buckets = val
+      if ((!isNaN(+val) && reg.test(val))) {
+        if (Number(val) < 0) {
+          state.table.salt_buckets = '0'
+        } else if (Number(val) > 256) {
+          state.table.salt_buckets = '256'
+        } else {
+          state.table.salt_buckets = val ? String(+val) : val
+        }
       } else {
         state.table.salt_buckets = preVal
       }
@@ -781,12 +837,12 @@ export default defineComponent({
     const initTableTransfer = async() => {
 
       const initTable = props.initTable as Table
-      if (initTable.databaseName === undefined) {
-        message.error('database 不存在')
-        return
-      }
+      // if (initTable.databaseName === undefined) {
+      //   message.error('database 不存在')
+      //   return
+      // }
 
-      state.getTableDetailLoading = true
+      // state.getTableDetailLoading = true
 
       // 获取表的详细数据、列信息
 
@@ -853,7 +909,7 @@ export default defineComponent({
       // 维护自增 id 状态
       columnIdCount = state.table.columnList.length + 1
 
-      state.getTableDetailLoading = false
+      // state.getTableDetailLoading = false
     }
 
 
@@ -863,18 +919,14 @@ export default defineComponent({
       STORAGE_FORMAT_LIST,
       TYPE_OPTION_LIST,
 
-      fieldNameRules,
-      partitionNameRules,
-      intervalRules,
-      partitionBeginRules,
-      partitionEndRules,
-      partitionRangeRules,
-
       columns: COLUMNS,
 
       tableNameRules,
       tableSplitRules,
       columnNameRules,
+      columnFamilyRules,
+      validateColumnName,
+      validateColumnFamily,
 
       windowOpen,
 
@@ -973,7 +1025,7 @@ export default defineComponent({
         .v-oushudb-add-table-form-container-item-number {
           display: flex;
           justify-content: space-between;
-          width: 160px;
+          width: 230px;
           height: 50px;
           padding-top: 15px;
           .v-oushudb-add-table-form-container-item-number-btn {
@@ -987,14 +1039,14 @@ export default defineComponent({
             cursor: pointer;
           }
           .v-oushudb-add-table-form-container-item-number-input {
-            width: 80px;
+            width: 150px;
             height: 30px;
             border-radius: 4px;
             border: 1px solid #D5D8D8;
 
             &:hover,
             &:focus {
-            width: 80px;
+            width: 150px;
             height: 30px;
             border-radius: 4px;
             border: 1px solid #336CFF;

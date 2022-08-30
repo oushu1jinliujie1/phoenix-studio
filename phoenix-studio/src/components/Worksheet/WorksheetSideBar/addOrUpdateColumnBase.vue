@@ -241,8 +241,9 @@ export default defineComponent({
 
     /**
      * 刷新 SQL 详情
-     */// eslint-disable-next-line require-await
+     */
     const handleRefreshSQLDetail = debounce(
+      // eslint-disable-next-line require-await
       async(cancel = false) => {
         if (cancel) {
           editor.setValue('')
@@ -257,6 +258,7 @@ export default defineComponent({
           getUpdateTableSQLDetail()
         }
         // 数据转化
+        // eslint-disable-next-line require-await
         async function getCreateTableSQLDetail() {
           const data: any = {
             name: formState.name,
@@ -328,6 +330,7 @@ export default defineComponent({
     })
 
     onUnmounted(() => {
+      // eslint-disable-next-line
       editor?.dispose()
     })
 
