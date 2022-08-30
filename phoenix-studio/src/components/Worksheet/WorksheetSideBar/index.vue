@@ -232,37 +232,37 @@
               <template #tab>
                 <span data-test-id="oushudb-worksheet-resource-table-tab-title">
                   查询表
-                  <span>{{ view.total }}</span>
+                  <span>{{ searchTable.total }}</span>
                 </span>
               </template>
-              <x-spin :spinning="!tabsLoading && view.spinning">
+              <x-spin :spinning="!tabsLoading && searchTable.spinning">
                 <!-- 搜索 -->
                 <div class="work-sheet-sidebar-search">
                   <x-input-search
-                    v-model:value="view.searchValue"
+                    v-model:value="searchTable.searchValue"
                     allowClear
                     class="raw"
-                    data-test-id="oushudb-worksheet-recourse-view-tab-search-input"
+                    data-test-id="oushudb-worksheet-recourse-search-table-tab-search-input"
                     placeholder="请输入查询表名，按回车搜索"
-                    @search="handleViewOnSearch"
-                    @keyup.enter="handleViewOnSearch"
+                    @search="handleSearchTableOnSearch"
+                    @keyup.enter="handleSearchTableOnSearch"
                   />
                 </div>
                 <!-- 分页 -->
                 <a-pagination
-                  v-model:current="view.current"
-                  :page-size="view.pageSize"
-                  :total="view.total"
-                  data-test-id="oushudb-worksheet-resource-view-tab-pagination"
+                  v-model:current="searchTable.current"
+                  :page-size="searchTable.pageSize"
+                  :total="searchTable.total"
+                  data-test-id="oushudb-worksheet-resource-search-table-tab-pagination"
                   simple
-                  @change="handleViewPaginationChange"
+                  @change="handleSearchTablePaginationChange"
                 >
                   <template #itemRender="{ page, type, originalElement }">
                     <template v-if="type === 'prev' || page === ''">
                       <div
-                        data-test-id="oushudb-worksheet-resource-view-tab-pagination-first-page-btn"
+                        data-test-id="oushudb-worksheet-resource-search-table-tab-pagination-first-page-btn"
                         style="display: inline-block; padding-right: 8px;"
-                        @click.stop="handleViewJumpToFirstPage"
+                        @click.stop="handleSearchTableJumpToFirstPage"
                       >
                         <a class="antv-pagination-item-link" title="第一页">
                           <icon name="worksheet/arrow_double"/>
@@ -270,7 +270,7 @@
                       </div>
                       <a
                         class="antv-pagination-item-link"
-                        data-test-id="oushudb-worksheet-resource-view-tab-pagination-previous-page-btn"
+                        data-test-id="oushudb-worksheet-resource-search-table-tab-pagination-previous-page-btn"
                       >
                         <icon name="worksheet/arrow"/>
                       </a>
@@ -278,14 +278,14 @@
                     <template v-else-if="type === 'next' || page === ''">
                       <a
                         class="antv-pagination-item-link"
-                        data-test-id="oushudb-worksheet-resource-view-tab-pagination-next-page-btn"
+                        data-test-id="oushudb-worksheet-resource-search-table-tab-pagination-next-page-btn"
                       >
                         <icon name="worksheet/arrow"/>
                       </a>
                       <div
-                        data-test-id="oushudb-worksheet-resource-view-tab-pagination-last-page-btn"
+                        data-test-id="oushudb-worksheet-resource-search-table-tab-pagination-last-page-btn"
                         style="display: inline-block; padding-left: 8px;"
-                        @click.stop="handleViewJumpToLastPage"
+                        @click.stop="handleSearchTableJumpToLastPage"
                       >
                         <a class="antv-pagination-item-link" title="最后一页">
                           <icon name="worksheet/arrow_double"/>
@@ -296,36 +296,36 @@
                   </template>
                 </a-pagination>
                 <!--  -->
-                <div class="work-sheet-sidebar-tab-list view">
+                <div class="work-sheet-sidebar-tab-list searchTable">
                   <div
-                    v-for="(_view, index) in (view.list as any[])" :key="index"
-                    :class="[_view.ellipsisHover ? 'ellipsis-hover' : '']"
+                    v-for="(_searchTable, index) in (searchTable.list as any[])" :key="index"
+                    :class="[_searchTable.ellipsisHover ? 'ellipsis-hover' : '']"
                     class="work-sheet-sidebar-tab-list-item"
                   >
-                    <span :title="_view.name">
-                      <icon name="worksheet/search_table"/>{{ _view.name }}
+                    <span :title="_searchTable.name">
+                      <icon name="worksheet/search_table"/>{{ _searchTable.name }}
                     </span>
                     <span @click.stop="()=>{}">
                       <x-tooltip placement="bottomLeft" title="编辑">
-                        <x-button icon-name="worksheet/edit" type="text" @click="() => handleEditViewIconClick(_view)"/>
+                        <x-button icon-name="worksheet/edit" type="text" @click="() => handleEditSearchTableIconClick(_searchTable)"/>
                       </x-tooltip>
                       <x-tooltip placement="bottomLeft" title="删除">
                         <x-button icon-name="worksheet/delete" type="text"
-                                  @click="() => handleDeleteViewIconClick(_view)"/>
+                                  @click="() => handleDeleteSearchTableIconClick(_searchTable)"/>
                       </x-tooltip>
-                      <a-dropdown @visibleChange="(visible: any) => {_view.ellipsisHover = visible}">
+                      <a-dropdown @visibleChange="(visible: any) => {_searchTable.ellipsisHover = visible}">
                         <x-button icon-name="worksheet/ellipsis" type="text"/>
                         <template #overlay>
-                          <x-menu @click="_view.ellipsisHover = false">
+                          <x-menu @click="_searchTable.ellipsisHover = false">
                             <x-menu-item
                               :disabled="schemaSelectedName === undefined"
-                              @click="() => handleCopyViewName(_view.name)"
+                              @click="() => handleCopySearchTableName(_searchTable.name)"
                             >
                               <icon color="black" name="worksheet/copy"/>
                               复制表名
                             </x-menu-item>
                             <x-menu-divider/>
-                            <x-menu-item @click="() => handlePreviewViewDataClick(_view)">
+                            <x-menu-item @click="() => handlePreviewSearchTableDataClick(_searchTable)">
                               <icon color="black" name="worksheet/secondary_index"/>
                               数据查询
                             </x-menu-item>
@@ -339,7 +339,7 @@
             </x-tab-pane>
             <template #tabBarExtraContent>
               <a-dropdown>
-                <x-button data-test-id="oushudb-worksheet-resource-table-view-function-extra-dropdown" icon-name="worksheet/ellipsis"
+                <x-button data-test-id="oushudb-worksheet-resource-table-search-table-function-extra-dropdown" icon-name="worksheet/ellipsis"
                           type="text"/>
                 <template #overlay>
                   <x-menu>
@@ -365,7 +365,7 @@
                       <x-menu-item
                         :disabled="schemaSelectedName === undefined"
                         data-test-id="oushudb-worksheet-resource-table-refresh-menu-item"
-                        @click="handleRefreshView"
+                        @click="handleRefreshSearchTable"
                       >
                         <icon color="inherit" name="worksheet/refresh"/>
                         刷新
@@ -373,7 +373,7 @@
                       <x-menu-item
                         :disabled="schemaSelectedName === undefined"
                         data-test-id="oushudb-worksheet-resource-table-add-menu-item"
-                        @click="handleAddViewIconClick"
+                        @click="handleAddSearchTableIconClick"
                       >
                         <icon color="inherit" name="worksheet/search_table_add"/>
                         新建查询表
@@ -489,15 +489,15 @@
     </template>
   </x-modal>
   <!-- 删除查询表 -->
-  <x-modal v-model:visible="viewDeleteModalVisible">
+  <x-modal v-model:visible="searchTableDeleteModalVisible">
     <template #title>
       <icon class="title-icon" color="danger" name="worksheet/warning"></icon>
       <span>删除查询表</span>
     </template>
-    <p style="margin-bottom: 30px">删除查询表会导致部分资源无法运行，您确认要删除查询表 {{ viewToDelete && viewToDelete.name }} 吗？</p>
-    <x-checkbox v-model:checked="viewDeleteCascade">同时级联删除</x-checkbox>
+    <p style="margin-bottom: 30px">删除查询表会导致部分资源无法运行，您确认要删除查询表 {{ searchTableToDelete && searchTableToDelete.name }} 吗？</p>
+    <x-checkbox v-model:checked="searchTableDeleteCascade">同时级联删除</x-checkbox>
     <template #footer>
-      <x-button :loading="viewDeleteLoading" style="width: 100%;" type="primary" @click="handleDeleteView">确认删除
+      <x-button :loading="searchTableDeleteLoading" style="width: 100%;" type="primary" @click="handleDeleteSearchTable">确认删除
       </x-button>
     </template>
   </x-modal>
@@ -517,33 +517,50 @@
 
   <!-- 查询表新建 -->
   <x-drawer
-    :visible="addViewDrawerVisible"
-    class="v-oushudb-add-view-drawer"
+    :visible="addSearchTableDrawerVisible"
+    class="v-oushudb-add-search-table-drawer"
     destroyOnClose
     title="新建查询表"
     width="1000"
-    @close="() => { addViewDrawerVisible = false }"
+    @close="() => { addSearchTableDrawerVisible = false }"
   >
     <AddSearchTable
-      :init-already-exist-name-list="view.list.map(item => item.name)"
+      :init-already-exist-name-list="searchTable.list.map(item => item.name)"
       :schema="schemaSelectedName"
-      @confirm="handleRefreshView()"
+      @confirm="handleRefreshSearchTable()"
     />
   </x-drawer>
 
   <!-- 查询表编辑 -->
   <x-drawer
-    :visible="editViewDrawerVisible"
-    class="v-oushudb-add-view-drawer"
+    :visible="editSearchTableDrawerVisible"
+    class="v-oushudb-add-search-table-drawer"
     destroyOnClose
     title="编辑查询表"
-    width="800"
-    @close="() => { editViewDrawerVisible = false }"
+    width="1000"
+    @close="() => { editSearchTableDrawerVisible = false }"
   >
     <EditSearchTable
-      v-model:tab-active-key="viewToPreviewTabKey"
       :schema-name="schemaSelectedName"
-      :view="viewToPreview"
+      :search-table="searchTableToPreview"
+      @confirm="handleEditSearchTable"
+      @close="() => { editSearchTableDrawerVisible = false }"
+    />
+  </x-drawer>
+
+  <!-- 查询表数据查询 -->
+  <x-drawer
+    :visible="previewSearchTableDrawerVisible"
+    class="v-oushudb-add-search-table-drawer"
+    destroyOnClose
+    title="数据查询"
+    width="800"
+    @close="() => { previewSearchTableDrawerVisible = false }"
+  >
+    <PreviewSearchTable
+      :schema-name="schemaSelectedName"
+      :search-table="searchTableToPreview"
+      @close="() => { previewSearchTableDrawerVisible = false }"
     />
   </x-drawer>
 </template>
@@ -565,7 +582,7 @@ import {
   getColumnList,
   getSchemaList,
   getTableList,
-  getViewList,
+  getSearchTableList,
 } from '@/api/mock'
 import { ColumnResData, Schema, Table } from '@/components/Worksheet/type'
 import AddOrUpdateSchema from '@/components/Worksheet/WorksheetSideBar/addOrUPdateSchema.vue'
@@ -575,6 +592,7 @@ import TableSecondaryIndex from '@/components/Worksheet/WorksheetSideBar/TableDe
 import TableConnectionInfo from '@/components/Worksheet/WorksheetSideBar/TableDetails/tableConnectionInfo.vue'
 import AddSearchTable from '@/components/Worksheet/WorksheetSideBar/SearchTable/addSearchTable.vue'
 import EditSearchTable from '@/components/Worksheet/WorksheetSideBar/SearchTable/editSearchTable.vue'
+import PreviewSearchTable from '@/components/Worksheet/WorksheetSideBar/SearchTable/previewSearchTable.vue'
 
 // @ts-ignore
 function renderVNode(_, { attrs: { vnode } }) {
@@ -591,6 +609,7 @@ export default defineComponent({
     TableConnectionInfo,
     AddSearchTable,
     EditSearchTable,
+    PreviewSearchTable,
     ...smartUI,
     Icon,
     renderVNode,
@@ -640,19 +659,18 @@ export default defineComponent({
       tableInWhichColumnToOperateReside: undefined as undefined | OwnTable,
 
       // 查询表新建 or 编辑 drawer visible
-      addViewDrawerVisible: false,
-      editViewDrawerVisible: false,
-      viewToPreviewDrawerVisible: false,
-      viewToPreview: undefined as undefined | ColumnResData,
-      viewToPreviewTabKey: 'view_info' as ('view_info' | 'view_preview'),
-      viewToDelete: undefined as undefined | ColumnResData,
-      viewDeleteModalVisible: false,
-      viewDeleteLoading: false,
-      viewDeleteCascade: false,
+      addSearchTableDrawerVisible: false,
+      editSearchTableDrawerVisible: false,
+      previewSearchTableDrawerVisible: false,
+      searchTableToPreview: undefined as undefined | ColumnResData,
+      searchTableToDelete: undefined as undefined | ColumnResData,
+      searchTableDeleteModalVisible: false,
+      searchTableDeleteLoading: false,
+      searchTableDeleteCascade: false,
 
       activeTabKey: 'table',
       table: getDefaultTable(),
-      view: getDefaultTable(),
+      searchTable: getDefaultTable(),
 
       // 每次操作都会重新赋值
       // 选择 schema 时，table 应处于 loading 状态
@@ -714,9 +732,9 @@ export default defineComponent({
             ?? state.schemaList.length ? state.schemaList[0].name : undefined
         }
 
-        // 请求对应的 table、view、function
+        // 请求对应的 table、searchTable、function
         state.tabsLoading = true
-        await Promise.all([handleGetTableList(), handleGetViewData()])
+        await Promise.all([handleGetTableList(), handleGetSearchTableData()])
         state.tabsLoading = false
       } else {
         state.schemaList = []
@@ -730,7 +748,7 @@ export default defineComponent({
     const handleOnSchemaSelectChanged = async() => {
       if (state.schemaSelectedName === undefined || state.schemaSelectedName === '') {
         state.table = getDefaultTable()
-        state.view = getDefaultTable()
+        state.searchTable = getDefaultTable()
       } else {
         // store.commit('worksheet/setObjectSchema', {
         //   worksheetId: props.worksheetId,
@@ -739,7 +757,7 @@ export default defineComponent({
         // store.commit('worksheet/setObjectDatabaseSymbol', {
         //   worksheetId: props.worksheetId,
         // })
-        await Promise.all([handleGetTableList(), handleGetViewData()])
+        await Promise.all([handleGetTableList(), handleGetSearchTableData()])
       }
     }
 
@@ -1016,75 +1034,75 @@ export default defineComponent({
     // 查询表操作
     // -----------------------------
     /**
-     *  获取 view 数据
+     *  获取 searchTable 数据
      */
-    const handleGetViewData = async() => {
+    const handleGetSearchTableData = async() => {
       if (state.schemaSelectedName === undefined) return
 
-      state.view.spinning = true
-      const result = await getViewList(
+      state.searchTable.spinning = true
+      const result = await getSearchTableList(
         state.schemaSelectedName,
-        state.view.pageSize,
-        (state.view.current - 1) * state.view.pageSize,
-        state.view.searchValue ? `%${state.view.searchValue}%` : '',
+        state.searchTable.pageSize,
+        (state.searchTable.current - 1) * state.searchTable.pageSize,
+        state.searchTable.searchValue ? `%${state.searchTable.searchValue}%` : '',
       )
 
       if (result.meta.success) {
         // 全部数据
         // todo: 数据为空时返回的是 null，应为 []
-        state.view.list = result.data?.data ?? []
-        state.view.total = result.data.totalCount
+        state.searchTable.list = result.data?.data ?? []
+        state.searchTable.total = result.data.totalCount
       } else {
         message.error(`刷新查询表失败：${getError(result)}`)
       }
-      state.view.spinning = false
+      state.searchTable.spinning = false
     }
 
     /**
      * 刷新查询表 list
      */
-    const handleRefreshView = async(isAddTable?: boolean) => {
+    const handleRefreshSearchTable = async(isAddTable?: boolean) => {
       if (isAddTable === undefined)
-        state.view.current = 1
+        state.searchTable.current = 1
       state.table.list = []
       state.table.searchValue = ''
-      await handleGetViewData()
+      await handleGetSearchTableData()
     }
 
     /**
      * 复制查询表名
      */
-    const handleCopyViewName = (viewName: string) => {
-      handleCopyValue(viewName)
+    const handleCopySearchTableName = (searchTableName: string) => {
+      handleCopyValue(searchTableName)
     }
 
     /**
      * 新建查询表点击（弹出 modal or drawer）
      */
-    const handleAddViewIconClick = () => {
-      state.addViewDrawerVisible = true
+    const handleAddSearchTableIconClick = () => {
+      state.addSearchTableDrawerVisible = true
     }
 
     /**
      * 删除当前查询表
      */
-    const handleDeleteViewIconClick = async(view: any) => {
-      state.viewToDelete = view
-      state.viewDeleteModalVisible = true
+    const handleDeleteSearchTableIconClick = async(searchTable: any) => {
+      state.searchTableToDelete = searchTable
+      state.searchTableDeleteModalVisible = true
     }
 
     /**
      * 删除查询表
      */
-    const handleDeleteView = () => {
+    const handleDeleteSearchTable = () => {
       if (state.schemaSelectedName === undefined) return
-      if (!state.viewToDelete) return
+      if (!state.searchTableToDelete) return
 
-      state.viewDeleteLoading = true
+      state.searchTableDeleteLoading = true
 
       // 删除
 
-      state.viewDeleteLoading = false
+      state.searchTableDeleteLoading = false
     }
 
     /**
@@ -1097,35 +1115,38 @@ export default defineComponent({
     /**
      * 展示查询表结构
      */
-    const handleEditViewIconClick = (view: any) => {
-      state.viewToPreview = view
-      state.editViewDrawerVisible = true
+    const handleEditSearchTableIconClick = (searchTable: any) => {
+      state.searchTableToPreview = searchTable
+      state.editSearchTableDrawerVisible = true
+    }
+
+    const handleEditSearchTable = (searchTable: any) => {
+      console.log(searchTable)
     }
 
     /**
      * 预览查询表数据
      */
-    const handlePreviewViewDataClick = (view: any) => {
-      state.viewToPreviewTabKey = 'view_preview'
-      state.viewToPreview = view
-      state.viewToPreviewDrawerVisible = true
+    const handlePreviewSearchTableDataClick = (searchTable: any) => {
+      state.searchTableToPreview = searchTable
+      state.previewSearchTableDrawerVisible = true
     }
 
-    const handleViewJumpToFirstPage = () => {
-      state.view.current = 1
+    const handleSearchTableJumpToFirstPage = () => {
+      state.searchTable.current = 1
     }
 
-    const handleViewJumpToLastPage = () => {
-      state.view.current = Math.ceil(state.view.total / state.view.pageSize)
+    const handleSearchTableJumpToLastPage = () => {
+      state.searchTable.current = Math.ceil(state.searchTable.total / state.searchTable.pageSize)
     }
 
-    const handleViewPaginationChange = (page: number) => {
+    const handleSearchTablePaginationChange = (page: number) => {
       // 查询表页面跳转
     }
 
-    const handleViewOnSearch = () => {
-      state.view.current = 1
-      state.view.searchValue = state.view.searchValue
+    const handleSearchTableOnSearch = () => {
+      state.searchTable.current = 1
+      state.searchTable.searchValue = state.searchTable.searchValue
     }
 
 
@@ -1173,17 +1194,18 @@ export default defineComponent({
 
       // 查询表 操作
       // 查询表操作
-      handleRefreshView,
-      handleCopyViewName,
-      handleAddViewIconClick,
-      handleDeleteViewIconClick,
-      handleDeleteView,
-      handleEditViewIconClick,
-      handlePreviewViewDataClick,
-      handleViewJumpToFirstPage,
-      handleViewJumpToLastPage,
-      handleViewPaginationChange,
-      handleViewOnSearch,
+      handleRefreshSearchTable,
+      handleCopySearchTableName,
+      handleAddSearchTableIconClick,
+      handleDeleteSearchTableIconClick,
+      handleDeleteSearchTable,
+      handleEditSearchTableIconClick,
+      handleEditSearchTable,
+      handlePreviewSearchTableDataClick,
+      handleSearchTableJumpToFirstPage,
+      handleSearchTableJumpToLastPage,
+      handleSearchTablePaginationChange,
+      handleSearchTableOnSearch,
       handleAddSQLQueryIconClick,
 
       // @ts-ignore
@@ -1220,7 +1242,7 @@ function getDefaultTable() {
     position: relative;
     display: flex;
     // 为什么加上这一行，好像多此一举？
-    // 因为：sidebar tabs 宽度塌陷问题（当选择schema 的 table view function 数量为 0 时 触发）
+    // 因为：sidebar tabs 宽度塌陷问题（当选择schema 的 table searchTable function 数量为 0 时 触发）
     //width: 461px;
     // 这样可以自适应，但是会有塌陷问题
     width: 100%;
@@ -1559,7 +1581,7 @@ function getDefaultTable() {
             padding: 2px 15px 2px 38px;
           }
 
-          &.view,
+          &.searchTable,
           &.dbFunction {
             // todo: 记得改回来
             height: calc(100vh - 250px - 120px);
@@ -1694,7 +1716,7 @@ function getDefaultTable() {
               height: calc(100vh - 250px - 40px);
             }
 
-            &.view,
+            &.searchTable,
             &.dbFunction {
               height: calc(100vh - 250px - 40px);
             }
@@ -1712,7 +1734,7 @@ function getDefaultTable() {
       height: calc(100vh - 250px - 40px);
     }
 
-    &.view,
+    &.searchTable,
     &.dbFunction {
       height: calc(100vh - 250px - 40px);
     }

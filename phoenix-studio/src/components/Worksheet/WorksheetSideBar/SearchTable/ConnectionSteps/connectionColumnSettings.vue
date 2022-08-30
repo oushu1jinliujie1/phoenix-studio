@@ -1,9 +1,16 @@
 <template>
   <div class="connection-column-settings">
-    <x-button @click="handleAddConnectionWithDebounce">
-      <icon name="add_circle"/>
-      新建关联
-    </x-button>
+    <div class="connection-column-settings-buttons">
+      <x-button @click="handleAddConnectionWithDebounce">
+        <icon name="add_circle"/>
+        新建关联
+      </x-button>
+      <x-button v-if="tableSettingsButton" @click="handelShowConnectionTableSettings">
+        <icon name="worksheet/settings"/>
+        设置关联表
+      </x-button>
+    </div>
+
     <x-table
       :data-source="columnSettings"
       :pagination="false"
@@ -65,10 +72,11 @@ export default defineComponent({
     columnSettings: {
       type: Array as PropType<any[]>,
       required: true
-    }
+    },
+    tableSettingsButton: Boolean
   },
   components: { Icon, ...smartUI },
-  emits: ['update:columnSettings'],
+  emits: ['update:columnSettings', 'showConnectionTableSettings'],
   setup(props, context) {
     const notFinishMsgRef = ref('')
     const isFinishRef = computed(() => {
@@ -98,6 +106,10 @@ export default defineComponent({
       console.log('add connection')
     }, 500)
 
+    const handelShowConnectionTableSettings = () => {
+      context.emit('showConnectionTableSettings')
+    }
+
     const deleteConnection = (row: any) => {
       const settings = props.columnSettings.filter((item: any) => item !== row)
       context.emit('update:columnSettings', settings)
@@ -108,6 +120,7 @@ export default defineComponent({
       notFinishMsgRef,
       isFinishRef,
 
+      handelShowConnectionTableSettings,
       handleAddConnectionWithDebounce,
       deleteConnection
     }
@@ -120,5 +133,9 @@ export default defineComponent({
 .connection-column-settings {
   height: 100%;
 
+  .connection-column-settings-buttons {
+    display: flex;
+    gap: 10px;
+  }
 }
 </style>

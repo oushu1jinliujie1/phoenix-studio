@@ -945,7 +945,7 @@ export const getColumnList = (...args: any): Promise<any> => {
 }
 
 
-export const getViewList = (...args: any): Promise<any> => {
+export const getSearchTableList = (...args: any): Promise<any> => {
   const resp = {
     'meta': {
       'success': true,
