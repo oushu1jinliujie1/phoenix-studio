@@ -726,7 +726,7 @@ export default defineComponent({
         return
       }
 
-      if (column.isDistributionKey) {
+      if (column.isPrimary) {
         column.columnDeletePopConfirmVisible = true
       } else {
         handleDeleteColumn(column)

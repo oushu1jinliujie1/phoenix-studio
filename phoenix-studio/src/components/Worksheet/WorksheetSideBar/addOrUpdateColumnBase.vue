@@ -53,6 +53,22 @@
       <x-switch v-model:checked="isPrimary"/>
     </x-form-item>
   </x-form>
+  <!-- SQL 详情挂载 -->
+  <div class="v-oushudb-add-table-form-sql-detail">
+    <div class="v-oushudb-add-table-form-sql-detail-header">
+      <span>SQL详情</span>
+      <!-- 复制、刷新按钮 -->
+      <div class="v-oushudb-add-table-form-sql-detail-header-icon-group">
+        <x-tooltip placement="bottomLeft" title="复制">
+          <icon class="hover-translateY-2" color="primary" name="worksheet/copy" @click="handleCopySQLDetail"/>
+        </x-tooltip>
+      </div>
+    </div>
+    <div style="overflow: auto;height: 500px;">
+      <div id="v-oushudb-add-table-form-sql-detail-container"
+           class="v-oushudb-add-table-form-sql-detail-container"></div>
+    </div>
+  </div>
   <!-- 提交、取消按钮组 -->
   <div class="v-oushudb-edit-column-form-btn-container">
     <x-button
@@ -71,16 +87,47 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, PropType, reactive, ref, toRefs, watch } from 'vue'
+import { computed, defineComponent, onMounted, onUnmounted, PropType, reactive, ref, toRefs, watch } from 'vue'
 // @ts-ignore
 import smartUI from '@/smart-ui-vue/index.js'
 import { RuleObject } from 'ant-design-vue/es/form/interface'
 import Icon from '@/components/Icon.vue'
 import { message } from 'ant-design-vue-3'
+import * as monaco from 'monaco-editor'
 import useClipboard from 'vue-clipboard3'
 
 import { TIME_DEFAULT_TYPE_LIST, TYPE_OPTION_LIST } from './constant'
 import { COLOR_PRIMARY_BLUE } from 'lava-fe-lib/lib-common/constant'
+import { debounce } from 'lodash'
+import('monaco-themes/themes/Tomorrow.json')
+  .then(data => {
+    // @ts-ignore
+    monaco.editor.defineTheme('Tomorrow', data)
+  })
+
+let editor: any = undefined
+
+/**
+ * editor 初始化配置
+ */
+const initEditor = () => {
+  const domEditor = document.getElementById('v-oushudb-add-table-form-sql-detail-container') as HTMLElement
+  if (!domEditor) return
+  // 初始化配置
+  editor = monaco.editor.create(domEditor, {
+    // eslint-disable-next-line no-magic-numbers
+    fontSize: 14,
+    theme: 'Tomorrow',
+    readOnly: true,
+    automaticLayout: false,
+    language: 'sql',
+    value: '',
+    minimap: {
+      enabled: false,
+    },
+    lineNumbers: 'on',
+  })
+}
 
 /**
  * 表单验证先不做
@@ -124,7 +171,6 @@ export default defineComponent({
       columnFamily: props.initialColumn.columnFamily,
       comment: props.initialColumn.comment,
       isPrimary: props.initialColumn.isPrimary,
-      isDistributionKey: props.initialColumn.isDistributionKey,
       length: props.initialColumn.length,
       scale: props.initialColumn.scale,
     })
@@ -135,7 +181,6 @@ export default defineComponent({
       formState.columnFamily = props.initialColumn.columnFamily
       formState.comment = props.initialColumn.comment
       formState.isPrimary = props.initialColumn.isPrimary
-      formState.isDistributionKey = props.initialColumn.isDistributionKey
       formState.length = props.initialColumn.length
       formState.scale = props.initialColumn.scale
     })
@@ -185,6 +230,107 @@ export default defineComponent({
       context.emit('close')
     }
 
+    /**
+     * 复制 SQL 详情
+     */
+    const handleCopySQLDetail = () => {
+      handleCopyValue(editor.getValue())
+    }
+
+    const originSQL = ref('')
+
+    /**
+     * 刷新 SQL 详情
+     */// eslint-disable-next-line require-await
+    const handleRefreshSQLDetail = debounce(
+      async(cancel = false) => {
+        if (cancel) {
+          editor.setValue('')
+          return
+        }
+
+        // todo: 参数检查
+
+        if (props.isAdd) {
+          getCreateTableSQLDetail()
+        } else {
+          getUpdateTableSQLDetail()
+        }
+        // 数据转化
+        async function getCreateTableSQLDetail() {
+          const data: any = {
+            name: formState.name,
+            type: formState.type,
+            columnFamily: formState.columnFamily,
+            comment: formState.comment,
+            isPrimary: formState.isPrimary,
+            length: formState.length,
+            scale: formState.scale,
+          }
+
+          // const result = await getSQLForCreateTable(props.instanceId, props.database, data)
+
+          // if (result.meta.success) {
+          //   originSQL.value = typeof result.data === 'string' ? result.data : result.data.join('\n')
+          //   editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n'), {
+          //     language: 'db2',
+          //   }))
+          // } else {
+          //   editor.setValue('')
+          // }
+        }
+
+        async function getUpdateTableSQLDetail() {
+          // const initTable = props.initTable as Table
+
+          // const data: any = {
+          //   name: formState.name,
+          //   owner: formState.ownerName,
+          //   oid: initTable.oid,
+          //   comment: formState.comment,
+          //   schema: props.initTable?.schema ?? '',
+          //   external: initTable.external,
+          //   hawq_dk: state.columnsWithDistributionKey.map(column => {
+          //     return {
+          //       att_num: column.att_num as string,
+          //       column_name: column.name,
+          //     }
+          //   }),
+          //   columns: formState.columnList.map(column => {
+          //     return {
+          //       name: column.name,
+          //       type: column.type,
+          //       length: column.length,
+          //       scale: column.scale,
+          //       notnull: column.isPrimary,
+          //       comment: column.comment,
+          //       att_rel_id: column.att_rel_id,
+          //       att_num: column.att_num,
+          //     }
+          //   }),
+          // }
+
+          // const result = await getSQLForUpdateTable(props.instanceId, initTable.databaseName ?? '', data)
+
+          // if (result.meta.success) {
+          //   originSQL.value = typeof result.data === 'string' ? result.data : result.data.join('\n')
+          //   editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n'), {
+          //     language: 'db2',
+          //   }))
+          // } else {
+          //   editor.setValue('')
+          // }
+        }
+      }, 800)
+
+    onMounted(() => {
+      initEditor()
+    })
+
+    onUnmounted(() => {
+      editor?.dispose()
+    })
+
     return {
       COLOR_PRIMARY_BLUE,
 
@@ -199,6 +345,7 @@ export default defineComponent({
       TIME_DEFAULT_TYPE_LIST,
 
       handleCopyValue,
+      handleCopySQLDetail,
 
       handleCancel,
       handleConfirm,
@@ -207,18 +354,52 @@ export default defineComponent({
 })
 </script>
 <style lang="scss">
+  // SQL 预览
+  .v-oushudb-add-table-form-sql-detail {
+    flex: 1;
+    padding: 10px 0 0;
+    border-top: 1px solid $color-text-comment;
 
-// 操作按钮：确认、取消
-.v-oushudb-edit-column-form-btn-container {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-  width: 100%;
-  padding: 20px 40px;
+    .v-oushudb-add-table-form-sql-detail-header {
+      display: flex;
+      justify-content: space-between;
+      @include font-small();
+      padding-bottom: 20px;
+      color: $color-primary-black;
 
-  .#{$ant-prefix}-btn:not(:last-child) {
-    margin-right: 10px;
+      .v-oushudb-add-table-form-sql-detail-header-icon-group {
+        .icon {
+          cursor: pointer;
+        }
+
+        .icon:not(:last-child) {
+          margin-right: 10px;
+        }
+      }
+    }
+
+    .v-oushudb-add-table-form-sql-detail-container {
+      height: 100%;
+      //height: calc(100% - 50px);
+      //max-height: calc(100% - 50px);
+
+      // 隐藏：右侧的灰线以及 cursor 所在行的指示
+      .decorationsOverviewRuler {
+        display: none;
+      }
+    }
   }
-}
+  // 操作按钮：确认、取消
+  .v-oushudb-edit-column-form-btn-container {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    width: 100%;
+    padding: 20px 40px;
+
+    .#{$ant-prefix}-btn:not(:last-child) {
+      margin-right: 10px;
+    }
+  }
 </style>
