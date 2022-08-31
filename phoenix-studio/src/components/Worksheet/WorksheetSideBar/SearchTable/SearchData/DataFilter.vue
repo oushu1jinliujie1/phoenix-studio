@@ -63,6 +63,7 @@
             :key="secondaryIndex + column">
             <div class="search-data-filter-form-value-label">{{ column }}</div>
             <x-input-search
+              :id="'searchValue_' + secondaryIndex + column"
               allow-clear
               class="raw search-data-filter-form-input-short"
               data-test-id="search-data-filter-form-search-input"
@@ -140,6 +141,15 @@ export default defineComponent({
     })
 
     const resetFilters = () => {
+      if (state.secondaryIndex === props.filterOptions.secondaryIndex) {
+        for (const key in state.searchValue) {
+          const _ref = document.getElementById('searchValue_' + state.secondaryIndex + key)?.getElementsByTagName('input')[0]
+          if (_ref) {
+            _ref.value = props.filterOptions.searchValue[key] || ''
+            _ref.dispatchEvent(new Event('input'))
+          }
+        }
+      }
       state.secondaryIndex = props.filterOptions.secondaryIndex
       state.returnColumns = props.filterOptions.returnColumns
       state.limit = props.filterOptions.limit

@@ -177,10 +177,11 @@
               <!-- 根据 hover 控制 display 来切换编辑状态 -->
               <div v-if="['numeric','varchar','char','bit','time','timestamp'].includes(record.type)"
                    class="v-oushudb-add-table-basic-info-table-cell">
-                <x-input-number v-model:value="record.length"
-                                :max="record.type === 'numeric' ? 1000 : 10485760"
-                                :min='1'
-                                class="raw"/>
+                <x-input-number
+                  v-model:value="record.length"
+                  :max="record.type === 'numeric' ? 1000 : 10485760"
+                  :min='1'
+                  class="raw"/>
               </div>
               <div v-else>
                 --
@@ -198,7 +199,11 @@
             </template>
             <!-- 是否为主键，只有编辑状态 -->
             <template #isPrimary="{ record }">
-              <a-checkbox v-model:checked="record.isPrimary" @change="(event: any) => columnSelectChange(event, record)"/>
+              <x-tooltip
+                title="主键列之间必须相邻，且会在表中置顶"
+              >
+                <a-checkbox v-model:checked="record.isPrimary" @change="(event: any) => columnSelectChange(event, record)"/>
+              </x-tooltip>
             </template>
             <!-- 操作区域 -->
             <template #action="{ record }">

@@ -15,6 +15,8 @@ export const mockData = (...args: any): Promise<any> => {
   })
 }
 
+// /////////////// 主页面
+// schema
 export const getSchemaList = (...args: any): Promise<any> => {
   const resp = {
     'meta': {
@@ -92,7 +94,107 @@ export const getSchemaList = (...args: any): Promise<any> => {
     }, 500)
   })
 }
+export const getSqlForCreateSchema = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': 'SQL FOR CREATE SCHEMA'
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const deleteSchema = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const duplicateSchema = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
 
+// SQL相关
+export const executeSql = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const getSqlStatus = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const getSqlResult = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+
+// /////////////// 基础表
+// 基础表操作
 export const getTableList = (...args: any): Promise<any> => {
   const resp = {
     'meta': {
@@ -653,7 +755,88 @@ export const getTableList = (...args: any): Promise<any> => {
     }, 500)
   })
 }
+export const getSqlForCreateTable = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': 'SQL FOR CREATE TABLE'
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const getSqlForUpdateTable = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': 'SQL FOR UPDATE TABLE'
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const deleteTable = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const duplicateTable = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const getTableDetails = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
 
+// 列操作
 export const getColumnList = (...args: any): Promise<any> => {
   const resp = {
     'meta': {
@@ -943,8 +1126,176 @@ export const getColumnList = (...args: any): Promise<any> => {
     }, 500)
   })
 }
+export const getSqlForCreateColumn = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': 'SQL FOR CREATE COLUMN'
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const getSqlForUpdateColumn = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': 'SQL FOR UPDATE COLUMN'
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const deleteColumn = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const duplicateColumn = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
 
+// 二级索引
+export const getSecondaryIndexList = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': {
+      'data': [],
+      'totalCount': 0
+    }
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const createSecondaryIndex = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const deleteSecondaryIndex = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const duplicateSecondaryIndex = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
 
+// 表关联
+export const getConnectionList = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const cancelConnection = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+
+// /////////////// 查询表
+// 查询表操作
 export const getSearchTableList = (...args: any): Promise<any> => {
   const resp = {
     'meta': {
@@ -1098,6 +1449,138 @@ export const getSearchTableList = (...args: any): Promise<any> => {
       ],
       'totalCount': 49
     }
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const createSearchTable = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const updateSearchTable = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const deleteSearchTable = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const duplicateSearchTable = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+
+// 查询表新建/编辑流程 关联设置相关
+export const getDatabaseList = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const getTableListByDatabase = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+export const setConnection = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
+  }
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(resp)
+    }, 500)
+  })
+}
+
+// 数据查询
+export const filterData = (...args: any): Promise<any> => {
+  const resp = {
+    'meta': {
+      'success': true,
+      'message': '',
+      'status_code': '',
+      'params': null
+    },
+    'data': null
   }
   return new Promise((resolve, reject) => {
     setTimeout(() => {

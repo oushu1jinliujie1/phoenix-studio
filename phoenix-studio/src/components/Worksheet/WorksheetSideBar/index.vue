@@ -1523,7 +1523,7 @@ function getDefaultTable() {
           }
 
           .#{$ant-prefix}-collapse-borderless {
-            height: calc(100vh - 250px - 120px);
+            height: calc(100vh - 250px);
             // todo: 记得改回来
             overflow: auto;
             //height: calc(100vh - 250px - 80px - 51px - 10px);
@@ -1584,7 +1584,7 @@ function getDefaultTable() {
           &.searchTable,
           &.dbFunction {
             // todo: 记得改回来
-            height: calc(100vh - 250px - 120px);
+            height: calc(100vh - 250px);
             //height: calc(100vh - 250px - 80px - 51px - 10px);
             overflow: auto;
 

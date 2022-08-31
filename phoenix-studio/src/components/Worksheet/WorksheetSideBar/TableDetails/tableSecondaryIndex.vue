@@ -12,36 +12,40 @@
     </template>
     <div class="v-oushudb-worksheet-table-detail-table-struct">
       <x-table
-          :dataSource="data"
-          :columns="columns"
-          :pagination="false"
-          auto-calc-empty-height
-        >
-          <template #name="{ text }">
-            <span>{{ text }}</span>
-          </template>
-          <template #columns="{ record }">
-            <div class="v-secondary-index-columns">
-              <x-tag v-for="column of record.columns.split(',')" :key="column" color-type="gray">{{ column }}</x-tag>
-            </div>
-          </template>
-          <template #extra="{ record }">
-            <div class="v-secondary-index-columns">
-              <x-tag v-for="column of record.extra.split(',')" :key="column" color-type="gray">{{ column }}</x-tag>
-            </div>
-          </template>
-          <template #status="{ record }">
-            <x-tooltip placement="topLeft" :title="statusMap[record.status].title">
-              <icon :name="statusMap[record.status].icon" />
-            </x-tooltip>
-          </template>
-          <template #action="{ record }">
-            <x-tooltip placement="topLeft" title="删除">
-              <icon style="cursor: pointer;" color="primary" name="minus_circle" @click="deleteIndex(record)"/>
-            </x-tooltip>
-          </template>
+        :dataSource="data"
+        :columns="columns"
+        :pagination="false"
+        auto-calc-empty-height
+        emptyImage="empty"
+      >
+        <template #name="{ text }">
+          <span>{{ text }}</span>
+        </template>
+        <template #columns="{ record }">
+          <div class="v-secondary-index-columns">
+            <x-tag v-for="column of record.columns.split(',')" :key="column" color-type="gray">{{ column }}</x-tag>
+          </div>
+        </template>
+        <template #extra="{ record }">
+          <div class="v-secondary-index-columns">
+            <x-tag v-for="column of record.extra.split(',')" :key="column" color-type="gray">{{ column }}</x-tag>
+          </div>
+        </template>
+        <template #status="{ record }">
+          <x-tooltip placement="topLeft" :title="statusMap[record.status].title">
+            <icon :name="statusMap[record.status].icon" />
+          </x-tooltip>
+        </template>
+        <template #action="{ record }">
+          <x-tooltip placement="topLeft" title="删除">
+            <icon style="cursor: pointer;" color="primary" name="minus_circle" @click="deleteIndex(record)"/>
+          </x-tooltip>
+        </template>
+        <template #emptyDescription>
+          暂无二级索引
+        </template>
       </x-table>
-      <div class="v-oushudb-worksheet-table-detail-table-load-more" @click="loadMoreWithDebounce()">
+      <div v-if="moreVisible" class="v-oushudb-worksheet-table-detail-table-load-more" @click="loadMoreWithDebounce()">
         点击加载更多
       </div>
       <x-drawer
@@ -66,10 +70,10 @@
 <script lang="ts">
 import { defineComponent, PropType, ref, reactive, toRefs } from 'vue'
 import Icon from '@/components/Icon.vue'
-import { debounce, last, throttle } from 'lodash'
+import { throttle } from 'lodash'
 // @ts-ignore
 import smartUI from '@/smart-ui-vue/index.js'
-import { isProduction, useModel } from '@/smart-ui-vue/utils'
+import { useModel } from '@/smart-ui-vue/utils'
 import { Table } from '@/components/Worksheet/type'
 import CreateIndex from '@/components/Worksheet/WorksheetSideBar/TableDetails/createIndex.vue'
 
@@ -110,7 +114,8 @@ export default defineComponent({
     const loading = ref(false)
 
     const state = reactive({
-      createIndexVisible: false
+      createIndexVisible: false,
+      moreVisible: false
     })
 
     const columns = [
