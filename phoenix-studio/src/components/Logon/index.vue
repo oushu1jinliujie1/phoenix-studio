@@ -3,7 +3,7 @@
     <div class="logon-main">
       <div class="logon-left">
         <div class="title">欢迎</div>
-        <div class="logon-title">登录{{ hideOushuMarksRef ? '' : 'PHOENIX数据平台' }}</div>
+        <div class="logon-title">登录Phoenix Studio</div>
         <div class="login-container">
           <FormPwd @autofill='autofill' @sendParams="sendParams" @keydown.enter='confirmLogin' />
           <div class="logon-buttom">
@@ -25,9 +25,6 @@
         <Icon class="right-bottom" image name='login/right-bottom' />
       </div>
       <SecureVerifyModal v-if="showModal" :showModalStatus="showModal" @showModalStatus="showModalStatus" />
-    </div>
-    <div class="oushu-id" v-if="!hideOushuMarksRef">
-      © 2021 cloud.oushu.com 版权所有 京ICP备20028197号 京公网安备 11010802032740号
     </div>
   </div>
 </template>
@@ -68,7 +65,6 @@ export default {
     })
     // 登录中
     const loginLoadding = ref(false)
-    const hideOushuMarksRef = computed(() => store.state.settings.hideOushuMarks)
     const reset401Status = () => {
       window.sessionStorage.removeItem('is401')
     }
@@ -137,7 +133,6 @@ export default {
       disabledBoolean,
       logonParams,
       loginLoadding,
-      hideOushuMarksRef,
     }
   },
 }

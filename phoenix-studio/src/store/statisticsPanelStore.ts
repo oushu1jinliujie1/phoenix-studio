@@ -107,7 +107,7 @@ const statisticsPanelStore = {
       const sqlExecResult = state.sqlExecResult
       if (sqlExecResult === undefined)
         if (process.env.NODE_ENV !== 'production')
-          console.error(`未找到执行结果，请检查`)
+          console.error('未找到执行结果，请检查')
       return sqlExecResult?.loading ?? 0
     },
     getSummary: (state: StatisticsPanelStoreState) => () => {

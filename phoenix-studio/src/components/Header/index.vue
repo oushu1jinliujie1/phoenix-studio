@@ -49,7 +49,6 @@ export default defineComponent({
       }
     }, { immediate: true })
     return {
-      lavaMode: process.env.VUE_APP_LAVA_MODE || 'cloud',
       userInfoRef,
       isShowMsgCenterDrawerRef,
     }

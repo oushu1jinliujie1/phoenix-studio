@@ -1,8 +1,6 @@
 import { getConfig } from '@/api/config'
 import { message } from 'ant-design-vue-3'
 import { Commit } from 'vuex'
-import { LOGO_TYPE_OUSHU } from '@/hooks/useLogo'
-
 interface Settings {
   // 配置登录成功后的路由跳转
   routeAfterLogin: string,
@@ -20,8 +18,7 @@ export default {
     return {
       // 默认值
       routeAfterLogin: '/',
-      logo: LOGO_TYPE_OUSHU,
-      hideOushuMarks: false
+      logo: ''
     }
   },
   mutations: {

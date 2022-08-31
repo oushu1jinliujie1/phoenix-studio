@@ -250,7 +250,7 @@
     </div>
     <!-- 提交、取消按钮组 -->
     <div class="v-oushudb-add-table-form-btn-container">
-      <x-button :disabled="false" type="primary" @click="handleSubmit">
+      <x-button :disabled="getTableDetailLoading" type="primary" @click="handleSubmit">
         <icon name="worksheet/submit"/>
         提交
       </x-button>
@@ -847,7 +847,7 @@ export default defineComponent({
       //   return
       // }
 
-      // state.getTableDetailLoading = true
+      state.getTableDetailLoading = true
 
       // 获取表的详细数据、列信息
 
@@ -914,7 +914,7 @@ export default defineComponent({
       // 维护自增 id 状态
       columnIdCount = state.table.columnList.length + 1
 
-      // state.getTableDetailLoading = false
+      state.getTableDetailLoading = false
     }
 
 

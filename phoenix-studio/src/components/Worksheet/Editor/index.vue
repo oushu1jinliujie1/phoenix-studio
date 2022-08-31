@@ -387,8 +387,7 @@ export default defineComponent({
           })
         })
       } else {
-        if (process.env.NODE_ENV !== 'production')
-          console.error('editor model 获取失败，请排查！')
+        console.error('editor model 获取失败，请排查！')
       }
 
       // 光标选中改变回调事件
@@ -523,8 +522,7 @@ export default defineComponent({
      */
     watch(() => worksheetInfoRef.value?.newSQL?.SQLTextFromImportSymbol, (value) => {
       if (!editor) {
-        if (process.env.NODE_ENV !== 'production')
-          console.error('获取不到 editor 对象，请排查')
+        console.error('获取不到 editor 对象，请排查')
         return
       }
       const curValue = editor.getValue()

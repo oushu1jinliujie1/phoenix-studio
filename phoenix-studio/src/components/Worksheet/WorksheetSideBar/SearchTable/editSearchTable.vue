@@ -172,7 +172,7 @@ export default defineComponent({
           { table1: 'column2', table2: 'column2' },
         ]
         state.getTableDetailLoading = false
-      }, 3000)
+      }, 500)
     })
 
     return {
