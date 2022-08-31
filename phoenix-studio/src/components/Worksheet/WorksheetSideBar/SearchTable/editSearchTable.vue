@@ -24,7 +24,7 @@
           </template>
           <ConnectionColumnSettings
             ref="columnSettingsRef"
-            :tables="selectTableList"
+            :tables="initialSelectTableList"
             :table-settings-button="true"
             v-model:column-settings="columnSettings"
             @show-connection-table-settings="() => { connectionTableDrawerVisible = true }"
@@ -108,7 +108,7 @@ export default defineComponent({
     execLoading: Boolean
   },
   components: { Icon, ...smartUI, BasicInfoForm, ConnectionTableSettings, ConnectionColumnSettings },
-  emits: ['confirm', 'close', 'confirmTable'],
+  emits: ['confirm', 'close'],
   setup(props, context) {
     const state = reactive({
       // tab key
@@ -124,6 +124,7 @@ export default defineComponent({
       notFinishMsg: '',
       notFinishTableMsg: '',
       selectTableList: [] as any[],
+      initialSelectTableList: [] as any[],
       columnSettings: [] as any[],
       connectionTableDrawerVisible: false
     })
@@ -136,9 +137,9 @@ export default defineComponent({
     const isDisableTableRef = computed(() => getIsDisableRef(state, basicRef, tableSettingsRef, columnSettingsRef, ['tableSettingsRef']))
 
     const handleConfirmTable = () => {
-      context.emit('confirmTable', {
 
-      })
+      state.initialSelectTableList = state.selectTableList
+
       state.connectionTableDrawerVisible = false
     }
 
@@ -166,6 +167,7 @@ export default defineComponent({
           { name: 'table1', primary: 'columnP', columns: [{ name: 'columnP' }, { name: 'column1' }, { name: 'column2' }, { name: 'column3' }] },
           { name: 'table2', primary: 'columnP', columns: [{ name: 'columnP' }, { name: 'column1' }, { name: 'column2' }, { name: 'column3' }] }
         ]
+        state.initialSelectTableList = state.selectTableList
         state.columnSettings = [
           { table1: 'columnP', table2: 'columnP' },
           { table1: 'column1', table2: 'column1' },

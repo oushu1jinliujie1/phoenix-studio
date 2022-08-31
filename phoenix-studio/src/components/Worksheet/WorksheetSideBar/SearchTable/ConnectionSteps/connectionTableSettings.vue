@@ -126,6 +126,10 @@ export default defineComponent({
     selectTableList: {
       type: Array as PropType<any[]>,
       required: true
+    },
+    initialTableList: {
+      type: Array as PropType<any[]>,
+      required: true
     }
   },
   components: { Icon, ...smartUI },
@@ -192,7 +196,8 @@ export default defineComponent({
     }
 
     const removeTableTag = (table: any) => {
-      table.selected = false
+      const _table = state.table.list.find((item: any) => item.name === table.name)
+      if (_table) _table.selected = false
       const selectTableList = props.selectTableList.filter((item: any) => item.name !== table.name)
       context.emit('update:selectTableList', selectTableList)
     }
