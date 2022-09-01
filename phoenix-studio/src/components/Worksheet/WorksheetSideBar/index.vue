@@ -419,10 +419,10 @@
   >
     <template #title>
       {{ `${isAddTable ? '新建' : '编辑'}基础表` }}
-      <x-tooltip v-if="isAddTable" placement="bottomLeft" title="点击查看如何建表">
+      <!-- <x-tooltip v-if="isAddTable" placement="bottomLeft" title="点击查看如何建表">
         <x-button icon-name="worksheet/info_hollow" type="text"
                   @click="windowOpen('http://www.oushu.com/docs/ch/data-definition-tables.html', '_blank')"/>
-      </x-tooltip>
+      </x-tooltip> -->
     </template>
     <AddOrUpdateTable
       :init-already-exist-name-list="table.list.map(item => item.name)"
@@ -734,7 +734,7 @@ export default defineComponent({
 
         // 请求对应的 table、searchTable、function
         state.tabsLoading = true
-        await Promise.all([handleGetTableList(), handleGetSearchTableData()])
+        await Promise.all([handleGetTableList()])
         state.tabsLoading = false
       } else {
         state.schemaList = []
@@ -757,7 +757,7 @@ export default defineComponent({
         // store.commit('worksheet/setObjectDatabaseSymbol', {
         //   worksheetId: props.worksheetId,
         // })
-        await Promise.all([handleGetTableList(), handleGetSearchTableData()])
+        await Promise.all([handleGetTableList()])
       }
     }
 
@@ -1037,11 +1037,9 @@ export default defineComponent({
      *  获取 searchTable 数据
      */
     const handleGetSearchTableData = async() => {
-      if (state.schemaSelectedName === undefined) return
 
       state.searchTable.spinning = true
       const result = await getSearchTableList(
-        state.schemaSelectedName,
         state.searchTable.pageSize,
         (state.searchTable.current - 1) * state.searchTable.pageSize,
         state.searchTable.searchValue ? `%${state.searchTable.searchValue}%` : '',
@@ -1064,8 +1062,8 @@ export default defineComponent({
     const handleRefreshSearchTable = async(isAddTable?: boolean) => {
       if (isAddTable === undefined)
         state.searchTable.current = 1
-      state.table.list = []
-      state.table.searchValue = ''
+      state.searchTable.list = []
+      state.searchTable.searchValue = ''
       await handleGetSearchTableData()
     }
 
@@ -1152,6 +1150,7 @@ export default defineComponent({
 
     onBeforeMount(() => {
       handleRefreshSchema()
+      handleRefreshSearchTable()
     })
 
     return {
