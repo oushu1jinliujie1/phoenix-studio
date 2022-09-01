@@ -3,26 +3,25 @@
     <!-- worksheet 主要部分 -->
     <div class="worksheet-main">
       <splitpanes
-          style="border-bottom-left-radius: 4px;border-bottom-right-radius: 4px;"
-          @resize="handleMainPanesResize($event)"
-          @resized="handleMainPanesResized()"
+        style="border-bottom-left-radius: 4px;border-bottom-right-radius: 4px;"
+        @resize="handleMainPanesResize($event)"
+        @resized="handleMainPanesResized()"
       >
         <pane
-            :max-size="`${sidebarWidthRatioMax}`"
-            :size="sidebarWidthRatio"
-            style="overflow:hidden; border-bottom-left-radius: 4px;"
+          :size="sidebarWidthRatio"
+          style="overflow:hidden; border-bottom-left-radius: 4px;position: relative;"
         >
           <!-- 左侧 -->
           <worksheet-side-bar />
+          <div v-show="sqlControlHidden" class="right-side-visible-button expand" @click="showSql()">展开控制台</div>
         </pane>
-        <pane :size="100-sidebarWidthRatio" style="border-bottom-right-radius: 4px;">
+        <pane :size="100-sidebarWidthRatio" style="border-bottom-right-radius: 4px;position: relative;">
           <!-- 右侧 -->
-          <div class="worksheet-main-right">
+          <div v-show="!sqlControlHidden" class="worksheet-main-right">
             <splitpanes
-                :style="{height: `100%`} "
-                horizontal
-                @resize="handleRightPanesResize($event)"
-                @resized="handleRightPanesResized()"
+              :style="{height: `100%`} "
+              horizontal
+              @resize="handleRightPanesResize($event)"
             >
               <pane :size="editorHeightRatio">
                 <!-- 右上 -->
@@ -65,6 +64,7 @@
               </pane>
             </splitpanes>
           </div>
+          <div v-show="!sqlControlHidden" class="right-side-visible-button collapse" @click="hideSql()">收起控制台</div>
         </pane>
       </splitpanes>
     </div>
@@ -100,33 +100,6 @@ import WorksheetSideBar from './WorksheetSideBar/index.vue'
 import Editor from './Editor/index.vue'
 import StatisticsPanel from '@/components/Worksheet/StatisticsPanel/StatisticsPanel.vue'
 
-/* eslint-disable camelcase */
-
-const ONE_TWO_THREE = {
-  key: 'ONE_TWO_THREE',
-  iconPath: 'worksheet/arrangement_one_two_three',
-}
-const ONE_TWO = {
-  key: 'ONE_TWO',
-  iconPath: 'worksheet/arrangement_one_two',
-}
-const ONE_THREE = {
-  key: 'ONE_THREE',
-  iconPath: 'worksheet/arrangement_one_three',
-}
-const TWO_THREE = {
-  key: 'TWO_THREE',
-  iconPath: 'worksheet/arrangement_two_three',
-}
-const TWO = {
-  key: 'TWO',
-  iconPath: 'worksheet/arrangement_two',
-}
-const THREE = {
-  key: 'THREE',
-  iconPath: 'worksheet/arrangement_three',
-}
-
 export default defineComponent({
   name: 'Worksheet',
   components: {
@@ -146,21 +119,8 @@ export default defineComponent({
     const { t } = useI18n()
     const getError = translateErrorMessage(t)
     const store = useStore()
-    const router = useRouter()
     const state = reactive({
       // sqlValue: '',
-      arrangement: {
-        iconList: [
-          ONE_TWO_THREE,
-          ONE_TWO,
-          ONE_THREE,
-          TWO_THREE,
-          TWO,
-          THREE
-        ],
-        // index of iconList
-        activeKey: ONE_TWO_THREE.key,
-      },
       queryValue: 200,
       queryOptions: [
         {
@@ -189,10 +149,11 @@ export default defineComponent({
       firstFlag: true,
       // 侧边栏宽带占比百分比
       sidebarWidthRatio: 0,
-      // 侧边栏宽带占比最大百分比
-      sidebarWidthRatioMax: 90,
       // 侧边栏 collapsed 后的标志，用于 collapse 后第一次打开时的行为交互
       sidebarCollapsedFlag: false,
+      sideBarCollapsePending: false,
+      sqlControlHidden: false,
+      sqlCollapsePending: false,
       // 编辑器高度占比百分比
       editorHeightRatio: 50,
       // worksheet 宽度，单位：px
@@ -265,6 +226,18 @@ export default defineComponent({
       // state.isExecuting = false
     }
 
+    const hideSql = () => {
+      state.sqlControlHidden = true
+      state.sidebarWidthRatio = 100
+    }
+
+    const showSql = () => {
+      state.sqlControlHidden = false
+      const SIDEBAR_MIN_WIDTH = 360
+      const worksheetElementClientWidth = state.worksheetElementClientWidth
+      state.sidebarWidthRatio = SIDEBAR_MIN_WIDTH / worksheetElementClientWidth * 100
+    }
+
     /**
      * 若 sidebar pane 上次的状态为 collapse，则本次拉长，在未达到阈值，此时收缩不触发自动 collapse
      * 其它状态下，收缩达到阈值时，会自动 collapse
@@ -273,44 +246,38 @@ export default defineComponent({
     const handleMainPanesResize = (event: any) => {
       // shrinking
       const THRESHOLD_VALUE = 300
+      const THRESHOLD_VALUE_1 = 450
       const sidebarWidth = state.worksheetElementClientWidth * state.sidebarWidthRatio / 100
+      const editorWidth = state.worksheetElementClientWidth * (1 - state.sidebarWidthRatio / 100)
       if (event[0].size < state.sidebarWidthRatio && sidebarWidth < THRESHOLD_VALUE && !state.sidebarCollapsedFlag) {
-        state.sidebarWidthRatio = 0
-        state.sidebarWidthRatioMax = 0
+        state.sideBarCollapsePending = true
       } else {
-        state.sidebarWidthRatio = event[0].size
         // 此时宽度已大于阈值，此时收缩至小于阈值时，会触发自动 collapse
         if (sidebarWidth >= THRESHOLD_VALUE) {
           state.sidebarCollapsedFlag = false
+        }
+        if (event[0].size > state.sidebarWidthRatio && editorWidth < THRESHOLD_VALUE_1 && !state.sqlControlHidden) {
+          state.sqlCollapsePending = true
+        } else {
+          state.sidebarWidthRatio = event[0].size
+          if (editorWidth >= THRESHOLD_VALUE_1) {
+            state.sqlControlHidden = false
+          }
         }
       }
     }
 
     const handleMainPanesResized = () => {
       // 上一次拉拽出发了自动 collapse
-      if (state.sidebarWidthRatioMax === 0) {
+      if (state.sideBarCollapsePending) {
+        state.sidebarWidthRatio = 0
         state.sidebarCollapsedFlag = true
-        state.sidebarWidthRatioMax = 90
+        state.sideBarCollapsePending = false
       }
-      const sidebarWidthRatio = state.sidebarWidthRatio
-      const editorHeightRatio = state.editorHeightRatio
-
-      if (sidebarWidthRatio === 0) {
-        if (editorHeightRatio === 0) {
-          state.arrangement.activeKey = THREE.key
-        } else if (editorHeightRatio === 100) {
-          state.arrangement.activeKey = TWO.key
-        } else {
-          state.arrangement.activeKey = TWO_THREE.key
-        }
-      } else {
-        if (editorHeightRatio === 0) {
-          state.arrangement.activeKey = ONE_THREE.key
-        } else if (editorHeightRatio === 100) {
-          state.arrangement.activeKey = ONE_TWO.key
-        } else {
-          state.arrangement.activeKey = ONE_TWO_THREE.key
-        }
+      if (state.sqlCollapsePending) {
+        state.sidebarWidthRatio = 100
+        state.sqlControlHidden = true
+        state.sqlCollapsePending = false
       }
     }
 
@@ -320,79 +287,6 @@ export default defineComponent({
      */
     const handleRightPanesResize = (event: any) => {
       state.editorHeightRatio = event[0].size
-    }
-
-    /**
-     * 拖拽完
-     */
-    const handleRightPanesResized = () => {
-      const sidebarWidthRatio = state.sidebarWidthRatio
-      const editorHeightRatio = state.editorHeightRatio
-
-      if (sidebarWidthRatio === 0) {
-        if (editorHeightRatio === 0) {
-          state.arrangement.activeKey = THREE.key
-        } else if (editorHeightRatio === 100) {
-          state.arrangement.activeKey = TWO.key
-        } else {
-          state.arrangement.activeKey = TWO_THREE.key
-        }
-      } else {
-        if (editorHeightRatio === 0) {
-          state.arrangement.activeKey = ONE_THREE.key
-        } else if (editorHeightRatio === 100) {
-          state.arrangement.activeKey = ONE_TWO.key
-        } else {
-          state.arrangement.activeKey = ONE_TWO_THREE.key
-        }
-      }
-    }
-
-    /**
-     * 布局按钮点击
-     * @param key
-     */
-    const handleLayoutIconClick = (key: string) => {
-      const SIDEBAR_MIN_WIDTH = 360
-      const worksheetElementClientWidth = state.worksheetElementClientWidth
-      state.arrangement.activeKey = key
-      switch (key) {
-        case 'ONE_TWO_THREE': {
-          state.sidebarWidthRatio = SIDEBAR_MIN_WIDTH / worksheetElementClientWidth * 100
-          state.editorHeightRatio = 50
-          break
-        }
-        case 'ONE_TWO': {
-          state.sidebarWidthRatio = SIDEBAR_MIN_WIDTH / worksheetElementClientWidth * 100
-          state.editorHeightRatio = 100
-          break
-        }
-        case 'ONE_THREE': {
-          state.sidebarWidthRatio = SIDEBAR_MIN_WIDTH / worksheetElementClientWidth * 100
-          state.editorHeightRatio = 0
-          break
-        }
-        case 'TWO_THREE': {
-          state.sidebarWidthRatio = 0
-          state.sidebarCollapsedFlag = true
-          state.editorHeightRatio = 50
-          break
-        }
-        case 'TWO': {
-          state.sidebarWidthRatio = 0
-          state.sidebarCollapsedFlag = true
-          state.editorHeightRatio = 100
-          break
-        }
-        case 'THREE': {
-          state.sidebarWidthRatio = 0
-          state.sidebarCollapsedFlag = true
-          state.editorHeightRatio = 0
-          break
-        }
-        default:
-          // do nothing
-      }
     }
 
     const handleSaveWorksheetInfo = () => {
@@ -405,7 +299,6 @@ export default defineComponent({
         state.worksheetElementClientWidth = document.getElementsByClassName('worksheet')[0].clientWidth
         state.sidebarWidthRatio = SIDEBAR_MIN_WIDTH / state.worksheetElementClientWidth * 100
         nextTick(() => {
-          handleRightPanesResized()
           handleMainPanesResized()
         })
       })
@@ -483,11 +376,11 @@ export default defineComponent({
 
       ...toRefs(state),
       handleExecute,
+      hideSql,
+      showSql,
       handleMainPanesResize,
       handleMainPanesResized,
       handleRightPanesResize,
-      handleRightPanesResized,
-      handleLayoutIconClick,
     }
   },
 })
@@ -674,6 +567,30 @@ p {
 
   .#{$ant-prefix}-select-selection-placeholder {
 
+  }
+}
+.right-side-visible-button {
+  position: absolute;
+  top: 45%;
+  width: 20px;
+  padding: 6px 3px;
+  background: rgba(51, 108, 255, 0.6);
+  color: #fff;
+  font-size: 12px;
+  word-break: break-all;
+  cursor: pointer;
+  opacity: 0.4;
+
+  &.collapse {
+    left: 0;
+    border-radius: 0 8px 8px 0;
+  }
+  &.expand {
+    right: 0;
+    border-radius: 8px 0 0 8px;
+  }
+  &:hover {
+    opacity: 1;
   }
 }
 </style>

@@ -65,21 +65,12 @@
             </div>
             <div class="v-oushudb-add-table-form-container-item-control" style="position: relative">
               <div class="v-oushudb-add-table-form-container-item-number">
-                <div
-                  class="v-oushudb-add-table-form-container-item-number-btn"
-                  @click="() => {
-                    table.salt_buckets = String(Number(table.salt_buckets) - 1)
-                  }">
-                  <icon color="" name="minus"/>
-                </div>
-                <x-input class="v-oushudb-add-table-form-container-item-number-input" v-model:value="table.salt_buckets" placeholder="请输入0-256的数字"></x-input>
-                <div
-                  class="v-oushudb-add-table-form-container-item-number-btn"
-                  @click="() => {
-                    table.salt_buckets = String(Number(table.salt_buckets) + 1)
-                  }">
-                  <icon color="" name="add"/>
-                </div>
+                <x-input-number
+                  placeholder="0-256"
+                  v-model:value="table.salt_buckets"
+                  :max="256"
+                  :min="0"
+                />
               </div>
             </div>
           </div>
@@ -400,7 +391,7 @@ export default defineComponent({
         name: '',
         comment: '',
         split_on: '',
-        salt_buckets: '0',
+        salt_buckets: 0,
         columnList: [getDefaultColumn()] as any[],
       },
 
@@ -571,7 +562,7 @@ export default defineComponent({
           const data: any = {
             name: state.table.name,
             split_on: state.table.split_on,
-            salt_buckets: Number(state.table.salt_buckets),
+            salt_buckets: state.table.salt_buckets,
             columns: state.table.columnList.map(column => {
               return {
                 name: column.name,
@@ -650,6 +641,8 @@ export default defineComponent({
         return
       }
 
+      if (state.table.salt_buckets === null) state.table.salt_buckets = 0
+
       // const executeResult = await executeSql({
       //   instanceId: props.instanceId,
       //   databaseName: props.isAdd ? props.database : props.initTable?.databaseName ?? '',
@@ -702,25 +695,6 @@ export default defineComponent({
       handleRefreshSQLDetail()
     }, {
       deep: true,
-    })
-    const format = (val: string, preVal: string) => {
-      // const reg = /^-?\d*(\.\d*)?$/;
-      const reg = /^\d*$/
-
-      if ((!isNaN(+val) && reg.test(val))) {
-        if (Number(val) < 0) {
-          state.table.salt_buckets = '0'
-        } else if (Number(val) > 256) {
-          state.table.salt_buckets = '256'
-        } else {
-          state.table.salt_buckets = val ? String(+val) : val
-        }
-      } else {
-        state.table.salt_buckets = preVal
-      }
-    };
-    watch(() => state.table.salt_buckets, (val, preVal) => {
-      format(val, preVal)
     })
 
     const handleCancel = () => {
@@ -887,7 +861,7 @@ export default defineComponent({
 
       state.table.name = initTable.name
       state.table.split_on = initTable.split_on
-      state.table.salt_buckets = String(initTable.salt_buckets)
+      state.table.salt_buckets = initTable.salt_buckets
       state.table.comment = initTable.comment
       // schema 未传，用 props 里面的
 
@@ -1028,35 +1002,8 @@ export default defineComponent({
           left: 9px;
         }
         .v-oushudb-add-table-form-container-item-number {
-          display: flex;
-          justify-content: space-between;
-          width: 230px;
           height: 50px;
           padding-top: 15px;
-          .v-oushudb-add-table-form-container-item-number-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 30px;
-            height: 30px;
-            border-radius: 4px;
-            border: 1px solid #282B2E;
-            cursor: pointer;
-          }
-          .v-oushudb-add-table-form-container-item-number-input {
-            width: 150px;
-            height: 30px;
-            border-radius: 4px;
-            border: 1px solid #D5D8D8;
-
-            &:hover,
-            &:focus {
-            width: 150px;
-            height: 30px;
-            border-radius: 4px;
-            border: 1px solid #336CFF;
-            }
-          }
         }
       }
     }

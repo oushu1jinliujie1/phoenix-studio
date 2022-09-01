@@ -17,6 +17,7 @@
       :scroll="{ x: 920, y: null }"
       rowKey="name"
       auto-calc-empty-height
+      emptyImage="empty"
     >
       <a-table-column v-for="table of tables" :key="table.name" :title="table.name" width="120px">
         <template #default="{ record }">
@@ -48,6 +49,9 @@
           </x-tooltip>
         </template>
       </a-table-column>
+      <template #emptyDescription>
+        暂无关联
+      </template>
     </x-table>
   </div>
 </template>

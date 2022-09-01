@@ -105,7 +105,7 @@ export interface Table {
   oid: string,
   name: string,
   split_on: string,
-  salt_buckets: string,
+  salt_buckets: number,
   owner: string,
   schema: string,
   table_space: string,
