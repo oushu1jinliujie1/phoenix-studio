@@ -264,6 +264,8 @@
     <add-or-update-column-base
       :init-already-exist-name-list="table.columnList.filter(item => item.id !== columnWillEdit.id).map(item => item.name)"
       :initial-column="columnWillEdit"
+      :schema-name="schema"
+      :table="table"
       :is-add="isAdd"
       @close="() => { columnDrawerVisible=false }"
       @confirm="handleConfirmEditColumn"
@@ -294,8 +296,9 @@ import { Table } from '@/components/Worksheet/type'
 import { useI18n } from 'vue-i18n'
 import { translateErrorMessage } from 'lava-fe-lib/lib-common/i18n'
 import { windowOpen } from '@/smart-ui-vue/utils'
-import { getColumnList } from '@/api/mock'
+import { executeSql, getColumnList, getSqlForCreateTable, getSqlForUpdateTable, getTableDetails } from '@/api/mock'
 import { checkIsInstanceName, CHECK_INSTANCE_NAME_RULE_DESCRIPTION } from '@/lib/regexp'
+import { format } from 'sql-formatter'
 
 import('monaco-themes/themes/Tomorrow.json')
   .then(data => {
@@ -579,58 +582,51 @@ export default defineComponent({
           }
 
 
-          // const result = await getSQLForCreateTable(props.instanceId, props.database, data)
+          const result = await getSqlForCreateTable(data)
 
-          // if (result.meta.success) {
-          //   originSQL.value = typeof result.data === 'string' ? result.data : result.data.join('\n')
-          //   editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n'), {
-          //     language: 'db2',
-          //   }))
-          // } else {
-          //   editor.setValue('')
-          // }
+          if (result.meta.success) {
+            originSQL.value = typeof result.data === 'string' ? result.data : result.data.join('\n')
+            editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n'), {
+              language: 'db2',
+            }))
+          } else {
+            editor.setValue('')
+          }
         }
 
         async function getUpdateTableSQLDetail() {
-          // const initTable = props.initTable as Table
+          const initTable = props.initTable as Table
 
-          // const data: any = {
-          //   name: state.table.name,
-          //   owner: state.table.ownerName,
-          //   oid: initTable.oid,
-          //   comment: state.table.comment,
-          //   schema: props.initTable?.schema ?? '',
-          //   external: initTable.external,
-          //   hawq_dk: state.columnsWithDistributionKey.map(column => {
-          //     return {
-          //       att_num: column.att_num as string,
-          //       column_name: column.name,
-          //     }
-          //   }),
-          //   columns: state.table.columnList.map(column => {
-          //     return {
-          //       name: column.name,
-          //       type: column.type,
-          //       length: column.length,
-          //       scale: column.scale,
-          //       notnull: column.isPrimary,
-          //       comment: column.comment,
-          //       att_rel_id: column.att_rel_id,
-          //       att_num: column.att_num,
-          //     }
-          //   }),
-          // }
+          const data: any = {
+            oid: initTable.oid,
+            name: state.table.name,
+            split_on: state.table.split_on,
+            salt_buckets: state.table.salt_buckets,
+            columns: state.table.columnList.map(column => {
+              return {
+                name: column.name,
+                type: column.type,
+                length: column.length,
+                scale: column.scale,
+                isPrimary: column.isPrimary,
+                comment: column.comment,
+                column_family: column.columnFamily
+              }
+            }),
+            comment: state.table.comment,
+            schema: props.initTable?.schema ?? '',
+          }
 
-          // const result = await getSQLForUpdateTable(props.instanceId, initTable.databaseName ?? '', data)
+          const result = await getSqlForUpdateTable(data)
 
-          // if (result.meta.success) {
-          //   originSQL.value = typeof result.data === 'string' ? result.data : result.data.join('\n')
-          //   editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n'), {
-          //     language: 'db2',
-          //   }))
-          // } else {
-          //   editor.setValue('')
-          // }
+          if (result.meta.success) {
+            originSQL.value = typeof result.data === 'string' ? result.data : result.data.join('\n')
+            editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n'), {
+              language: 'db2',
+            }))
+          } else {
+            editor.setValue('')
+          }
         }
       }, 800)
 
@@ -643,20 +639,15 @@ export default defineComponent({
 
       if (state.table.salt_buckets === null) state.table.salt_buckets = 0
 
-      // const executeResult = await executeSql({
-      //   instanceId: props.instanceId,
-      //   databaseName: props.isAdd ? props.database : props.initTable?.databaseName ?? '',
-      //   schema: props.isAdd ? props.schema : props.initTable?.schema ?? '',
-      //   statement: originSQL.value,
-      // })
+      const executeResult = await executeSql({ statement: originSQL.value })
 
-      // if (executeResult.meta.success && executeResult.data?.error === '') {
-      //   // 创建表成功
-      //   message.success(`${props.isAdd ? '创建' : '修改'}表成功`)
-      //   context.emit('close', true)
-      // } else {
-      //   message.error(`${props.isAdd ? '创建' : '修改'}表失败: ${executeResult.data?.error || getError(executeResult) || '无失败提示'}`, 5)
-      // }
+      if (executeResult.meta.success && executeResult.data?.error === '') {
+        // 创建表成功
+        message.success(`${props.isAdd ? '创建' : '修改'}表成功`)
+        context.emit('close', true)
+      } else {
+        message.error(`${props.isAdd ? '创建' : '修改'}表失败: ${executeResult.data?.error || getError(executeResult) || '无失败提示'}`, 5)
+      }
 
       /**
        * 参数检查
@@ -816,36 +807,30 @@ export default defineComponent({
     const initTableTransfer = async() => {
 
       const initTable = props.initTable as Table
-      // if (initTable.databaseName === undefined) {
-      //   message.error('database 不存在')
-      //   return
-      // }
 
       state.getTableDetailLoading = true
 
       // 获取表的详细数据、列信息
 
       // 详细信息
-      // const getDetailResult = await getTableDetail(
-      //   worksheetInfoRef.value.instanceId,
-      //   initTable.databaseName,
-      //   initTable.oid,
-      // )
+      const getDetailResult = await getTableDetails(
+        initTable.oid,
+      )
 
-      // if (getDetailResult.meta.success) {
-      //   for (const key in initTable) {
-      //     // 以下四个属性在 detail 中不会返回
-      //     if (['location', 'table_type', 'external', 'columns'].includes(key)) continue
+      if (getDetailResult.meta.success) {
+        for (const key in initTable) {
+          // 以下属性在 details 中不会返回
+          if (['columns'].includes(key)) continue
 
-      //     if (Object.prototype.hasOwnProperty.call(initTable, key)) {
-      //       // @ts-ignore
-      //       initTable[key] = (getDetailResult.data)[key] ? (getDetailResult.data)[key] : initTable[key]
-      //     }
-      //   }
-      // } else {
-      //   message.error(`获取表详细信息失败：${getError(getDetailResult)}`)
-      //   return
-      // }
+          if (Object.prototype.hasOwnProperty.call(initTable, key)) {
+            // @ts-ignore
+            initTable[key] = (getDetailResult.data)[key] ? (getDetailResult.data)[key] : initTable[key]
+          }
+        }
+      } else {
+        message.error(`获取表详细信息失败：${getError(getDetailResult)}`)
+        return
+      }
 
       // 列信息
       const getColumnListResult = await getColumnList(

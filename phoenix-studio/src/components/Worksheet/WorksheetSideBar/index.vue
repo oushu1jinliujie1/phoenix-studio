@@ -27,7 +27,7 @@
                       @click="handleRefreshSchema"
                     >
                       <icon color="inherit" name="worksheet/refresh"/>
-                      刷新
+                      刷新模式
                     </x-menu-item>
                     <x-menu-item
                       :disabled="schemaSelectedName === undefined "
@@ -208,7 +208,7 @@
                           :key="index"
                           class="work-sheet-sidebar-tab-list-item-children"
                         >
-                        <span :tilte="column.name">
+                        <span :title="column.name">
                           <icon image name="worksheet/field_blue"/>{{ column.name }}
                         </span>
                           <span>
@@ -350,7 +350,7 @@
                         @click="handleRefreshTable"
                       >
                         <icon color="inherit" name="worksheet/refresh"/>
-                        刷新
+                        刷新基础表
                       </x-menu-item>
                       <x-menu-item
                         :disabled="schemaSelectedName === undefined"
@@ -368,7 +368,7 @@
                         @click="handleRefreshSearchTable"
                       >
                         <icon color="inherit" name="worksheet/refresh"/>
-                        刷新
+                        刷新查询表
                       </x-menu-item>
                       <x-menu-item
                         :disabled="schemaSelectedName === undefined"
@@ -390,21 +390,17 @@
 
   <!-- （数据库｜模式）（新建｜编辑）-->
   <x-drawer
-    :title="`${isAddSchemaDrawer ? '新建': '编辑'}模式`"
-    :visible="addOrEditDatabaseDrawerVisible"
+    title="新建模式"
+    :visible="addSchemaDrawerVisible"
     class="v-oushudb-add-db-drawer"
     destroyOnClose
     width="800"
-    @close="() => { addOrEditDatabaseDrawerVisible = false }"
+    @close="() => { addSchemaDrawerVisible = false }"
   >
     <addOrUpdateSchema
-      :init-already-exist-name-list="isAddSchemaDrawer ? schemaList.map(schema => schema.name) : undefined"
-      :init-comment="isAddSchemaDrawer ? undefined : schemaList.find(schema => schema.name === schemaSelectedName)?.comment"
-      :initSchemaName="isAddSchemaDrawer ? undefined : schemaSelectedName"
-      :is-add="isAddSchemaDrawer"
-      :schema="schemaSelectedName"
+      :init-already-exist-name-list="schemaList.map(schema => schema.name)"
       @close="(success: any) => {
-        addOrEditDatabaseDrawerVisible=false;
+        addSchemaDrawerVisible=false;
         if (success) handleRefreshSchema()
       }"
     />
@@ -625,10 +621,8 @@ export default defineComponent({
       sidebarActiveKey: 'resource',
       sidebarHoverKey: '',
 
-      // is addition or is edited
-      isAddSchemaDrawer: true,
-      // （数据库 or 模式）（新建 or 编辑）drawer visible
-      addOrEditDatabaseDrawerVisible: false,
+      // 模式新建 drawer visible
+      addSchemaDrawerVisible: false,
 
       // 模式选项
       schemaList: [] as Schema[],
@@ -733,9 +727,11 @@ export default defineComponent({
         }
 
         // 请求对应的 table、searchTable、function
-        state.tabsLoading = true
-        await Promise.all([handleGetTableList()])
-        state.tabsLoading = false
+        if (state.activeTabKey === 'table') {
+          state.tabsLoading = true
+          await Promise.all([handleGetTableList()])
+          state.tabsLoading = false
+        }
       } else {
         state.schemaList = []
         message.error(`刷新模式失败：${getError(result)}`)
@@ -771,16 +767,7 @@ export default defineComponent({
      * 新增模式
      */
     const handleAddSchemaIconClick = () => {
-      state.isAddSchemaDrawer = true
-      state.addOrEditDatabaseDrawerVisible = true
-    }
-
-    /**
-     * 编辑模式
-     */
-    const handleEditSchemaIconClick = () => {
-      state.isAddSchemaDrawer = false
-      state.addOrEditDatabaseDrawerVisible = true
+      state.addSchemaDrawerVisible = true
     }
 
     /**
@@ -1166,7 +1153,6 @@ export default defineComponent({
       handleOnSchemaSelectChanged,
       handleCopySchemaName,
       handleAddSchemaIconClick,
-      handleEditSchemaIconClick,
       handleDeleteSchemaIconClick,
       handleDeleteSchema,
 

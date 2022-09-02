@@ -54,7 +54,7 @@
     </x-form-item>
   </x-form>
   <!-- SQL 详情挂载 -->
-  <div class="v-oushudb-add-table-form-sql-detail">
+  <div v-if="isUpdateTable" class="v-oushudb-add-table-form-sql-detail">
     <div class="v-oushudb-add-table-form-sql-detail-header">
       <span>SQL详情</span>
       <!-- 复制、刷新按钮 -->
@@ -99,6 +99,9 @@ import useClipboard from 'vue-clipboard3'
 import { TIME_DEFAULT_TYPE_LIST, TYPE_OPTION_LIST } from './constant'
 import { COLOR_PRIMARY_BLUE } from 'lava-fe-lib/lib-common/constant'
 import { debounce } from 'lodash'
+import { getSqlForCreateColumn, getSqlForUpdateColumn } from '@/api/mock'
+import { Table } from '@/components/Worksheet/type'
+import { format } from 'sql-formatter'
 import('monaco-themes/themes/Tomorrow.json')
   .then(data => {
     // @ts-ignore
@@ -135,6 +138,14 @@ const initEditor = () => {
 export default defineComponent({
   name: 'addOrUpdateColumnBase',
   props: {
+    schemaName: {
+      type: String,
+      required: true,
+    },
+    table: {
+      type: Object as PropType<Table | undefined>,
+      required: true,
+    },
     initialColumn: {
       type: Object,
       required: true,
@@ -237,8 +248,6 @@ export default defineComponent({
       handleCopyValue(editor.getValue())
     }
 
-    const originSQL = ref('')
-
     /**
      * 刷新 SQL 详情
      */
@@ -253,14 +262,16 @@ export default defineComponent({
         // todo: 参数检查
 
         if (props.isAdd) {
-          getCreateTableSQLDetail()
+          getCreateColumnSQLDetail()
         } else {
-          getUpdateTableSQLDetail()
+          getUpdateColumnSQLDetail()
         }
         // 数据转化
         // eslint-disable-next-line require-await
-        async function getCreateTableSQLDetail() {
+        async function getCreateColumnSQLDetail() {
           const data: any = {
+            schema: props.schemaName,
+            table: props.table?.name,
             name: formState.name,
             type: formState.type,
             columnFamily: formState.columnFamily,
@@ -270,60 +281,51 @@ export default defineComponent({
             scale: formState.scale,
           }
 
-          // const result = await getSQLForCreateTable(props.instanceId, props.database, data)
+          const result = await getSqlForCreateColumn(data)
 
-          // if (result.meta.success) {
-          //   originSQL.value = typeof result.data === 'string' ? result.data : result.data.join('\n')
-          //   editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n'), {
-          //     language: 'db2',
-          //   }))
-          // } else {
-          //   editor.setValue('')
-          // }
+          if (result.meta.success) {
+            editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n'), {
+              language: 'db2',
+            }))
+          } else {
+            editor.setValue('')
+          }
         }
 
-        async function getUpdateTableSQLDetail() {
-          // const initTable = props.initTable as Table
+        async function getUpdateColumnSQLDetail() {
+          const initTable = props.table as Table
 
-          // const data: any = {
-          //   name: formState.name,
-          //   owner: formState.ownerName,
-          //   oid: initTable.oid,
-          //   comment: formState.comment,
-          //   schema: props.initTable?.schema ?? '',
-          //   external: initTable.external,
-          //   hawq_dk: state.columnsWithDistributionKey.map(column => {
-          //     return {
-          //       att_num: column.att_num as string,
-          //       column_name: column.name,
-          //     }
-          //   }),
-          //   columns: formState.columnList.map(column => {
-          //     return {
-          //       name: column.name,
-          //       type: column.type,
-          //       length: column.length,
-          //       scale: column.scale,
-          //       notnull: column.isPrimary,
-          //       comment: column.comment,
-          //       att_rel_id: column.att_rel_id,
-          //       att_num: column.att_num,
-          //     }
-          //   }),
-          // }
+          const data: any = {
+            schema: props.schemaName,
+            table: initTable.name,
+            name: formState.name,
+            type: formState.type,
+            columnFamily: formState.columnFamily,
+            comment: formState.comment,
+            isPrimary: formState.isPrimary,
+            length: formState.length,
+            scale: formState.scale,
+          }
 
-          // const result = await getSQLForUpdateTable(props.instanceId, initTable.databaseName ?? '', data)
+          const result = await getSqlForUpdateColumn(data)
 
-          // if (result.meta.success) {
-          //   originSQL.value = typeof result.data === 'string' ? result.data : result.data.join('\n')
-          //   editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n'), {
-          //     language: 'db2',
-          //   }))
-          // } else {
-          //   editor.setValue('')
-          // }
+          if (result.meta.success) {
+            editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n'), {
+              language: 'db2',
+            }))
+          } else {
+            editor.setValue('')
+          }
         }
       }, 800)
+
+    const temp = computed(() => formState)
+    watch(() => temp.value, () => {
+      if (!props.isUpdateTable) return
+      handleRefreshSQLDetail()
+    }, {
+      deep: true,
+    })
 
     onMounted(() => {
       initEditor()
@@ -349,6 +351,7 @@ export default defineComponent({
 
       handleCopyValue,
       handleCopySQLDetail,
+      handleRefreshSQLDetail,
 
       handleCancel,
       handleConfirm,

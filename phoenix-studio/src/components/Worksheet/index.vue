@@ -419,12 +419,6 @@ p {
           color: $color-primary-blue;
         }
       }
-
-      .history-moudle {
-        position: absolute;
-        right: 58px;
-        top: 1px
-      }
     }
 
     .editor-component-container {
@@ -563,10 +557,6 @@ p {
 
   .#{$ant-prefix}-select-selection-item {
     font-weight: 600;
-  }
-
-  .#{$ant-prefix}-select-selection-placeholder {
-
   }
 }
 .right-side-visible-button {

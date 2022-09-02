@@ -97,6 +97,7 @@ import { debounce } from 'lodash'
 import { RuleObject } from 'ant-design-vue/es/form/interface'
 import { useI18n } from 'vue-i18n'
 import { translateErrorMessage } from 'lava-fe-lib/lib-common/i18n'
+import { executeSql, getSqlForCreateSchema } from '@/api/mock'
 
 import('monaco-themes/themes/Tomorrow.json')
   .then(data => {
@@ -136,24 +137,6 @@ export default defineComponent({
       type: Array,
       default: (): [] => [],
     },
-    initComment: {
-      type: String,
-      default: '',
-    },
-    initSchemaName: {
-      type: String,
-      default: '',
-    },
-    // 执行 SQL 时需用到，与是否是 database drawer 无关
-    schema: {
-      type: String,
-      required: true,
-    },
-    // is added = false means is edited
-    isAdd: {
-      type: Boolean,
-      required: true,
-    },
   },
   emits: ['close'],
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -165,17 +148,14 @@ export default defineComponent({
     const state = reactive({
       // 初始名字得再优化一下
       schemaName: props.initSchemaName ?? '',
-      ownerName: props.initOwnerName,
       comment: props.initComment,
-      tableSpace: props.initTableSpace,
-      disabled: !props.isAdd,
+      disabled: false,
     })
 
     const validatePass = (rule: RuleObject, value: string) => {
       if (value === '') {
         return Promise.reject('请填写模式名')
       } else {
-        if (!props.isAdd) return Promise.resolve()
         if (props.initAlreadyExistNameList?.includes(state.schemaName)) {
           return Promise.reject('该模式名已存在，请检查后重新填写')
         }
@@ -188,12 +168,12 @@ export default defineComponent({
     const rules = [
       // 非空
       { required: true, validator: validatePass },
-      // {
-      //   validator: () => {
-      //     if (!props.isAdd) return true
-      //     return props.initAlreadyExistNameList?.includes(state.schemaName)
-      //   }, message: `该${props.isDatabaseDrawer ? '数据库' : '模式'}名已存在，请检查后重新填写`,
-      // },
+      {
+        validator: () => {
+          return props.initAlreadyExistNameList?.includes(state.schemaName)
+        },
+        message: '该模式名已存在，请检查后重新填写',
+      },
     ]
 
     /**
@@ -221,89 +201,52 @@ export default defineComponent({
     /**
      * 刷新 SQL 详情
      */
-    const handleRefreshSQLDetail = debounce((cancel = false) => {
-        // if (cancel) {
-        //   editor.setValue('')
-        //   return
-        // }
+    const handleRefreshSQLDetail = debounce(async(cancel = false) => {
+        if (cancel) {
+          editor.setValue('')
+          return
+        }
 
-        // 获取新建SQL
+        const data = {
+          name: state.schemaName,
+          comment: state.comment,
+        }
+        const result = await getSqlForCreateSchema(data)
 
-
-        // const data = {
-        //   name: state.schemaName,
-        //   owner: state.ownerName,
-        //   comment: state.comment,
-        //   table_space: state.tableSpace,
-        //   new_name: '',
-        // }
-        // const result = await (() => {
-        //   if (props.isAdd) {
-        //     return (props.isDatabaseDrawer ? getSQLForCreateDatabase : getSQLForCreateSchema)(props.instanceId, props.database, data)
-        //   } else {
-        //     if (!props.isDatabaseDrawer) {
-        //       data.new_name = data.name
-        //       data.name = props.initSchemaName
-        //     }
-
-        //     return (props.isDatabaseDrawer ? getSQLForEditDatabase : getSQLForEditSchema)(props.instanceId, props.database, data)
-        //   }
-        // })()
-
-        // if (result.meta.success) {
-        //   editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n')))
-        // } else {
-        //   editor.setValue('')
-        //   // message.warning(result.meta.message)
-        // }
+        if (result.meta.success) {
+          editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n')))
+        } else {
+          editor.setValue('')
+          message.warning(result.meta.message)
+        }
       }
       , DEBOUNCE_WAIT)
     /**
      * 提交表单
      */
-    const handleSubmit = () => {
+    const handleSubmit = async() => {
       // 获取新建SQL，执行SQL
+      const data = {
+        name: state.schemaName,
+        comment: state.comment,
+      }
+      const getSQLResult = await getSqlForCreateSchema(data)
 
+      if (!getSQLResult.meta.success) {
+        message.error(`新建模式失败: ${getSQLResult.meta.message}`)
+        return
+      }
 
-      // const data = {
-      //   name: state.schemaName,
-      //   owner: state.ownerName,
-      //   comment: state.comment,
-      //   table_space: state.tableSpace,
-      //   new_name: '',
-      // }
-      // const getSQLResult = await (() => {
-      //   if (props.isAdd) {
-      //     return (props.isDatabaseDrawer ? getSQLForCreateDatabase : getSQLForCreateSchema)(props.instanceId, props.database, data)
-      //   } else {
-      //     if (!props.isDatabaseDrawer) {
-      //       data.new_name = data.name
-      //       data.name = props.initSchemaName
-      //     }
+      const executeResult = await executeSql({
+        statement: typeof getSQLResult.data === 'string' ? getSQLResult.data : getSQLResult.data.join('\n'),
+      })
 
-      //     return (props.isDatabaseDrawer ? getSQLForEditDatabase : getSQLForEditSchema)(props.instanceId, props.database, data)
-      //   }
-      // })()
-
-      // if (!getSQLResult.meta.success) {
-      //   message.error(`${props.isAdd ? '新建' : '编辑'}${props.isDatabaseDrawer ? '数据库' : '模式'}失败: ${getSQLResult.meta.message}`)
-      //   return
-      // }
-
-
-      // const executeResult = await executeSql({
-      //   instanceId: props.instanceId,
-      //   databaseName: props.database,
-      //   schema: props.schema,
-      //   statement: typeof getSQLResult.data === 'string' ? getSQLResult.data : getSQLResult.data.join('\n'),
-      // })
-
-      // if (executeResult.meta.success && executeResult.data?.error === '') {
-      //   message.success(`${props.isAdd ? '新建' : '编辑'}${props.isDatabaseDrawer ? '数据库' : '模式'}成功`)
-      //   context.emit('close', true)
-      // } else {
-      //   message.error(`${props.isAdd ? '新建' : '编辑'}${ props.isDatabaseDrawer ? '数据库' : '模式'}失败: ${executeResult.data?.error || getError(executeResult) || '无失败提示'}`)
-      // }
+      if (executeResult.meta.success && executeResult.data?.error === '') {
+        message.success('新建模式成功')
+        context.emit('close', true)
+      } else {
+        message.error(`新建模式失败: ${executeResult.data?.error || getError(executeResult) || '无失败提示'}`)
+      }
     }
 
     const handleCancel = () => {
@@ -320,11 +263,10 @@ export default defineComponent({
     })
 
     const isSubmitDisabled = computed(() => {
-      return (state.schemaName === '' || state.ownerName === '')
-        || (props.isAdd && props.initAlreadyExistNameList?.includes(state.schemaName))
+      return state.schemaName === '' || props.initAlreadyExistNameList?.includes(state.schemaName)
     })
 
-    watch([() => state.schemaName, () => state.ownerName, () => state.tableSpace, () => state.comment], () => {
+    watch([() => state.schemaName, () => state.comment], () => {
       handleRefreshSQLDetail(isSubmitDisabled.value)
     })
 
