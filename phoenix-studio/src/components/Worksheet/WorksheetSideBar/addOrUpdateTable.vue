@@ -148,6 +148,7 @@
             <template #columnFamily="{ record }">
               <!-- 根据 hover 控制 display 来切换编辑状态 -->
               <x-tooltip
+                v-if="!record.isPrimary"
                 :visible="validateColumnFamily(record.columnFamily)?undefined:false"
                 :overlayStyle="{ 'pointer-events': 'none' }"
               >
@@ -162,16 +163,20 @@
                   placeholder="--"
                 />
               </x-tooltip>
+              <div v-else>
+                --
+              </div>
             </template>
             <!-- 长度 -->
             <template #length="{ record }">
               <!-- 根据 hover 控制 display 来切换编辑状态 -->
-              <div v-if="['numeric','varchar','char','bit','time','timestamp'].includes(record.type)"
+              <div v-if="TYPE_WITH_LENGTH.includes(record.type)"
                    class="v-oushudb-add-table-basic-info-table-cell">
                 <x-input-number
                   v-model:value="record.length"
-                  :max="record.type === 'numeric' ? 1000 : 10485760"
-                  :min='1'
+                  :max="record.type === 'DECIMAL' ? 38 : Infinity"
+                  :min="TYPE_REQUIRED_LENGTH.includes(record.type) ? 1 : 0"
+                  placeholder="--"
                   class="raw"/>
               </div>
               <div v-else>
@@ -181,8 +186,8 @@
             <!-- 精度，仅 decimal 有 -->
             <template #scale="{ record }">
               <!-- 根据 hover 控制 display 来切换编辑状态 -->
-              <div v-if="['numeric'].includes(record.type)" class="v-oushudb-add-table-basic-info-table-cell">
-                <x-input-number v-model:value="record.scale" :max="record.length - 1" :min='0' class="raw"/>
+              <div v-if="TYPE_WITH_SCALE.includes(record.type)" class="v-oushudb-add-table-basic-info-table-cell">
+                <x-input-number v-model:value="record.scale" :max="Math.max(record.length - 1, 0)" :min='0' placeholder="--" class="raw"/>
               </div>
               <div v-else>
                 --
@@ -289,6 +294,9 @@ import {
   COLUMNS,
   STORAGE_FORMAT_LIST,
   TYPE_OPTION_LIST,
+  TYPE_WITH_LENGTH,
+  TYPE_REQUIRED_LENGTH,
+  TYPE_WITH_SCALE,
 } from './constant'
 import addOrUpdateColumnBase from '@/components/Worksheet/WorksheetSideBar/addOrUpdateColumnBase.vue'
 import { useStore } from 'vuex'
@@ -340,12 +348,12 @@ export function getDefaultColumn(): any {
     id: columnIdCount,
     columnDeletePopConfirmVisible: false,
     name: `column_${columnIdCount++}`,
-    type: 'int8',
+    type: 'INTEGER',
     comment: '',
     columnFamily: '',
     isPrimary: false,
-    length: 128,
-    scale: 10,
+    length: 10,
+    scale: 2,
   }
 }
 
@@ -671,7 +679,7 @@ export default defineComponent({
         if (state.table.columnList.some(column => {
           return column.name === ''
             // todo: 临时操作
-            || (!TYPE_OPTION_LIST.map(item => item.value).includes(column.type) && column.type !== 'serial' && column.type !== 'text')
+            || (!TYPE_OPTION_LIST.map(item => item.value).includes(column.type))
         })) {
           message.warning('请检查所有列名、选择列类型是否已输入！')
           return false
@@ -700,6 +708,7 @@ export default defineComponent({
       const table = state.table.columnList
       const index = table.findIndex((item) => item.id === column.id)
       if (event.target.checked) {
+        table[index].columnFamily = ''
         const i = table.findIndex((value) => !value.isPrimary)
         if (index + 1 === i || i === -1) return
         state.table.columnList = [...table.slice(0,i), table[index], ...table.slice(i, index), ...table.slice(index + 1)]
@@ -793,6 +802,9 @@ export default defineComponent({
           if (oldPrimary !== newPrimary) {
             state.table.columnList[oldIndex].isPrimary = state.table.columnList[newIndex].isPrimary
           }
+          if (newPrimary) {
+            state.table.columnList[oldIndex].columnFamily = ''
+          }
           // @ts-ignore
           const currRow = state.table.columnList.splice(oldIndex, 1)[0]
           // @ts-ignore
@@ -824,7 +836,7 @@ export default defineComponent({
 
           if (Object.prototype.hasOwnProperty.call(initTable, key)) {
             // @ts-ignore
-            initTable[key] = (getDetailResult.data)[key] ? (getDetailResult.data)[key] : initTable[key]
+            initTable[key] = getDetailResult.data[key] ? (getDetailResult.data)[key] : initTable[key]
           }
         }
       } else {
@@ -882,6 +894,9 @@ export default defineComponent({
 
       STORAGE_FORMAT_LIST,
       TYPE_OPTION_LIST,
+      TYPE_WITH_LENGTH,
+      TYPE_REQUIRED_LENGTH,
+      TYPE_WITH_SCALE,
 
       columns: COLUMNS,
 

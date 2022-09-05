@@ -37,17 +37,18 @@
       </x-input>
     </x-form-item>
     <x-form-item
-      v-if="['numeric','varchar','char','bit','time','timestamp'].includes(type)"
+      v-if="TYPE_WITH_LENGTH.includes(type)"
       label="长度"
     >
       <x-input-number
         v-model:value="length"
-        :max="type === 'numeric' ? storageFormat === 'orc' ? 38: 1000 : 10485760"
-        :min='1'
+        :max="type === 'DECIMAL' ? 38 : Infinity"
+        :min="TYPE_REQUIRED_LENGTH.includes(type) ? 1 : 0"
+        placeholder="--"
       />
     </x-form-item>
-    <x-form-item v-if="['numeric'].includes(type)" label="精度">
-      <x-input-number v-model:value="scale" :max="length - 1" :min='0'/>
+    <x-form-item v-if="TYPE_WITH_SCALE.includes(type)" label="精度">
+      <x-input-number v-model:value="scale" :max="Math.max(length - 1, 0)" :min='0' placeholder="--"/>
     </x-form-item>
     <x-form-item label="主键">
       <x-switch v-model:checked="isPrimary"/>
@@ -96,7 +97,7 @@ import { message } from 'ant-design-vue-3'
 import * as monaco from 'monaco-editor'
 import useClipboard from 'vue-clipboard3'
 
-import { TIME_DEFAULT_TYPE_LIST, TYPE_OPTION_LIST } from './constant'
+import { TYPE_WITH_LENGTH, TYPE_REQUIRED_LENGTH, TYPE_WITH_SCALE, TYPE_OPTION_LIST } from './constant'
 import { COLOR_PRIMARY_BLUE } from 'lava-fe-lib/lib-common/constant'
 import { debounce } from 'lodash'
 import { getSqlForCreateColumn, getSqlForUpdateColumn } from '@/api/mock'
@@ -347,7 +348,9 @@ export default defineComponent({
       columnNameRules,
 
       TYPE_OPTION_LIST,
-      TIME_DEFAULT_TYPE_LIST,
+      TYPE_WITH_LENGTH,
+      TYPE_REQUIRED_LENGTH,
+      TYPE_WITH_SCALE,
 
       handleCopyValue,
       handleCopySQLDetail,

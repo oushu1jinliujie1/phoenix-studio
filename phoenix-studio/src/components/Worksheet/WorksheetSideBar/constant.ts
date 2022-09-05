@@ -3,69 +3,98 @@
  */
 export const TYPE_OPTION_LIST = [
   {
-    label: 'byte',
-    value: 'byte',
+    label: 'INTEGER',
+    value: 'INTEGER',
   }, {
-    label: 'int2',
-    value: 'int2',
+    label: 'UNSIGNED_INT',
+    value: 'UNSIGNED_INT',
   }, {
-    label: 'int4',
-    value: 'int4',
+    label: 'BIGINT',
+    value: 'BIGINT',
   }, {
-    label: 'int8',
-    value: 'int8',
+    label: 'UNSIGNED_LONG',
+    value: 'UNSIGNED_LONG',
   }, {
-    label: 'money',
-    value: 'money',
+    label: 'TINYINT',
+    value: 'TINYINT',
   }, {
-    label: 'json',
-    value: 'json',
+    label: 'UNSIGNED_TINYINT',
+    value: 'UNSIGNED_TINYINT',
   }, {
-    label: 'float4',
-    value: 'float4',
+    label: 'SMALLINT',
+    value: 'SMALLINT',
   }, {
-    label: 'float8',
-    value: 'float8',
+    label: 'UNSIGNED_SMALLINT',
+    value: 'UNSIGNED_SMALLINT',
   }, {
-    label: 'name',
-    value: 'name',
+    label: 'FLOAT',
+    value: 'FLOAT',
   }, {
-    label: 'bool',
-    value: 'bool',
+    label: 'UNSIGNED_FLOAT',
+    value: 'UNSIGNED_FLOAT',
   }, {
-    label: 'date',
-    value: 'date',
+    label: 'DOUBLE',
+    value: 'DOUBLE',
   }, {
-    label: 'point',
-    value: 'point',
+    label: 'UNSIGNED_DOUBLE',
+    value: 'UNSIGNED_DOUBLE',
   }, {
-    label: 'timetz',
-    value: 'timetz',
+    label: 'DECIMAL',
+    value: 'DECIMAL',
   }, {
-    label: 'timestamptz',
-    value: 'timestamptz',
+    label: 'BOOLEAN',
+    value: 'BOOLEAN',
   }, {
-    label: 'numeric',
-    value: 'numeric',
+    label: 'TIME',
+    value: 'TIME',
   }, {
-    label: 'text',
-    value: 'text',
+    label: 'DATE',
+    value: 'DATE',
   }, {
-    label: 'varchar',
-    value: 'varchar',
+    label: 'TIMESTAMP',
+    value: 'TIMESTAMP',
   }, {
-    label: 'char',
-    value: 'char',
+    label: 'UNSIGNED_TIME',
+    value: 'UNSIGNED_TIME',
   }, {
-    label: 'bit',
-    value: 'bit',
+    label: 'UNSIGNED_DATE',
+    value: 'UNSIGNED_DATE',
   }, {
-    label: 'time',
-    value: 'time',
+    label: 'UNSIGNED_TIMESTAMP',
+    value: 'UNSIGNED_TIMESTAMP',
   }, {
-    label: 'timestamp',
-    value: 'timestamp',
-  },
+    label: 'VARCHAR',
+    value: 'VARCHAR',
+  }, {
+    label: 'CHAR',
+    value: 'CHAR',
+  }, {
+    label: 'BINARY',
+    value: 'BINARY',
+  }, {
+    label: 'VARBINARY',
+    value: 'VARBINARY',
+  }, {
+    label: 'ARRAY',
+    value: 'ARRAY',
+  }
+]
+
+export const TYPE_WITH_LENGTH = [
+  'DECIMAL',
+  'VARCHAR',
+  'CHAR',
+  'BINARY',
+  'ARRAY'
+]
+
+export const TYPE_REQUIRED_LENGTH = [
+  'CHAR',
+  'BINARY'
+]
+
+export const TYPE_WITH_SCALE = [
+  'DECIMAL'
 ]
 
 export const TIME_DEFAULT_TYPE_LIST = [
@@ -78,34 +107,6 @@ export const TIME_DEFAULT_TYPE_LIST = [
   }, {
     label: '自定义表达式',
     value: '自定义表达式',
-  },
-]
-
-/**
- * 分区类型
- */
-export const PARTITION_TYPE_OPTION_LIST = [
-  {
-    label: 'range',
-    value: 'range',
-  },
-  {
-    label: 'list',
-    value: 'list',
-  },
-]
-
-/**
- * 分区类型为 range 时，是否时等值分区的选择
- */
-export const RANGE_PARTITION_TYPE_OPTION_LIST = [
-  {
-    label: '自定义分区',
-    value: 0,
-  },
-  {
-    label: '等值分区',
-    value: 1,
   },
 ]
 
@@ -131,7 +132,7 @@ export const COLUMNS = [
     title: '类型',
     dataIndex: 'type',
     key: 'type',
-    width: '80px',
+    width: '160px',
     slots: { customRender: 'type' },
   },
   {
@@ -167,101 +168,6 @@ export const COLUMNS = [
     key: 'action',
     width: '60px',
     slots: { customRender: 'action' },
-  },
-]
-
-/**
- * 分区区间类型为 range，且非等值区间时的 table 的 columns 定义
- */
-export const COLUMNS_FOR_RANGE_NON_EVEN_PARTITION = [
-  {
-    title: '分区名',
-    dataIndex: 'name',
-    key: 'name',
-    width: '40%',
-    slots: { customRender: 'name' },
-  },
-  {
-    title: '分区开始值',
-    dataIndex: 'partitionBegin',
-    key: 'partitionBegin',
-    width: '40%',
-    slots: { customRender: 'partitionBegin' },
-  },
-  {
-    title: '包含开始值',
-    dataIndex: 'isIncludeBegin',
-    key: 'isIncludeBegin',
-    width: '20%',
-    slots: { customRender: 'isIncludeBegin' },
-  },
-]
-
-/**
- * 分区区间类型为 range，且为等值区间时的 table 的 columns 定义
- */
-export const COLUMNS_FOR_RANGE_EVEN_PARTITION = [
-  {
-    title: '分区名',
-    dataIndex: 'name',
-    key: 'name',
-    width: '15%',
-    slots: { customRender: 'name' },
-  },
-  {
-    title: '分区开始值',
-    dataIndex: 'partitionBegin',
-    key: 'partitionBegin',
-    width: '20%',
-    slots: { customRender: 'partitionBegin' },
-  },
-  {
-    title: '包含开始值',
-    dataIndex: 'isIncludeBegin',
-    key: 'isIncludeBegin',
-    width: '12.5%',
-    slots: { customRender: 'isIncludeBegin' },
-  },
-  {
-    title: '分区结束值',
-    dataIndex: 'partitionEnd',
-    key: 'partitionEnd',
-    width: '20%',
-    slots: { customRender: 'partitionEnd' },
-  },
-  {
-    title: '包含结束值',
-    dataIndex: 'isIncludeEnd',
-    key: 'isIncludeEnd',
-    width: '12.5%',
-    slots: { customRender: 'isIncludeEnd' },
-  },
-  {
-    title: 'interval',
-    dataIndex: 'interval',
-    key: 'interval',
-    width: '20%',
-    slots: { customRender: 'interval' },
-  },
-]
-
-/**
- * 分区区间类型为 list 的 table 的 columns 定义
- */
-export const COLUMNS_FOR_LIST_PARTITION = [
-  {
-    title: '分区名',
-    dataIndex: 'name',
-    key: 'name',
-    width: '30%',
-    slots: { customRender: 'name' },
-  },
-  {
-    title: '分区区间',
-    dataIndex: 'partitionSection',
-    key: 'partitionSection',
-    width: '70%',
-    slots: { customRender: 'partitionSection' },
   },
 ]
 
