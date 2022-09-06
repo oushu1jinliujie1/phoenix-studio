@@ -13,7 +13,7 @@
       </x-input>
     </x-form-item>
     <x-form-item label="索引列">
-      <x-select v-model:value="columns" :options="initialColumns" mode="multiple" is-in-form show-search placeholder="请选择需要索引的列">
+      <x-select :disabled="extra.length" v-model:value="columns" :options="initialColumns" mode="multiple" is-in-form show-search :placeholder="extra.length ? '索引列与额外列不能同时选择' : '请选择需要索引的列'">
         <template #prefixIcon>
           <icon
             image
@@ -23,7 +23,7 @@
       </x-select>
     </x-form-item>
     <x-form-item label="额外列">
-      <x-select v-model:value="extra" :options="initialColumns" mode="multiple" is-in-form show-search placeholder="请选择需要额外索引的列">
+      <x-select :disabled="columns.length" v-model:value="extra" :options="initialColumns" mode="multiple" is-in-form show-search :placeholder="columns.length ? '索引列与额外列不能同时选择' : '请选择需要额外索引的列'">
         <template #prefixIcon>
           <icon
             image
