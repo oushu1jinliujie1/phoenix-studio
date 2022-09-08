@@ -1,0 +1,27 @@
+<configuration>
+    <property>
+        <name>hbase.zookeeper.quorum</name>
+        <value>118.195.235.4,118.195.248.21,118.195.248.34</value>
+        <description>集群zookeeper节点信息</description>
+    </property>
+    <property>
+        <name>hbase.regionserver.wal.codec</name>
+        <value>org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec</value>
+        <description>开启二级索引</description>
+    </property>
+    <property>
+        <name>phoenix.schema.isNamespaceMappingEnabled</name>
+        <value>true</value>
+        <description>开启schema</description>
+    </property>
+    <property>
+        <name>hbase.zookeeper.property.clientPort</name>
+        <value>2181</value>
+        <description>zookeeper端口</description>
+    </property>
+    <property>
+        <name>zookeeper.znode.parent</name>
+        <value>/hbase</value>
+        <description>hbase在zookeeper上的节点根路径</description>
+    </property>
+</configuration>

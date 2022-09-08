@@ -1,0 +1,6 @@
+server:
+  port: 18081
+spring:
+  http:
+    converters:
+      preferred-json-mapper: gson
