@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class MyInitialization implements ApplicationRunner {
 
-    // ApplicationArguments 参数获取形如：--name=zhangsan --gender=nan 格式的命令行参数
     @Override
     public void run(ApplicationArguments args) throws Exception {
         log.info("应用启动了，我准备初始化数据了");
