@@ -58,7 +58,7 @@
         @close="() => { createIndexVisible = false }">
         <CreateIndex
           :init-already-exist-name-list="[]"
-          :initial-columns="[{ value: 'column1' }, { value: 'column2' }, { value: 'column3' }]"
+          :initial-columns="table.columns?.map(column => { return { value: column.name } })"
           @close="() => { createIndexVisible=false }"
           @confirm="handleConfirmCreateIndex"
         />
@@ -68,13 +68,15 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref, reactive, toRefs } from 'vue'
+import { defineComponent, PropType, ref, reactive, toRefs, onMounted } from 'vue'
 import Icon from '@/components/Icon.vue'
 import { throttle } from 'lodash'
 // @ts-ignore
 import smartUI from '@/smart-ui-vue/index.js'
+import { message } from 'ant-design-vue-3'
 import { useModel } from '@/smart-ui-vue/utils'
 import { Table } from '@/components/Worksheet/type'
+import { getSecondaryIndexList, createSecondaryIndex, deleteSecondaryIndex, duplicateTable } from '@/api'
 import CreateIndex from '@/components/Worksheet/WorksheetSideBar/TableDetails/createIndex.vue'
 
 export default defineComponent({
@@ -99,13 +101,33 @@ export default defineComponent({
   emits: [],
   setup(props, context) {
     const statusMap: any = {
-      0: {
-        icon: 'worksheet/creating',
+      'b': {
+        icon: 'secondary-index/building',
         title: '创建中'
       },
-      1: {
-        icon: 'worksheet/success',
-        title: '已创建'
+      'a': {
+        icon: 'secondary-index/active',
+        title: '可用'
+      },
+      'i': {
+        icon: 'secondary-index/inactive',
+        title: '不可用，维护中'
+      },
+      'e': {
+        icon: 'secondary-index/active',
+        title: '可用'
+      },
+      'd': {
+        icon: 'secondary-index/inactive',
+        title: '不可用，维护中'
+      },
+      'x': {
+        icon: 'secondary-index/disabled',
+        title: '不可用'
+      },
+      'r': {
+        icon: 'secondary-index/rebuild',
+        title: '重建中'
       }
     }
     // 表格数据
@@ -115,7 +137,9 @@ export default defineComponent({
 
     const state = reactive({
       createIndexVisible: false,
-      moreVisible: false
+      moreVisible: false,
+      offset: 0,
+      limit: 10
     })
 
     const columns = [
@@ -164,17 +188,33 @@ export default defineComponent({
       },
     ]
 
-    const deleteIndex = (record: any) => {
-      console.log('del')
+    const deleteIndex = async(record: any) => {
+      const resp = await deleteSecondaryIndex({
+        schemaName: props.schema,
+        tableName: props.table.name,
+        indexName: record.name
+      })
+      if (resp.meta.success) {
+        message.success('删除二级索引成功')
+        initSecondaryIndexList()
+      } else {
+        message.error(`删除二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
+      }
     }
 
-    const loadMore = () => {
-      data.value.push({
-        name: 'IndexName',
-        columns: 'column1, column2, column3, column4, column5, column6',
-        extra: 'extra1, extra2, extra3, extra4, extra5, extra6',
-        status: 0
+    const loadMore = async() => {
+      state.offset += state.limit
+      const resp = await getSecondaryIndexList({
+        schemaName: props.schema,
+        tableName: props.table.name,
+        offset: state.offset,
+        limit: state.limit
       })
+      if (resp.meta.success) {
+        data.value = [...data.value, ...resp.data]
+      } else {
+        message.error(`获取二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
+      }
     }
     const loadMoreWithDebounce = throttle(loadMore, 500)
 
@@ -183,9 +223,42 @@ export default defineComponent({
       state.createIndexVisible = true
     }
 
-    const handleConfirmCreateIndex = () => {
-      console.log('handleCreate')
+    const handleConfirmCreateIndex = async(form: any) => {
+      const resp = await createSecondaryIndex({
+        schemaName: props.schema,
+        tableName: props.table.name,
+        indexName: form.name,
+        attrs: form.columns,
+        includesAttrs: form.extra
+      })
+      if (resp.meta.success) {
+        message.success('新建二级索引成功')
+        initSecondaryIndexList()
+        state.createIndexVisible = false
+      } else {
+        message.error(`新建二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
+      }
     }
+
+    const initSecondaryIndexList = async() => {
+      state.limit += state.offset
+      state.offset = 0
+      const resp = await getSecondaryIndexList({
+        schemaName: props.schema,
+        tableName: props.table.name,
+        offset: state.offset,
+        limit: state.limit
+      })
+      if (resp.meta.success) {
+        data.value = resp.data
+      } else {
+        message.error(`获取二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
+      }
+    }
+
+    onMounted(() => {
+      initSecondaryIndexList()
+    })
 
     return {
       ...toRefs(state),

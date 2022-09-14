@@ -15,32 +15,8 @@ module.exports = {
     },
     port: SERVER_PORT,
     proxy: {
-      '/api/worksheet': {
-        target: 'https://82.157.60.107:1631',
-        ws: true,
-        changOrigin: true, // 允许跨域
-        pathRewrite: {
-          '^/api/worksheet': '/' // 请求的时候使用这个api就可以
-        }
-      },
-      '/api/ds': {
-        target: 'https://82.157.60.107:1631',
-        ws: true,
-        changOrigin: true, // 允许跨域
-        pathRewrite: {
-          '^/api': '' // 请求的时候使用这个api就可以
-        }
-      },
-      '/api/ds/dbmeta': {
-        target: 'https://82.157.60.107:1631',
-        ws: true,
-        changOrigin: true, // 允许跨域
-        pathRewrite: {
-          '^/api': '' // 请求的时候使用这个api就可以
-        }
-      },
       '/api': {
-        target: 'https://82.157.60.107',
+        target: 'http://118.195.235.4:18081',
         ws: true,
         changOrigin: true,
         pathRewrite: {

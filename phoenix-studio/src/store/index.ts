@@ -1,11 +1,9 @@
 import { createStore } from 'vuex'
 import global from './global'
-import settings from '@/store/settings'
 
 const store = createStore({
   modules: {
-    global,
-    settings
+    global
   },
   state: {
   },

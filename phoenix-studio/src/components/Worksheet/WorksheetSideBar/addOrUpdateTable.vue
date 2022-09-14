@@ -9,7 +9,7 @@
               表名
             </div>
             <div class="v-oushudb-add-table-form-container-item-control" style="position: relative">
-              <x-input v-model:value="table.name" :rules="tableNameRules" placeholder="请输入表名">
+              <x-input v-if="isAdd" v-model:value="table.name" :rules="tableNameRules" placeholder="请输入表名">
                 <template #prefix>
                   <icon class="hover-translateY-2" image name="worksheet/table_info_name_two_color"/>
                 </template>
@@ -22,19 +22,22 @@
                   />
                 </x-tooltip>
               </x-input>
+              <div style="padding: 15px 0;" v-else>{{ table.name || '--' }}</div>
             </div>
           </div>
           <!-- 表备注 -->
           <div class="v-oushudb-add-table-form-container-item">
             <div class="v-oushudb-add-table-form-container-item-label">表备注（选填）</div>
             <div class="v-oushudb-add-table-form-container-item-control">
-              <a-textarea v-model:value="table.comment" auto-size placeholder="请输入备注"/>
+              <a-textarea v-if="isAdd" v-model:value="table.comment" auto-size placeholder="请输入备注"/>
               <!-- custom prefix icon -->
               <icon
+                v-if="isAdd"
                 class="v-oushudb-add-table-form-container-item-control-prefix-icon"
                 image
                 name="worksheet/table_info_comment_two_color"
               />
+              <div style="padding: 15px 0;" v-else>{{ table.comment || '--' }}</div>
             </div>
           </div>
           <!-- split on -->
@@ -43,7 +46,7 @@
               split on
             </div>
             <div class="v-oushudb-add-table-form-container-item-control" style="position: relative">
-              <x-input v-model:value="table.split_on" :rules="tableSplitRules" placeholder="请输入分隔，以逗号区分">
+              <x-input v-if="isAdd" v-model:value="table.split_on" :rules="tableSplitRules" placeholder="请输入分隔，以逗号区分">
                 <template #prefix>
                   <icon class="hover-translateY-2" image name="worksheet/table_info_comment_two_color"/>
                 </template>
@@ -56,15 +59,16 @@
                   />
                 </x-tooltip>
               </x-input>
+              <div style="padding: 15px 0;" v-else>{{ table.split_on || '--' }}</div>
             </div>
           </div>
           <!-- SALT_BUCKETS -->
           <div class="v-oushudb-add-table-form-container-item">
-            <div class="v-oushudb-add-table-form-container-item-label" style="padding-top: 15px;">
+            <div class="v-oushudb-add-table-form-container-item-label" :style="isAdd ? 'padding-top: 15px;' : ''">
               SALT_BUCKETS
             </div>
             <div class="v-oushudb-add-table-form-container-item-control" style="position: relative">
-              <div class="v-oushudb-add-table-form-container-item-number">
+              <div v-if="isAdd" class="v-oushudb-add-table-form-container-item-number">
                 <x-input-number
                   placeholder="0-256"
                   v-model:value="table.salt_buckets"
@@ -72,12 +76,13 @@
                   :min="0"
                 />
               </div>
+              <div style="padding: 15px 0;" v-else>{{ table.split_on || '--' }}</div>
             </div>
           </div>
           <!-- 列信息 -->
           <div class="v-oushudb-add-table-form-container-item" style="margin-top: 20px;margin-bottom: 20px;">
             <div class="v-oushudb-add-table-form-container-item-label">列信息</div>
-            <div class="v-oushudb-add-table-form-container-item-control">
+            <div v-if="isAdd" class="v-oushudb-add-table-form-container-item-control">
               <x-button type="primary" @click="handleAddColumnWithDebounce">
                 <icon color="white" name="worksheet/column_add"/>
                 新建列
@@ -99,6 +104,7 @@
             <template #name="{ record }">
               <!-- 根据 hover 控制 display 来切换编辑状态 -->
               <icon
+                v-if="isAdd"
                 class="v-oushudb-add-table-form-column-table-handle"
                 color="primary"
                 name="worksheet/sort"
@@ -112,6 +118,7 @@
                     <div style="color: #D74472;">{{ validateColumnName(record.name) }}</div>
                   </template>
                   <x-input
+                    :disabled="!isAdd"
                     v-model:value="record.name"
                     :rules="columnNameRules"
                     no-underline
@@ -126,6 +133,7 @@
               <!-- 根据 hover 控制 display 来切换编辑状态 -->
               <div>
                 <x-input
+                  :disabled="!isAdd"
                   v-model:value="record.comment"
                   no-underline
                   origin-form
@@ -137,6 +145,7 @@
             <template #type="{ record }">
               <!-- 仅有编辑状态 -->
               <x-select
+                :disabled="!isAdd"
                 v-model:value="record.type"
                 :options="TYPE_OPTION_LIST"
                 class="raw"
@@ -156,6 +165,7 @@
                   <div style="color: #D74472;text-align: justify;">{{ validateColumnFamily(record.columnFamily) }}</div>
                 </template>
                 <x-input
+                  :disabled="!isAdd"
                   v-model:value="record.columnFamily"
                   :rules="columnFamilyRules"
                   no-underline
@@ -168,14 +178,15 @@
               </div>
             </template>
             <!-- 长度 -->
-            <template #length="{ record }">
+            <template #scale="{ record }">
               <!-- 根据 hover 控制 display 来切换编辑状态 -->
-              <div v-if="TYPE_WITH_LENGTH.includes(record.type)"
+              <div v-if="TYPE_WITH_SCALE.includes(record.type)"
                    class="v-oushudb-add-table-basic-info-table-cell">
                 <x-input-number
-                  v-model:value="record.length"
+                  :disabled="!isAdd"
+                  v-model:value="record.scale"
                   :max="record.type === 'DECIMAL' ? 38 : Infinity"
-                  :min="TYPE_REQUIRED_LENGTH.includes(record.type) ? 1 : 0"
+                  :min="TYPE_REQUIRED_SCALE.includes(record.type) ? 1 : 0"
                   placeholder="--"
                   class="raw"/>
               </div>
@@ -184,10 +195,10 @@
               </div>
             </template>
             <!-- 精度，仅 decimal 有 -->
-            <template #scale="{ record }">
+            <template #precision="{ record }">
               <!-- 根据 hover 控制 display 来切换编辑状态 -->
-              <div v-if="TYPE_WITH_SCALE.includes(record.type)" class="v-oushudb-add-table-basic-info-table-cell">
-                <x-input-number v-model:value="record.scale" :max="Math.max(record.length - 1, 0)" :min='0' placeholder="--" class="raw"/>
+              <div v-if="TYPE_WITH_PRECISION.includes(record.type)" class="v-oushudb-add-table-basic-info-table-cell">
+                <x-input-number :disabled="!isAdd" v-model:value="record.precision" :max="Math.max(record.scale - 1, 0)" :min='0' placeholder="--" class="raw"/>
               </div>
               <div v-else>
                 --
@@ -198,11 +209,11 @@
               <x-tooltip
                 title="主键列之间必须相邻，且会在表中置顶"
               >
-                <a-checkbox v-model:checked="record.isPrimary" @change="(event: any) => columnSelectChange(event, record)"/>
+                <a-checkbox :disabled="!isAdd" v-model:checked="record.isPrimary" @change="(event: any) => columnSelectChange(event, record)"/>
               </x-tooltip>
             </template>
             <!-- 操作区域 -->
-            <template #action="{ record }">
+            <template v-if="isAdd" #action="{ record }">
               <x-tooltip placement="topLeft" title="编辑">
                 <x-button
                   icon-name="worksheet/edit"
@@ -229,7 +240,7 @@
         </div>
     </x-spin>
     <!-- SQL 详情挂载 -->
-    <div class="v-oushudb-add-table-form-sql-detail">
+    <div v-if="isAdd" class="v-oushudb-add-table-form-sql-detail">
       <div class="v-oushudb-add-table-form-sql-detail-header">
         <span>SQL详情</span>
         <!-- 复制、刷新按钮 -->
@@ -245,7 +256,7 @@
       </div>
     </div>
     <!-- 提交、取消按钮组 -->
-    <div class="v-oushudb-add-table-form-btn-container">
+    <div v-if="isAdd" class="v-oushudb-add-table-form-btn-container">
       <x-button :disabled="getTableDetailLoading" type="primary" @click="handleSubmit">
         <icon name="worksheet/submit"/>
         提交
@@ -285,7 +296,7 @@ import smartUUI from '@/smart-ui-vue/index.js'
 import Icon from '@/components/Icon.vue'
 import { RuleObject } from 'ant-design-vue/es/form/interface'
 import { message } from 'ant-design-vue-3'
-import { debounce, last, throttle } from 'lodash'
+import { debounce, throttle } from 'lodash'
 import * as monaco from 'monaco-editor'
 import useClipboard from 'vue-clipboard3'
 // @ts-ignore
@@ -294,18 +305,17 @@ import {
   COLUMNS,
   STORAGE_FORMAT_LIST,
   TYPE_OPTION_LIST,
-  TYPE_WITH_LENGTH,
-  TYPE_REQUIRED_LENGTH,
+  TYPE_REQUIRED_SCALE,
   TYPE_WITH_SCALE,
+  TYPE_WITH_PRECISION,
 } from './constant'
 import addOrUpdateColumnBase from '@/components/Worksheet/WorksheetSideBar/addOrUpdateColumnBase.vue'
 import { useStore } from 'vuex'
 import { Table } from '@/components/Worksheet/type'
 import { useI18n } from 'vue-i18n'
 import { translateErrorMessage } from 'lava-fe-lib/lib-common/i18n'
-import { windowOpen } from '@/smart-ui-vue/utils'
-import { executeSql, getColumnList, getSqlForCreateTable, getSqlForUpdateTable, getTableDetails } from '@/api/mock'
-import { checkIsInstanceName, CHECK_INSTANCE_NAME_RULE_DESCRIPTION } from '@/lib/regexp'
+import { executeSql, getColumnList, getSqlForCreateTable, getTableDetails } from '@/api'
+import { checkIsInstanceName } from '@/lib/regexp'
 import { format } from 'sql-formatter'
 
 import('monaco-themes/themes/Tomorrow.json')
@@ -343,7 +353,7 @@ let columnIdCount: number = 1
 /**
  * 列的默认值
  */
-export function getDefaultColumn(): any {
+export function getDefaultColumn(pk?: 'isPrimary'): any {
   return {
     id: columnIdCount,
     columnDeletePopConfirmVisible: false,
@@ -351,9 +361,9 @@ export function getDefaultColumn(): any {
     type: 'INTEGER',
     comment: '',
     columnFamily: '',
-    isPrimary: false,
-    length: 10,
-    scale: 2,
+    isPrimary: pk ? true : false,
+    scale: 10,
+    precision: 2,
   }
 }
 
@@ -391,9 +401,6 @@ export default defineComponent({
     let sortable: any = null;
 
     const state = reactive({
-      // tab key
-      tabsActiveKey: 'basicInformation' as 'basicInformation' | 'partitionInformation',
-
       // 编辑表，请求数据时 loading 状态
       getTableDetailLoading: false,
 
@@ -403,7 +410,7 @@ export default defineComponent({
         comment: '',
         split_on: '',
         salt_buckets: 0,
-        columnList: [getDefaultColumn()] as any[],
+        columnList: [getDefaultColumn('isPrimary')] as any[],
       },
 
       // column drawer
@@ -444,6 +451,10 @@ export default defineComponent({
         return Promise.reject('请输入表名')
       }
 
+      if (!checkIsInstanceName(value)) {
+        return Promise.reject('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串')
+      }
+
       if (props.initAlreadyExistNameList?.filter(alreadyName => alreadyName !== props.initTable?.name).includes(state.table.name)) {
         return Promise.reject('该表名已存在，请检查后重新填写')
       }
@@ -459,7 +470,7 @@ export default defineComponent({
     ]
 
     const tableSplitRules = [
-      { required: true, validator: tableNameValidator },
+      { required: true },
     ]
 
     /**
@@ -560,33 +571,27 @@ export default defineComponent({
           return
         }
 
-        // todo: 参数检查
-
-        if (props.isAdd) {
-          getCreateTableSQLDetail()
-        } else {
-          getUpdateTableSQLDetail()
-        }
+        getCreateTableSQLDetail()
 
         // 数据转化
         async function getCreateTableSQLDetail() {
           const data: any = {
-            name: state.table.name,
-            split_on: state.table.split_on,
-            salt_buckets: state.table.salt_buckets,
+            schemaName: props.schema,
+            tableName: state.table.name,
+            comment: state.table.comment,
+            splitOn: state.table.split_on,
+            saltBuckets: state.table.salt_buckets,
             columns: state.table.columnList.map(column => {
               return {
-                name: column.name,
-                type: column.type,
-                length: column.length,
-                scale: column.scale,
-                isPrimary: column.isPrimary,
+                familyName: column.columnFamily,
+                columnName: column.name,
                 comment: column.comment,
-                column_family: column.columnFamily
+                dataType: column.type,
+                scale: TYPE_WITH_SCALE.indexOf(column.type) !== -1 ? column.scale : 0,
+                precision: TYPE_WITH_PRECISION.indexOf(column.type) !== -1 ? column.precision : 0,
+                pk: column.isPrimary,
               }
             }),
-            comment: state.table.comment,
-            schema: props.schema,
           }
 
 
@@ -601,60 +606,23 @@ export default defineComponent({
             editor.setValue('')
           }
         }
-
-        async function getUpdateTableSQLDetail() {
-          const initTable = props.initTable as Table
-
-          const data: any = {
-            oid: initTable.oid,
-            name: state.table.name,
-            split_on: state.table.split_on,
-            salt_buckets: state.table.salt_buckets,
-            columns: state.table.columnList.map(column => {
-              return {
-                name: column.name,
-                type: column.type,
-                length: column.length,
-                scale: column.scale,
-                isPrimary: column.isPrimary,
-                comment: column.comment,
-                column_family: column.columnFamily
-              }
-            }),
-            comment: state.table.comment,
-            schema: props.initTable?.schema ?? '',
-          }
-
-          const result = await getSqlForUpdateTable(data)
-
-          if (result.meta.success) {
-            originSQL.value = typeof result.data === 'string' ? result.data : result.data.join('\n')
-            editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n'), {
-              language: 'db2',
-            }))
-          } else {
-            editor.setValue('')
-          }
-        }
       }, 800)
 
     const handleSubmit = async() => {
       if (!tableBasicInfoCheck()) {
-        // 基本参数检查未通过
-        state.tabsActiveKey = 'basicInformation'
         return
       }
 
       if (state.table.salt_buckets === null) state.table.salt_buckets = 0
 
-      const executeResult = await executeSql({ statement: originSQL.value })
+      const executeResult = await executeSql(originSQL.value)
 
-      if (executeResult.meta.success && executeResult.data?.error === '') {
+      if (executeResult.meta.success) {
         // 创建表成功
         message.success(`${props.isAdd ? '创建' : '修改'}表成功`)
         context.emit('close', true)
       } else {
-        message.error(`${props.isAdd ? '创建' : '修改'}表失败: ${executeResult.data?.error || getError(executeResult) || '无失败提示'}`, 5)
+        message.error(`${props.isAdd ? '创建' : '修改'}表失败: ${executeResult.meta?.message || getError(executeResult) || '无失败提示'}`, 5)
       }
 
       /**
@@ -663,6 +631,11 @@ export default defineComponent({
       function tableBasicInfoCheck(): boolean {
         if (state.table.name === '') {
           message.warning('请输入表名！')
+          return false
+        }
+
+        if (!checkIsInstanceName(state.table.name)) {
+          message.warning('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的表名')
           return false
         }
 
@@ -678,10 +651,13 @@ export default defineComponent({
         }
         if (state.table.columnList.some(column => {
           return column.name === ''
-            // todo: 临时操作
             || (!TYPE_OPTION_LIST.map(item => item.value).includes(column.type))
         })) {
           message.warning('请检查所有列名、选择列类型是否已输入！')
+          return false
+        }
+        if (state.table.columnList.every(column => !column.isPrimary)) {
+          message.warning('请至少勾选一个主键列！')
           return false
         }
 
@@ -730,7 +706,10 @@ export default defineComponent({
      * 新增列
      */
     const handleAddColumn = () => {
-      // ...
+      if (state.table.columnList.length === 0) {
+        state.table.columnList.push(getDefaultColumn('isPrimary'))
+        return
+      }
       state.table.columnList.push(getDefaultColumn())
     }
 
@@ -779,8 +758,8 @@ export default defineComponent({
       columnWillEdit.type = column.type
       columnWillEdit.comment = column.comment
       columnWillEdit.columnFamily = column.columnFamily
-      columnWillEdit.length = column.length
       columnWillEdit.scale = column.scale
+      columnWillEdit.precision = column.precision
       columnWillEdit.isPrimary = column.isPrimary
     }
 
@@ -825,9 +804,10 @@ export default defineComponent({
       // 获取表的详细数据、列信息
 
       // 详细信息
-      const getDetailResult = await getTableDetails(
-        initTable.oid,
-      )
+      const getDetailResult = await getTableDetails({
+        schemaName: props.schema,
+        tableName: initTable.name
+      })
 
       if (getDetailResult.meta.success) {
         for (const key in initTable) {
@@ -845,12 +825,24 @@ export default defineComponent({
       }
 
       // 列信息
-      const getColumnListResult = await getColumnList(
-        initTable.oid,
-      )
+      const getColumnListResult = await getColumnList({
+        schemaName: props.schema,
+        tableName: initTable.name,
+        offset: 0,
+        limit: -1
+      })
 
       if (getColumnListResult.meta.success) {
-        initTable.columns = getColumnListResult.data ?? []
+        initTable.columns = getColumnListResult.data ? getColumnListResult.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
+          return {
+            name: column.COLUMN_NAME,
+            schema: column.TABLE_SCHEM,
+            table: column.TABLE_NAME,
+            column_family: column.COLUMN_FAMILY,
+            order: column.ORDINAL_POSITION,
+            primary: Boolean(column.KEY_SEQ)
+          }
+        }) : []
       } else {
         message.error(`获取列信息失败：${getError(getColumnListResult)}`)
         return
@@ -870,15 +862,13 @@ export default defineComponent({
           columnDeletePopConfirmVisible: false,
           // 列名，也可做唯一值
           name: column.name,
-          type: column.type,
+          type: column.type || 'INTEGER',
           comment: column.comment,
           columnFamily: column.column_family,
           // 是否允许为空
           isPrimary: column.primary,
-          length: column.length,
-          scale: column.scale,
-          att_rel_id: column.att_rel_id,
-          att_num: column.att_num,
+          scale: column.scale || 10,
+          precision: column.precision || 2,
         }
       }))
 
@@ -894,11 +884,11 @@ export default defineComponent({
 
       STORAGE_FORMAT_LIST,
       TYPE_OPTION_LIST,
-      TYPE_WITH_LENGTH,
-      TYPE_REQUIRED_LENGTH,
       TYPE_WITH_SCALE,
+      TYPE_REQUIRED_SCALE,
+      TYPE_WITH_PRECISION,
 
-      columns: COLUMNS,
+      columns: props.isAdd ? COLUMNS : COLUMNS.slice(0, -1),
 
       tableNameRules,
       tableSplitRules,
@@ -906,8 +896,6 @@ export default defineComponent({
       columnFamilyRules,
       validateColumnName,
       validateColumnFamily,
-
-      windowOpen,
 
       handleCopySQLDetail,
       handleRefreshSQLDetail,
@@ -924,8 +912,8 @@ export default defineComponent({
 
       handleColumnTypeChange: (value: string, record: any) => {
         if (['timetz', 'timestamptz'].includes(value)) {
-          record.length = undefined
           record.scale = undefined
+          record.precision = undefined
         }
       },
     }

@@ -176,8 +176,8 @@ export interface ColumnResData {
   comment: string,
   column_family: string,
   type: string,
-  length: number,
   scale: number,
+  precision: number,
   primary: boolean,
   // 列所属表单的 oid
   att_rel_id?: string,

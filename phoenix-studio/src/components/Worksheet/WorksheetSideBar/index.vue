@@ -137,7 +137,7 @@
                     <template #expandIcon="{ isActive }">
                       <icon :style="{transform: `rotate(${isActive?'0deg' : '-90deg'})`}" image name="worksheet/arrow"/>
                     </template>
-                    <a-collapse-panel v-for="_table in (table.list as any[])" :key="_table.oid">
+                    <a-collapse-panel v-for="_table in (table.list as any[])" :key="_table.name">
                       <!-- 表 -->
                       <template #header>
                         <div
@@ -148,15 +148,15 @@
                             <icon name="worksheet/table_add"/>{{ _table.name }}
                           </span>
                           <span @click.stop="()=>{}">
-                            <x-tooltip placement="topLeft" title="编辑">
-                              <x-button icon-name="worksheet/edit" type="text"
+                            <x-tooltip placement="topLeft" title="表详情">
+                              <x-button icon-name="worksheet/preview" type="text"
                                         @click="() => handleEditTableIconClick(_table)"/>
                             </x-tooltip>
                             <x-tooltip placement="topLeft" title="删除">
                               <x-button icon-name="worksheet/delete" type="text"
                                         @click="() => handleDeleteTableIconClick(_table)"/>
                             </x-tooltip>
-                            <a-dropdown :key="_table.oid" @visibleChange="(visible: boolean)=>handleTableDropdownVisibleChange(visible, _table)">
+                            <a-dropdown :key="_table.name" @visibleChange="(visible: boolean)=>handleTableDropdownVisibleChange(visible, _table)">
                               <x-button icon-name="worksheet/ellipsis" type="text"/>
                               <template #overlay>
                                 <x-menu @click="_table.ellipsisHover = false">
@@ -212,8 +212,8 @@
                           <icon image name="worksheet/field_blue"/>{{ column.name }}
                         </span>
                           <span>
-                          <x-tooltip placement="bottomLeft" title="编辑列">
-                            <x-button icon-name="worksheet/edit" type="text"
+                          <x-tooltip placement="bottomLeft" title="列详情">
+                            <x-button icon-name="worksheet/preview" type="text"
                                       @click="() => handleEditColumnIconClick(_table, column)"/>
                           </x-tooltip>
                           <x-tooltip placement="bottomLeft" title="删除列">
@@ -388,7 +388,7 @@
       </div>
   </div>
 
-  <!-- （数据库｜模式）（新建｜编辑）-->
+  <!-- （数据库｜模式）（新建｜查看）-->
   <x-drawer
     title="新建模式"
     :visible="addSchemaDrawerVisible"
@@ -405,7 +405,7 @@
       }"
     />
   </x-drawer>
-  <!-- 表（新建｜编辑） -->
+  <!-- 表（新建｜查看） -->
   <x-drawer
     :visible="addOrEditTableDrawerVisible"
     class="v-oushudb-add-table-drawer"
@@ -414,7 +414,7 @@
     @close="() => { addOrEditTableDrawerVisible = false; tableToEdit.ellipsisHover = false; }"
   >
     <template #title>
-      {{ `${isAddTable ? '新建' : '编辑'}基础表` }}
+      {{ `${isAddTable ? '新建' : '查看'}基础表` }}
       <!-- <x-tooltip v-if="isAddTable" placement="bottomLeft" title="点击查看如何建表">
         <x-button icon-name="worksheet/info_hollow" type="text"
                   @click="windowOpen('http://www.oushu.com/docs/ch/data-definition-tables.html', '_blank')"/>
@@ -428,14 +428,11 @@
       @close="(isSuccess: any) => {
         addOrEditTableDrawerVisible = false;
         tableToEdit.ellipsisHover = false;
-        if((isAddTable && isSuccess)
-        || (!isAddTable && isSuccess
-        && schemaSelectedName === tableToEdit.schema))
-          handleRefreshTable(isAddTable)
+        if(isAddTable && isSuccess) handleRefreshTable(isAddTable)
       }"
     />
   </x-drawer>
-  <!-- 字段（新建｜编辑） -->
+  <!-- 字段（新建｜查看） -->
   <AddOrUpdateColumnForExistTable
     v-model:visible="addOrEditColumnDrawerVisible"
     :init-already-exist-name-list="tableInWhichColumnToOperateReside?.columns?.filter(item => item.name !== columnToEdit?.name).map(item => item.name)"
@@ -453,7 +450,6 @@
       <span>删除模式</span>
     </template>
     <p style="margin-bottom: 30px">删除模式会导致部分资源无法运行，您确认要删除模式 {{ schemaSelectedName }} 吗？</p>
-    <x-checkbox v-model:checked="schemaDeleteCascade">同时级联删除</x-checkbox>
     <template #footer>
       <x-button :loading="schemaDeleteLoading" style="width: 100%;" type="primary" @click="handleDeleteSchema">确认删除
       </x-button>
@@ -466,7 +462,6 @@
       <span>删除表</span>
     </template>
     <p style="margin-bottom: 30px">删除表会导致部分资源无法运行，您确认要删除表 {{ tableToDelete && tableToDelete.name }} 吗？</p>
-    <x-checkbox v-model:checked="tableDeleteCascade">同时级联删除</x-checkbox>
     <template #footer>
       <x-button :loading="tableDeleteLoading" style="width: 100%;" type="primary" @click="handleDeleteTable">确认删除
       </x-button>
@@ -491,7 +486,6 @@
       <span>删除查询表</span>
     </template>
     <p style="margin-bottom: 30px">删除查询表会导致部分资源无法运行，您确认要删除查询表 {{ searchTableToDelete && searchTableToDelete.name }} 吗？</p>
-    <x-checkbox v-model:checked="searchTableDeleteCascade">同时级联删除</x-checkbox>
     <template #footer>
       <x-button :loading="searchTableDeleteLoading" style="width: 100%;" type="primary" @click="handleDeleteSearchTable">确认删除
       </x-button>
@@ -576,11 +570,14 @@ import { debounce } from 'lodash'
 import { isProduction, windowOpen } from '@/smart-ui-vue/utils'
 import {
   getColumnList,
+  deleteColumn,
   getSchemaList,
+  deleteSchema,
   getTableList,
+  deleteTable,
   getSearchTableList,
-} from '@/api/mock'
-import { ColumnResData, Schema, Table } from '@/components/Worksheet/type'
+} from '@/api'
+import { ColumnResData, Table } from '@/components/Worksheet/type'
 import AddOrUpdateSchema from '@/components/Worksheet/WorksheetSideBar/addOrUPdateSchema.vue'
 import AddOrUpdateTable from '@/components/Worksheet/WorksheetSideBar/addOrUpdateTable.vue'
 import AddOrUpdateColumnForExistTable from '@/components/Worksheet/WorksheetSideBar/addOrUpdateColumnForExistTable.vue'
@@ -625,21 +622,19 @@ export default defineComponent({
       addSchemaDrawerVisible: false,
 
       // 模式选项
-      schemaList: [] as Schema[],
+      schemaList: [] as any[],
       schemaSelectedName: undefined as string | undefined,
-      schemaToDelete: undefined as undefined | Schema,
+      schemaToDelete: undefined as any,
       schemaDeleteModalVisible: false,
       schemaDeleteLoading: false,
-      schemaDeleteCascade: false,
 
-      // 基础表新建 or 编辑 drawer visible
+      // 基础表新建 or 查看 drawer visible
       addOrEditTableDrawerVisible: false,
       isAddTable: false,
       tableToEdit: {} as OwnTable,
       tableToDelete: undefined as undefined | OwnTable,
       tableDeleteModalVisible: false,
       tableDeleteLoading: false,
-      tableDeleteCascade: false,
       tableCollapseKeys: [] as string[],
 
       // 字段
@@ -660,7 +655,6 @@ export default defineComponent({
       searchTableToDelete: undefined as undefined | ColumnResData,
       searchTableDeleteModalVisible: false,
       searchTableDeleteLoading: false,
-      searchTableDeleteCascade: false,
 
       activeTabKey: 'table',
       table: getDefaultTable(),
@@ -709,14 +703,16 @@ export default defineComponent({
 
       if (result.meta.success) {
         const META_SCHEMA = [
-          'pg_catalog_magma',
-          'pg_catalog',
-          'pg_bitmapindex',
-          'pg_aoseg',
-          'information_schema',
-          'hawq_toolkit',
+          'SYSTEM',
+          'CT',
         ]
-        state.schemaList = (result.data ?? []).filter((schema: any) => !META_SCHEMA.includes(schema.name))
+        state.schemaList = (result.data ?? [])
+          .filter((schema: any) => !META_SCHEMA.includes(schema.TABLE_SCHEM))
+          .map((schema: any) => {
+            return {
+              name: schema.TABLE_SCHEM
+            }
+          })
         if (state.schemaList.some(schema => schema.name === state.schemaSelectedName)) {
           // do nothing.
         } else {
@@ -773,7 +769,7 @@ export default defineComponent({
     /**
      * 删除模式
      */
-    const handleDeleteSchemaIconClick = async(dropCascade: boolean) => {
+    const handleDeleteSchemaIconClick = async() => {
       state.schemaDeleteModalVisible = true
     }
 
@@ -783,8 +779,17 @@ export default defineComponent({
       state.schemaDeleteLoading = true
 
       // 获取删除的SQL语句后，执行SQL
+      const resp = await deleteSchema(state.schemaSelectedName)
+
+      if (resp.meta?.success) {
+        message.success('删除模式成功')
+        handleRefreshSchema()
+      } else {
+        message.error(`删除模式失败: ${resp.meta?.message || '无失败提示'}`)
+      }
 
       state.schemaDeleteLoading = false
+      state.schemaDeleteModalVisible = false
     }
 
     // -----------------------------
@@ -797,21 +802,24 @@ export default defineComponent({
       if (state.schemaSelectedName === undefined) return
 
       state.table.spinning = true
-      const result = await getTableList(
-        state.schemaSelectedName,
-        state.table.pageSize,
-        (state.table.current - 1) * state.table.pageSize,
-        state.table.searchValue ? `%${state.table.searchValue}%` : '',
-      )
+      const result = await getTableList({
+        schemaName: state.schemaSelectedName,
+        tableName: state.table.searchValue || '',
+        offset: (state.table.current - 1) * state.table.pageSize,
+        limit: state.table.pageSize,
+      })
 
       if (result.meta.success) {
         // state.table.searchValue = ''
         state.tableCollapseKeys = []
-        state.table.total = result.data.totalCount
+        state.table.total = result.data.count
         // todo: 为空时返回的是 null，应返回 []，记得和后端对接
         state.table.list = (result.data.data ?? []).map((table: any) => ({
-          ...table,
+          name: table.TABLE_NAME,
+
           loading: false,
+          offset: 0,
+          limit: 10
         }))
       } else {
         message.error(`刷新表失败：${getError(result)}`)
@@ -829,7 +837,7 @@ export default defineComponent({
       state.table.searchValue = ''
 
       await handleGetTableList()
-      state.tableCollapseKeys = (isAddTable === false && state.tableToEdit.oid) ? [state.tableToEdit.oid] : []
+      state.tableCollapseKeys = (isAddTable === false && state.tableToEdit.name) ? [state.tableToEdit.name] : []
       message.info('刷新表成功')
     }
 
@@ -860,13 +868,25 @@ export default defineComponent({
 
     const handleDeleteTable = async() => {
       if (!state.tableToDelete) return
-      if (state.tableToDelete.schema === '') return
+      if (!state.schemaSelectedName) return
 
       state.tableDeleteLoading = true
 
       // 获取删除表的SQL，执行SQL
+      const resp = await deleteTable({
+        schemaName: state.schemaSelectedName,
+        tableName: state.tableToDelete.name
+      })
+
+      if (resp.meta?.success) {
+        message.success('删除表成功')
+        handleRefreshTable()
+      } else {
+        message.error(`删除表失败: ${resp.meta?.message || '无失败提示'}`)
+      }
 
       state.tableDeleteLoading = false
+      state.tableDeleteModalVisible = false
     }
 
     /**
@@ -880,6 +900,7 @@ export default defineComponent({
      * 二级索引
      */
     const handleShowTableSecondaryIndexClick = (table: any) => {
+      handleRefreshColumnsClick(table)
       state.detailTableData = table
       state.showTableSecondaryIndex = true
     }
@@ -888,6 +909,7 @@ export default defineComponent({
      * 关联信息
      */
     const handleConnectionInfoClick = (table: any) => {
+      handleRefreshColumnsClick(table)
       state.detailTableData = table
       state.showTableConnectionInfo = true
     }
@@ -932,16 +954,29 @@ export default defineComponent({
      * 刷新当前 table 的 columns
      */
     const handleRefreshColumnsClick = async(table: OwnTable | undefined) => {
+      if (state.schemaSelectedName === undefined) return
       if (table === undefined) return
 
       table.loading = true
       try {
-        const result = await getColumnList(
-          table.oid,
-        )
+        const result = await getColumnList({
+          schemaName: state.schemaSelectedName,
+          tableName: table.name,
+          offset: 0,
+          limit: -1
+        })
 
         if (result.meta.success) {
-          table.columns = result.data ?? []
+          table.columns = result.data ? result.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
+            return {
+              name: column.COLUMN_NAME,
+              schema: column.TABLE_SCHEM,
+              table: column.TABLE_NAME,
+              column_family: column.COLUMN_FAMILY,
+              order: column.ORDINAL_POSITION,
+              primary: Boolean(column.KEY_SEQ)
+            }
+          }) : []
         }
       } catch (e) {
         message.error(`刷新列失败：${e}`)
@@ -991,21 +1026,33 @@ export default defineComponent({
     }
 
     watch(() => state.tableCollapseKeys, async(now, pre) => {
+      if (state.schemaSelectedName === undefined) return
       if (now.length > pre.length) {
         const collectedTableKey = now[now.length - 1]
-        const table = state.table.list.find(table => table.oid === collectedTableKey)
+        const table = state.table.list.find(table => table.name === collectedTableKey)
 
-        if (table === undefined)
-          return
+        if (table === undefined) return
 
         table.loading = true
         try {
-          const result = await getColumnList(
-            now[now.length - 1],
-          )
+          const result = await getColumnList({
+            schemaName: state.schemaSelectedName,
+            tableName: table.name,
+            offset: 0,
+            limit: -1
+          })
 
           if (result.meta.success) {
-            table.columns = result.data ?? []
+            table.columns = result.data ? result.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
+              return {
+                name: column.COLUMN_NAME,
+                schema: column.TABLE_SCHEM,
+                table: column.TABLE_NAME,
+                column_family: column.COLUMN_FAMILY,
+                order: column.ORDINAL_POSITION,
+                primary: Boolean(column.KEY_SEQ)
+              }
+            }) : []
           } else {
             message.error(`获取表${table.name}的列信息失败：${getError(result)}`)
           }
@@ -1024,13 +1071,15 @@ export default defineComponent({
      *  获取 searchTable 数据
      */
     const handleGetSearchTableData = async() => {
+      if (state.schemaSelectedName === undefined) return
 
       state.searchTable.spinning = true
-      const result = await getSearchTableList(
-        state.searchTable.pageSize,
-        (state.searchTable.current - 1) * state.searchTable.pageSize,
-        state.searchTable.searchValue ? `%${state.searchTable.searchValue}%` : '',
-      )
+      const result = await getSearchTableList({
+        schemaName: state.schemaSelectedName,
+        tableName: state.searchTable.searchValue || '',
+        offset: (state.searchTable.current - 1) * state.searchTable.pageSize,
+        limit: state.searchTable.pageSize,
+      })
 
       if (result.meta.success) {
         // 全部数据

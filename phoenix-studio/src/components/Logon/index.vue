@@ -81,7 +81,7 @@ export default {
           window.localStorage.setItem('userInfo', JSON.stringify(resp.data))
           // 将用户信息同步到 GlobalState
           store.commit('setGlobalState', { userInfo: resp.data })
-          router.push(store.state.settings.routeAfterLogin || '/main')
+          router.push('/')
           return
         }
         if (resp.meta.success === false) {

@@ -1,7 +1,7 @@
 <template>
   <x-form :label-col="{ style: { width: '108px', height: '50px' } }">
     <x-form-item label="列名">
-      <x-input v-model:value="name" :rules="columnNameRules" placeholder="请填写列名">
+      <x-input v-if="isAdd" v-model:value="name" :rules="columnNameRules" placeholder="请填写列名">
         <template #prefix>
           <icon image name="worksheet/column_two_color"/>
         </template>
@@ -11,16 +11,18 @@
           </x-tooltip>
         </template>
       </x-input>
+      <div style="padding: 15px 0;" v-else>{{ name || '--' }}</div>
     </x-form-item>
     <x-form-item label="中文名（选填）">
-      <x-textarea v-model:value="comment" autoSize placeholder="请填写中文名">
+      <x-textarea v-if="isAdd" v-model:value="comment" autoSize placeholder="请填写中文名">
         <template #prefixIcon>
           <icon image name="worksheet/column_comment_two_color"/>
         </template>
       </x-textarea>
+      <div style="padding: 15px 0;" v-else>{{ comment || '--' }}</div>
     </x-form-item>
     <x-form-item label="列类型">
-      <x-select v-model:value="type" :options="TYPE_OPTION_LIST" is-in-form show-search>
+      <x-select v-if="isAdd" v-model:value="type" :options="TYPE_OPTION_LIST" is-in-form show-search>
         <template #prefixIcon>
           <icon
             image
@@ -28,34 +30,39 @@
           />
         </template>
       </x-select>
+      <div style="padding: 15px 0;" v-else>{{ type || '--' }}</div>
     </x-form-item>
     <x-form-item label="列族（选填）">
-      <x-input v-model:value="columnFamily">
+      <x-input v-if="isAdd" v-model:value="columnFamily">
         <template #prefix>
           <icon image name="worksheet/column_two_color"/>
         </template>
       </x-input>
+      <div style="padding: 15px 0;" v-else>{{ columnFamily || '--' }}</div>
     </x-form-item>
     <x-form-item
-      v-if="TYPE_WITH_LENGTH.includes(type)"
+      v-if="TYPE_WITH_SCALE.includes(type)"
       label="长度"
     >
       <x-input-number
-        v-model:value="length"
+        v-if="isAdd"
+        v-model:value="scale"
         :max="type === 'DECIMAL' ? 38 : Infinity"
-        :min="TYPE_REQUIRED_LENGTH.includes(type) ? 1 : 0"
+        :min="TYPE_REQUIRED_SCALE.includes(type) ? 1 : 0"
         placeholder="--"
       />
+      <div style="padding: 15px 0;" v-else>{{ scale || '--' }}</div>
     </x-form-item>
-    <x-form-item v-if="TYPE_WITH_SCALE.includes(type)" label="精度">
-      <x-input-number v-model:value="scale" :max="Math.max(length - 1, 0)" :min='0' placeholder="--"/>
+    <x-form-item v-if="TYPE_WITH_PRECISION.includes(type)" label="精度">
+      <x-input-number v-if="isAdd" v-model:value="precision" :max="Math.max(scale - 1, 0)" :min='0' placeholder="--"/>
+      <div style="padding: 15px 0;" v-else>{{ precision || '--' }}</div>
     </x-form-item>
     <x-form-item label="主键">
-      <x-switch v-model:checked="isPrimary"/>
+      <x-switch :disabled="!isAdd" v-model:checked="isPrimary"/>
     </x-form-item>
   </x-form>
   <!-- SQL 详情挂载 -->
-  <div v-if="isUpdateTable" class="v-oushudb-add-table-form-sql-detail">
+  <div v-if="isUpdateTable && isAdd" class="v-oushudb-add-table-form-sql-detail">
     <div class="v-oushudb-add-table-form-sql-detail-header">
       <span>SQL详情</span>
       <!-- 复制、刷新按钮 -->
@@ -71,7 +78,7 @@
     </div>
   </div>
   <!-- 提交、取消按钮组 -->
-  <div class="v-oushudb-edit-column-form-btn-container">
+  <div v-if="isAdd" class="v-oushudb-edit-column-form-btn-container">
     <x-button
       :disabled="isSubmitDisabled"
       :loading="execLoading"
@@ -97,12 +104,13 @@ import { message } from 'ant-design-vue-3'
 import * as monaco from 'monaco-editor'
 import useClipboard from 'vue-clipboard3'
 
-import { TYPE_WITH_LENGTH, TYPE_REQUIRED_LENGTH, TYPE_WITH_SCALE, TYPE_OPTION_LIST } from './constant'
+import { TYPE_WITH_SCALE, TYPE_REQUIRED_SCALE, TYPE_WITH_PRECISION, TYPE_OPTION_LIST } from './constant'
 import { COLOR_PRIMARY_BLUE } from 'lava-fe-lib/lib-common/constant'
 import { debounce } from 'lodash'
-import { getSqlForCreateColumn, getSqlForUpdateColumn } from '@/api/mock'
+import { getSqlForCreateColumn } from '@/api'
 import { Table } from '@/components/Worksheet/type'
 import { format } from 'sql-formatter'
+import { checkIsInstanceName } from '@/lib/regexp'
 import('monaco-themes/themes/Tomorrow.json')
   .then(data => {
     // @ts-ignore
@@ -114,10 +122,13 @@ let editor: any = undefined
 /**
  * editor 初始化配置
  */
-const initEditor = () => {
+const initEditor = (fn: any) => {
   const domEditor = document.getElementById('v-oushudb-add-table-form-sql-detail-container') as HTMLElement
   if (!domEditor) return
   // 初始化配置
+  monaco.editor.onDidCreateEditor(() => {
+    fn()
+  })
   editor = monaco.editor.create(domEditor, {
     // eslint-disable-next-line no-magic-numbers
     fontSize: 14,
@@ -183,8 +194,8 @@ export default defineComponent({
       columnFamily: props.initialColumn.columnFamily,
       comment: props.initialColumn.comment,
       isPrimary: props.initialColumn.isPrimary,
-      length: props.initialColumn.length,
       scale: props.initialColumn.scale,
+      precision: props.initialColumn.precision,
     })
 
     watch(() => props.initialColumn, () => {
@@ -193,14 +204,17 @@ export default defineComponent({
       formState.columnFamily = props.initialColumn.columnFamily
       formState.comment = props.initialColumn.comment
       formState.isPrimary = props.initialColumn.isPrimary
-      formState.length = props.initialColumn.length
       formState.scale = props.initialColumn.scale
+      formState.precision = props.initialColumn.precision
     })
 
     const validatePass = (rule: RuleObject, value: string) => {
       if (value === '') {
         return Promise.reject('请填写列名')
       } else {
+        if (!checkIsInstanceName(value)) {
+          return Promise.reject('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串')
+        }
         if (props.initAlreadyExistNameList?.includes(formState.name)) {
           return Promise.reject('该列名已存在')
         }
@@ -261,54 +275,22 @@ export default defineComponent({
         }
 
         // todo: 参数检查
-
-        if (props.isAdd) {
-          getCreateColumnSQLDetail()
-        } else {
-          getUpdateColumnSQLDetail()
-        }
+        getCreateColumnSQLDetail()
         // 数据转化
         // eslint-disable-next-line require-await
         async function getCreateColumnSQLDetail() {
           const data: any = {
-            schema: props.schemaName,
-            table: props.table?.name,
-            name: formState.name,
-            type: formState.type,
-            columnFamily: formState.columnFamily,
-            comment: formState.comment,
-            isPrimary: formState.isPrimary,
-            length: formState.length,
-            scale: formState.scale,
+            schemaName: props.schemaName,
+            tableName: props.table?.name,
+            columnName: formState.name,
+            dataType: formState.type,
+            pk: formState.isPrimary,
+            scale: TYPE_WITH_SCALE.indexOf(formState.type) !== -1 ? formState.scale : 0,
+            precision: TYPE_WITH_PRECISION.indexOf(formState.type) !== -1 ? formState.precision : 0,
+            familyName: formState.columnFamily,
           }
 
           const result = await getSqlForCreateColumn(data)
-
-          if (result.meta.success) {
-            editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n'), {
-              language: 'db2',
-            }))
-          } else {
-            editor.setValue('')
-          }
-        }
-
-        async function getUpdateColumnSQLDetail() {
-          const initTable = props.table as Table
-
-          const data: any = {
-            schema: props.schemaName,
-            table: initTable.name,
-            name: formState.name,
-            type: formState.type,
-            columnFamily: formState.columnFamily,
-            comment: formState.comment,
-            isPrimary: formState.isPrimary,
-            length: formState.length,
-            scale: formState.scale,
-          }
-
-          const result = await getSqlForUpdateColumn(data)
 
           if (result.meta.success) {
             editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n'), {
@@ -329,7 +311,7 @@ export default defineComponent({
     })
 
     onMounted(() => {
-      initEditor()
+      initEditor(handleRefreshSQLDetail)
     })
 
     onUnmounted(() => {
@@ -337,20 +319,24 @@ export default defineComponent({
       editor?.dispose()
     })
 
+    const isSubmitDisabled = computed(() => {
+      return formState.name === '' || !checkIsInstanceName(formState.name) || props.initAlreadyExistNameList?.includes(formState.name)
+    })
+
     return {
       COLOR_PRIMARY_BLUE,
 
       disabledRef: computed(() => !props.isAdd),
-      isSubmitDisabled: false,
+      isSubmitDisabled,
 
       ...toRefs(formState),
 
       columnNameRules,
 
       TYPE_OPTION_LIST,
-      TYPE_WITH_LENGTH,
-      TYPE_REQUIRED_LENGTH,
       TYPE_WITH_SCALE,
+      TYPE_REQUIRED_SCALE,
+      TYPE_WITH_PRECISION,
 
       handleCopyValue,
       handleCopySQLDetail,

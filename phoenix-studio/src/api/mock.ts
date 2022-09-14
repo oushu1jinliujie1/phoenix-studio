@@ -160,6 +160,9 @@ export const executeSql = (...args: any): Promise<any> => {
     }, 500)
   })
 }
+/**
+ * 暂无接口
+ */
 export const getSqlStatus = (...args: any): Promise<any> => {
   const resp = {
     'meta': {
@@ -176,6 +179,9 @@ export const getSqlStatus = (...args: any): Promise<any> => {
     }, 500)
   })
 }
+/**
+ * 暂无接口
+ */
 export const getSqlResult = (...args: any): Promise<any> => {
   const resp = {
     'meta': {
@@ -771,6 +777,9 @@ export const getSqlForCreateTable = (...args: any): Promise<any> => {
     }, 500)
   })
 }
+/**
+ * 暂无接口
+ */
 export const getSqlForUpdateTable = (...args: any): Promise<any> => {
   const resp = {
     'meta': {
@@ -1142,6 +1151,9 @@ export const getSqlForCreateColumn = (...args: any): Promise<any> => {
     }, 500)
   })
 }
+/**
+ * 暂无接口
+ */
 export const getSqlForUpdateColumn = (...args: any): Promise<any> => {
   const resp = {
     'meta': {
@@ -1243,6 +1255,9 @@ export const deleteSecondaryIndex = (...args: any): Promise<any> => {
     }, 500)
   })
 }
+/**
+ * 暂无接口
+ */
 export const duplicateSecondaryIndex = (...args: any): Promise<any> => {
   const resp = {
     'meta': {

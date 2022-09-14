@@ -1,7 +1,7 @@
 <template>
   <x-drawer
     v-model:visible="localVisibleRef"
-    :title="`${isAdd ? '新增' : '编辑'}列`"
+    :title="`${isAdd ? '新增' : '查看'}列`"
     fixed
     width="800"
   >
@@ -25,13 +25,11 @@ import { computed, defineComponent, PropType, ref, watch } from 'vue'
 import smartUI from '@/smart-ui-vue/index.js'
 import { isProduction, useModel } from '@/smart-ui-vue/utils'
 import AddOrUpdateColumnBase from '@/components/Worksheet/WorksheetSideBar/addOrUpdateColumnBase.vue'
-import { useStore } from 'vuex'
-import { useI18n } from 'vue-i18n'
-import { translateErrorMessage } from 'lava-fe-lib/lib-common/i18n'
 import { message } from 'ant-design-vue-3'
 import { getDefaultColumn } from '@/components/Worksheet/WorksheetSideBar/addOrUpdateTable.vue'
 import { ColumnResData, Table } from '@/components/Worksheet/type'
-import { executeSql, getSqlForCreateColumn, getSqlForUpdateColumn } from '@/api/mock'
+import { executeSql, getSqlForCreateColumn } from '@/api'
+import { TYPE_WITH_PRECISION, TYPE_WITH_SCALE } from './constant'
 
 export default defineComponent({
   name: 'addOrUpdateColumnForExistTable',
@@ -70,9 +68,6 @@ export default defineComponent({
   components: { AddOrUpdateColumnBase, ...smartUI },
   emits: ['success', 'confirm', 'update:value'],
   setup(props, context) {
-    const { t } = useI18n()
-    const getError = translateErrorMessage(t)
-    const store = useStore()
 
     const localVisibleRef = (typeof props.visible === 'boolean' && typeof props['onUpdate:visible'] === 'function')
       ? useModel('visible', props, context)
@@ -83,7 +78,7 @@ export default defineComponent({
 
     const handleSubmit = async(column: any) => {
       execLoadingRef.value = true
-      await (props.isAdd ? handleAddSubmit(column) : handleUpdateSubmit(column))
+      await handleAddSubmit(column)
       execLoadingRef.value = false
     }
 
@@ -93,79 +88,34 @@ export default defineComponent({
           console.error('编辑列时，表信息未传入，请检查')
         return
       }
-      console.log('addSubmit')
       
       try {
         const sqlRes = await getSqlForCreateColumn({
-          schema: props.schemaName,
-          table: props.table.name,
-          name: column.name,
-          type: column.type,
-          columnFamily: column.columnFamily,
-          comment: column.comment,
-          isPrimary: column.isPrimary,
-          length: column.length,
-          scale: column.scale,
+          schemaName: props.schemaName,
+          tableName: props.table.name,
+          columnName: column.name,
+          dataType: column.type,
+          pk: column.isPrimary,
+          scale: TYPE_WITH_SCALE.indexOf(column.type) !== -1 ? column.scale : 0,
+          precision: TYPE_WITH_PRECISION.indexOf(column.type) !== -1 ? column.precision : 0,
+          familyName: column.columnFamily,
         })
 
         if (sqlRes.meta.success) {
-          const executeResult = await executeSql({ statement: sqlRes.data })
+          const executeResult = await executeSql(sqlRes.data)
 
-          if (executeResult.meta.success && executeResult.data?.error === '') {
+          if (executeResult.meta.success) {
             message.success(`${props.isAdd ? '创建' : '修改'}字段成功`)
             localVisibleRef.value = false
             context.emit('success')
           } else {
-            message.error(`${props.isAdd ? '创建' : '修改'}字段失败: ${ (executeResult.data?.error) || getError(executeResult) || '无失败提示'}`, 5)
+            message.error(`${props.isAdd ? '创建' : '修改'}字段失败: ${(executeResult.meta?.message) || '无失败提示'}`, 5)
           }
         } else {
-          message.error(`${props.isAdd ? '创建' : '修改'}字段失败: ${getError(sqlRes)}`, 5)
+          message.error(`${props.isAdd ? '创建' : '修改'}字段失败: ${(sqlRes.meta?.message) || '无失败提示'}`, 5)
         }
       } catch (e) {
         message.error(`${props.isAdd ? '创建' : '修改'}字段失败: ${e}`, 5)
-      }
-    }
-
-    const handleUpdateSubmit = async(column: any) => {
-      if (props.table === undefined) {
-        if (!isProduction)
-          console.error('编辑列时，表信息未传入，请检查')
-        return
-      }
-      if (props.initialColumn === undefined) {
-        message.warning('字段初始数据丢失，请检查')
-        return
-      }
-      console.log('updateSubmit')
-
-      try {
-        const sqlRes = await getSqlForUpdateColumn({
-          schema: props.schemaName,
-          table: props.table.name,
-          name: column.name,
-          type: column.type,
-          columnFamily: column.columnFamily,
-          comment: column.comment,
-          isPrimary: column.isPrimary,
-          length: column.length,
-          scale: column.scale,
-        })
-
-        if (sqlRes.meta.success) {
-          const executeResult = await executeSql({ statement: sqlRes.data })
-
-          if (executeResult.meta.success && executeResult.data?.error === '') {
-            message.success(`${props.isAdd ? '修改' : '修改'}字段成功`)
-            localVisibleRef.value = false
-            context.emit('success')
-          } else {
-            message.error(`${props.isAdd ? '修改' : '修改'}字段失败: ${executeResult.data?.error || getError(executeResult) || '无失败提示'}`, 5)
-          }
-        } else {
-          message.error(`${props.isAdd ? '修改' : '修改'}字段失败: ${getError(sqlRes)}`, 5)
-        }
-      } catch (e) {
-        message.error(`${props.isAdd ? '修改' : '修改'}字段失败: ${e}`, 5)
       }
     }
 
@@ -187,8 +137,8 @@ export default defineComponent({
               columnFamily: props.initialColumn.column_family,
               comment: props.initialColumn.comment,
               isPrimary: props.initialColumn.primary,
-              length: props.initialColumn.length,
               scale: props.initialColumn.scale,
+              precision: props.initialColumn.precision,
             }
           }
         })()

@@ -97,7 +97,8 @@ import { debounce } from 'lodash'
 import { RuleObject } from 'ant-design-vue/es/form/interface'
 import { useI18n } from 'vue-i18n'
 import { translateErrorMessage } from 'lava-fe-lib/lib-common/i18n'
-import { executeSql, getSqlForCreateSchema } from '@/api/mock'
+import { executeSql, getSqlForCreateSchema } from '@/api'
+import { checkIsInstanceName } from '@/lib/regexp'
 
 import('monaco-themes/themes/Tomorrow.json')
   .then(data => {
@@ -142,12 +143,10 @@ export default defineComponent({
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   setup(props: any, context: any) {
     const { toClipboard } = useClipboard()
-    const { t } = useI18n()
-    const getError = translateErrorMessage(t)
 
     const state = reactive({
       // 初始名字得再优化一下
-      schemaName: props.initSchemaName ?? '',
+      schemaName: (props.initSchemaName || '') as string,
       comment: props.initComment,
       disabled: false,
     })
@@ -156,6 +155,9 @@ export default defineComponent({
       if (value === '') {
         return Promise.reject('请填写模式名')
       } else {
+        if (!checkIsInstanceName(value)) {
+          return Promise.reject('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串')
+        }
         if (props.initAlreadyExistNameList?.includes(state.schemaName)) {
           return Promise.reject('该模式名已存在，请检查后重新填写')
         }
@@ -207,11 +209,11 @@ export default defineComponent({
           return
         }
 
-        const data = {
-          name: state.schemaName,
-          comment: state.comment,
-        }
-        const result = await getSqlForCreateSchema(data)
+        // const data = {
+        //   schemaName: state.schemaName,
+        //   comment: state.comment,
+        // }
+        const result = await getSqlForCreateSchema(state.schemaName)
 
         if (result.meta.success) {
           editor.setValue(format(typeof result.data === 'string' ? result.data : result.data.join('\n')))
@@ -226,26 +228,24 @@ export default defineComponent({
      */
     const handleSubmit = async() => {
       // 获取新建SQL，执行SQL
-      const data = {
-        name: state.schemaName,
-        comment: state.comment,
-      }
-      const getSQLResult = await getSqlForCreateSchema(data)
+      // const data = {
+      //   name: state.schemaName,
+      //   comment: state.comment,
+      // }
+      const getSQLResult = await getSqlForCreateSchema(state.schemaName)
 
       if (!getSQLResult.meta.success) {
         message.error(`新建模式失败: ${getSQLResult.meta.message}`)
         return
       }
 
-      const executeResult = await executeSql({
-        statement: typeof getSQLResult.data === 'string' ? getSQLResult.data : getSQLResult.data.join('\n'),
-      })
+      const executeResult = await executeSql(typeof getSQLResult.data === 'string' ? getSQLResult.data : getSQLResult.data.join('\n'))
 
-      if (executeResult.meta.success && executeResult.data?.error === '') {
+      if (executeResult.meta?.success) {
         message.success('新建模式成功')
         context.emit('close', true)
       } else {
-        message.error(`新建模式失败: ${executeResult.data?.error || getError(executeResult) || '无失败提示'}`)
+        message.error(`新建模式失败: ${executeResult.meta?.message || '无失败提示'}`)
       }
     }
 
@@ -263,7 +263,7 @@ export default defineComponent({
     })
 
     const isSubmitDisabled = computed(() => {
-      return state.schemaName === '' || props.initAlreadyExistNameList?.includes(state.schemaName)
+      return state.schemaName === '' || !checkIsInstanceName(state.schemaName) || props.initAlreadyExistNameList?.includes(state.schemaName)
     })
 
     watch([() => state.schemaName, () => state.comment], () => {

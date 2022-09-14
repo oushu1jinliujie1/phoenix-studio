@@ -80,7 +80,7 @@ export const TYPE_OPTION_LIST = [
   }
 ]
 
-export const TYPE_WITH_LENGTH = [
+export const TYPE_WITH_SCALE = [
   'DECIMAL',
   'VARCHAR',
   'CHAR',
@@ -88,12 +88,12 @@ export const TYPE_WITH_LENGTH = [
   'ARRAY'
 ]
 
-export const TYPE_REQUIRED_LENGTH = [
+export const TYPE_REQUIRED_SCALE = [
   'CHAR',
   'BINARY'
 ]
 
-export const TYPE_WITH_SCALE = [
+export const TYPE_WITH_PRECISION = [
   'DECIMAL'
 ]
 
@@ -144,17 +144,17 @@ export const COLUMNS = [
   },
   {
     title: '长度',
-    dataIndex: 'length',
-    key: 'length',
-    width: '60px',
-    slots: { customRender: 'length' },
-  },
-  {
-    title: '精度',
     dataIndex: 'scale',
     key: 'scale',
     width: '60px',
     slots: { customRender: 'scale' },
+  },
+  {
+    title: '精度',
+    dataIndex: 'precision',
+    key: 'precision',
+    width: '60px',
+    slots: { customRender: 'precision' },
   },
   {
     title: '主键',
