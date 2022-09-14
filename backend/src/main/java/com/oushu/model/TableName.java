@@ -12,4 +12,8 @@ public class TableName {
     public String getQuoteName(){
         return "\"" + schemaName + "\".\"" + tableName + "\"";
     }
+
+    public String getNameWithoutQuote(){
+        return schemaName + "." + tableName;
+    }
 }

@@ -2,6 +2,7 @@ package com.oushu.phoenix.jdbc;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.google.gson.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 
@@ -11,9 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class PhoenixQuery {
 
-    private static Logger Log = Logger.getLogger(PhoenixQuery.class);
     DruidDataSource pds = PhoenixDataSource.createPhoenixDataSource();
 
     public void queryTestJdbc(Integer qID){
@@ -49,13 +50,16 @@ public class PhoenixQuery {
             result = pstmt.executeUpdate();
 
         }catch (SQLException e) {
-            Log.error(e.getMessage());
+            log.error(e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e);
         } finally {
             closeRes(conn, pstmt, rs);
         }
-        Log.warn("执行时间： " + (System.currentTimeMillis()-startTime) + ", sql: " + sql + "; param: " + parBoundMap);
+        log.warn("执行时间： " + (System.currentTimeMillis()-startTime)
+                + ", sql: " + sql
+                + "; param: " + parBoundMap
+                + "; result: " + result);
         return result;
     }
 
@@ -94,12 +98,12 @@ public class PhoenixQuery {
             }
 
         }catch (SQLException e) {
-            Log.error(e.getMessage());
+            log.error(e.getMessage());
             e.printStackTrace();
         } finally {
             closeRes(conn, pstmt, rs);
         }
-        Log.warn("执行时间： " + (System.currentTimeMillis()-startTime) + ", sql: " + sql + "; param: " + parBoundMap);
+        log.warn("执行时间： " + (System.currentTimeMillis()-startTime) + ", sql: " + sql + "; param: " + parBoundMap);
         return elements;
     }
 
@@ -140,12 +144,12 @@ public class PhoenixQuery {
             }
 
         }catch (SQLException e) {
-            Log.error(e.getMessage());
+            log.error(e.getMessage());
             e.printStackTrace();
         } finally {
             closeRes(conn, pstmt, rs);
         }
-        Log.warn("执行时间： " + (System.currentTimeMillis()-startTime) + ", sql: " + sql + "; param: " + parBoundMap);
+        log.warn("执行时间： " + (System.currentTimeMillis()-startTime) + ", sql: " + sql + "; param: " + parBoundMap);
         return result;
     }
 
@@ -183,12 +187,12 @@ public class PhoenixQuery {
             }
 
         }catch (SQLException e) {
-            Log.error(e.getMessage());
+            log.error(e.getMessage());
             e.printStackTrace();
         } finally {
             closeRes(conn, pstmt, rs);
         }
-        Log.warn("执行时间： " + (System.currentTimeMillis()-startTime) + ", sql: " + sql + "; param: " + parBoundMap);
+        log.warn("执行时间： " + (System.currentTimeMillis()-startTime) + ", sql: " + sql + "; param: " + parBoundMap);
         return result;
     }
 

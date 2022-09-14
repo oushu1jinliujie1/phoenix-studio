@@ -47,6 +47,9 @@ public class Column extends TableName{
     }
 
     public String getColumnNameWithQuote(){
+        if (this.familyName != null && !this.familyName.equals("")){
+            return "\"" + this.familyName + "\".\"" + this.getColumnName() + "\"";
+        }
         return "\"" + this.getColumnName() + "\"";
     }
 }

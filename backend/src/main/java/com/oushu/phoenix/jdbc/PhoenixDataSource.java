@@ -1,6 +1,7 @@
 package com.oushu.phoenix.jdbc;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.log4j.Logger;
@@ -8,9 +9,9 @@ import org.apache.log4j.Logger;
 import java.sql.Connection;
 import java.util.concurrent.*;
 
+@Slf4j
 public class PhoenixDataSource {
 
-    private static Logger log = Logger.getLogger(PhoenixDataSource.class);
     private static DruidDataSource pds = null;
 
     public static DruidDataSource createPhoenixDataSource() {

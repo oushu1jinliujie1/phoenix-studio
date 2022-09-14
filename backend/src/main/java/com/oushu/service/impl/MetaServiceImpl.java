@@ -2,6 +2,7 @@ package com.oushu.service.impl;
 
 import com.google.gson.JsonObject;
 import com.oushu.model.BasicTableParam;
+import com.oushu.model.Column;
 import com.oushu.model.IdxParam;
 import com.oushu.phoenix.jdbc.PhoenixQuery;
 import com.oushu.service.MetaService;
@@ -161,7 +162,7 @@ public class MetaServiceImpl implements MetaService {
         Map<Integer,Object> param = new HashMap<>();
         param.put(1, schemaName);
         param.put(2, tableName);
-        String sql = "select table_schem,TABLE_NAME,COLUMN_NAME,KEY_SEQ,ORDINAL_POSITION " +
+        String sql = "select table_schem,TABLE_NAME,COLUMN_NAME,COLUMN_FAMILY,KEY_SEQ,ORDINAL_POSITION " +
                 "from system.catalog  " +
                 "where table_schem = ? and TABLE_NAME = ? AND COLUMN_NAME IS NOT null  " +
                 "ORDER BY KEY_SEQ, ORDINAL_POSITION";
@@ -179,7 +180,7 @@ public class MetaServiceImpl implements MetaService {
         param.put(2, tableParam.getTableName());
         param.put(3, tableParam.getLimit());
         param.put(4, tableParam.getOffset());
-        String sql = "select table_schem,TABLE_NAME,COLUMN_NAME,KEY_SEQ,ORDINAL_POSITION " +
+        String sql = "select table_schem,TABLE_NAME,COLUMN_NAME,COLUMN_FAMILY,KEY_SEQ,ORDINAL_POSITION " +
                 "from system.catalog  " +
                 "where table_schem = ? and TABLE_NAME = ? AND COLUMN_NAME IS NOT null  " +
                 "ORDER BY KEY_SEQ, ORDINAL_POSITION  LIMIT ? OFFSET ?";
@@ -210,5 +211,16 @@ public class MetaServiceImpl implements MetaService {
         String sql = "SELECT COLUMN_COUNT, TABLE_NAME, SALT_BUCKETS FROM  SYSTEM.CATALOG " +
                 "WHERE TABLE_SCHEM = ? AND TABLE_NAME = ? AND TABLE_TYPE = 'u'";
         return pq.executeQuery(sql, param);
+    }
+
+    /**
+     * @param column
+     * @return
+     */
+    @Override
+    public boolean delColumn(Column column) {
+        String sql = "alter table " + column.getQuoteName()
+                + " drop column " + column.getColumnNameWithQuote();
+        return pq.execute(sql, new HashMap<>()) >= 0;
     }
 }

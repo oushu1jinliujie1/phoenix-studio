@@ -1,18 +1,18 @@
 package com.oushu.phoenix.jdbc;
 
 import com.alibaba.druid.pool.ExceptionSorter;
-import org.apache.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
+import org.jboss.logging.Logger;
 
 import java.sql.SQLException;
 import java.util.Properties;
-
+@Slf4j
 public class PhoenixExceptionSorter implements ExceptionSorter {
-    private static Logger LOG = Logger.getLogger(PhoenixExceptionSorter.class);
 
     @Override
     public boolean isExceptionFatal(SQLException e) {
         if (e.getMessage().contains("Connection is null or closed")) {
-            LOG.error("Delete unavailable phoenix connection", e);
+            log.error("Delete unavailable phoenix connection", e);
             return true;
         }
         return false;

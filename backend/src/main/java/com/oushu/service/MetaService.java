@@ -2,6 +2,7 @@ package com.oushu.service;
 
 import com.google.gson.JsonObject;
 import com.oushu.model.BasicTableParam;
+import com.oushu.model.Column;
 import com.oushu.model.IdxParam;
 
 import java.util.List;
@@ -23,5 +24,6 @@ public interface MetaService {
     List<JsonObject> getTableColumnsWithLimit(BasicTableParam param);
     boolean delIdx(IdxParam param);
     JsonObject getTableInfo(String schemaName, String tableName);
+    boolean delColumn(Column column);
 
 }

@@ -110,7 +110,7 @@ public class MetaController {
         return responseModel.success(result);
     }
 
-    @DeleteMapping("/secondary_index/delete")
+    @PostMapping("/secondary_index/delete")
     public ResponseModel indexDel(@RequestBody IdxParam param){
         ResponseModel responseModel = new ResponseModel();
         boolean hasSuccess = this.metaService.delIdx(param);
@@ -130,7 +130,12 @@ public class MetaController {
 
     @PostMapping("/basic_table/columns")
     public ResponseModel tableColumns(@RequestBody BasicTableParam param){
-        List<JsonObject> tableColumns = this.metaService.getTableColumnsWithLimit(param);
+        List<JsonObject> tableColumns = null;
+        if (param.getLimit() == -1 ){
+            tableColumns = this.metaService.getTableColumns(param.getSchemaName(), param.getTableName());
+        } else {
+            tableColumns = this.metaService.getTableColumnsWithLimit(param);
+        }
         ResponseModel responseModel = new ResponseModel();
         return responseModel.success(tableColumns.toArray());
     }
@@ -148,4 +153,16 @@ public class MetaController {
             return responseModel.success();
         }
     }
+
+    @PostMapping("/basic_table/column/delete")
+    public ResponseModel ColumnDel(@RequestBody Column column){
+        ResponseModel responseModel = new ResponseModel();
+        boolean hasSuccess = this.metaService.delColumn(column);
+        if (hasSuccess){
+            return responseModel.success();
+        } else {
+            return responseModel.failure();
+        }
+    }
+
 }
