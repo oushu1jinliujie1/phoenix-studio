@@ -170,6 +170,23 @@ public class MetaServiceImpl implements MetaService {
     }
 
     /**
+     * @param schemaName
+     * @param tableName
+     * @return
+     */
+    @Override
+    public List<JsonObject> getTablePKColumns(String schemaName, String tableName) {
+        Map<Integer,Object> param = new HashMap<>();
+        param.put(1, schemaName);
+        param.put(2, tableName);
+        String sql = "select table_schem,TABLE_NAME,COLUMN_NAME,COLUMN_FAMILY,KEY_SEQ,ORDINAL_POSITION " +
+                "from system.catalog  " +
+                "where table_schem = ? and TABLE_NAME = ? AND COLUMN_NAME IS NOT null AND KEY_SEQ IS NOT null  " +
+                "ORDER BY KEY_SEQ, ORDINAL_POSITION";
+        return pq.getList(sql, param);
+    }
+
+    /**
      * @param tableParam
      * @return
      */

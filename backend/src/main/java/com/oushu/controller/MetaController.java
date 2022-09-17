@@ -55,6 +55,12 @@ public class MetaController {
         long tableNumWithSearch = this.metaService.getTableNumWithSearch(
                 param.getSchemaName(), param.getTableName());
         List<Map<String, Object>> tableList = this.metaService.getTableList(param);
+        for (int i = 0; i < tableList.size(); i++) {
+            Map<String, Object> item = tableList.get(i);
+            List<JsonObject> tableColumns = this.metaService.getTablePKColumns(
+                    param.getSchemaName(), item.get("TABLE_NAME").toString());
+            item.put("PK_COLUMNS", tableColumns);
+        }
         ResponseModel responseModel = new ResponseModel();
         LazyLoadResult lazyLoadResult = new LazyLoadResult(tableNumWithSearch, tableList);
         return responseModel.success(lazyLoadResult);

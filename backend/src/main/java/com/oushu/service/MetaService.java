@@ -21,6 +21,7 @@ public interface MetaService {
     List<Map<String, Object>> getIdxList(BasicTableParam param);
     String getIdxState(String schemaName, String tableName);
     List<JsonObject> getTableColumns(String schemaName, String tableName);
+    List<JsonObject> getTablePKColumns(String schemaName, String tableName);
     List<JsonObject> getTableColumnsWithLimit(BasicTableParam param);
     boolean delIdx(IdxParam param);
     JsonObject getTableInfo(String schemaName, String tableName);

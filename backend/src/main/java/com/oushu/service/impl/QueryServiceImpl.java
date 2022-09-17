@@ -3,6 +3,7 @@ package com.oushu.service.impl;
 import com.google.gson.JsonObject;
 import com.oushu.model.OsMeta;
 import com.oushu.model.QueryTableName;
+import com.oushu.model.TableName;
 import com.oushu.phoenix.jdbc.PhoenixQuery;
 import com.oushu.service.QueryService;
 import org.springframework.stereotype.Service;
@@ -110,5 +111,18 @@ public class QueryServiceImpl implements QueryService {
     @Override
     public boolean editQuery(OsMeta meta) {
         return false;
+    }
+
+    /**
+     * @param tableName
+     * @return
+     */
+    @Override
+    public List<Map<String, Object>> getConnectedQueryTableList(TableName tableName) {
+        String sql = "select * from " + this.metaTableName
+                + " where TABLENAMES like ?";
+        Map<Integer,Object> sqlParam = new HashMap<>();
+        sqlParam.put(1, "%" + tableName.getNameWithoutQuote() + "%");
+        return pq.getListMap(sql, sqlParam);
     }
 }

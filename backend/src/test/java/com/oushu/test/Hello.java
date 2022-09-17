@@ -7,14 +7,7 @@ public class Hello {
 
 
     public static void main(String[] args) {
-        String d = ">= 2 && <= 4";
-        Pattern p = Pattern.compile("^>= | <= | > | <");
-        Matcher m = p.matcher(d);
-        while (m.find()){
-            String group = m.group().trim();
-            System.out.println(group);
-        }
-
-
+        String string = Integer.toHexString(200);
+        System.out.println(string);
     }
 }
