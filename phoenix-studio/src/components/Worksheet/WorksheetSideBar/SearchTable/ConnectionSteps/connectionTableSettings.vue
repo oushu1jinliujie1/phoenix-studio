@@ -6,7 +6,7 @@
         <icon image name="worksheet/search_table_two_color"/>
       </div>
       <x-tag v-for="table of selectTableList" :key="table.name" closable class="selected-table-tag" @close="removeTableTag(table)">
-        connectionTableSettings{{ table.name }}
+        {{ table.schema + ': ' + table.name }}
       </x-tag>
       <div v-show="selectTableList.length === 0" class="selected-table-tag-placeholder">
         请选择需要关联查询的表（表之间需第一主键列匹配）
@@ -14,38 +14,38 @@
     </div>
     <!-- 选表主体 -->
     <div class="connection-table-settings-main">
-      <!-- 数据库选择 -->
-      <div class="connection-table-settings-database-container">
+      <!-- 模式选择 -->
+      <div class="connection-table-settings-schema-container">
         <div class="connection-table-settings-container-title">
-          <span>数据库</span>
-          <icon color="#336CFF" name="worksheet/refresh" style="cursor: pointer;" @click="refreshDatabaseList()"/>
+          <span>模式</span>
+          <icon color="#336CFF" name="worksheet/refresh" style="cursor: pointer;" @click="refreshSchemaList()"/>
         </div>
-        <x-spin :spinning="database.spinning">
+        <x-spin :spinning="schema.spinning">
           <!-- 搜索 -->
           <div class="connection-table-settings-container-search">
             <x-input-search
-              v-model:value="database.searchValue"
+              v-model:value="schema.searchValue"
               allow-clear
               class="raw"
-              data-test-id="connection-table-settings-database-search-input"
-              placeholder="请输入数据库名，按回车搜索"
-              @search="handleDatabaseOnSearch"
-              @keyup.enter="handleDatabaseOnSearch"
+              data-test-id="connection-table-settings-schema-search-input"
+              placeholder="请输入模式名，按回车搜索"
+              @search="handleSchemaOnSearch"
+              @keyup.enter="handleSchemaOnSearch"
             />
           </div>
-          <!-- database列表 -->
+          <!-- schema列表 -->
           <div class="connection-table-settings-list">
             <div
-              v-for="(_database, index) in (database.list as any[])" :key="index"
-              :class="[_database === currentDatabase ? 'current-select' : '']"
+              v-for="(_schema, index) in (schema.list as any[])" :key="index"
+              :class="[_schema.name === currentSchema.name ? 'current-select' : '']"
               class="connection-table-settings-list-item"
-              @click="selectCurrentDatabase(_database)"
+              @click="selectCurrentSchema(_schema)"
             >
-              <div class="item-content" :title="_database.name">
+              <div class="item-content" :title="_schema.name">
                 
-                <icon v-show="_database !== currentDatabase" name="worksheet/database"/>
-                <icon v-show="_database === currentDatabase" image name="worksheet/database_selected"/>
-                {{ _database.name }}
+                <icon v-show="_schema.name !== currentSchema.name" name="worksheet/schema"/>
+                <icon v-show="_schema.name === currentSchema.name" image name="worksheet/schema_selected"/>
+                {{ _schema.name }}
               </div>
               <div class="item-content">
                 <icon name="next"/>
@@ -116,18 +116,14 @@ import { defineComponent, ref, computed, reactive, toRefs, onBeforeMount, PropTy
 import Icon from '@/components/Icon.vue'
 // @ts-ignore
 import smartUI from '@/smart-ui-vue/index.js'
-import { message } from 'ant-design-vue-3'
-import { RuleObject } from 'ant-design-vue/es/form/interface'
+import { getSchemaList, getTableList } from '@/api'
 import { debounce, throttle } from 'lodash'
+import { message } from 'ant-design-vue-3'
 
 export default defineComponent({
   name: 'connectionTableSettings',
   props: {
     selectTableList: {
-      type: Array as PropType<any[]>,
-      required: true
-    },
-    initialTableList: {
       type: Array as PropType<any[]>,
       required: true
     }
@@ -136,7 +132,7 @@ export default defineComponent({
   emits: ['update:selectTableList'],
   setup(props, context) {
     const state = reactive({
-      database: {
+      schema: {
         spinning: false,
         searchValue: '',
         list: [] as any[],
@@ -146,7 +142,7 @@ export default defineComponent({
         searchValue: '',
         list: [] as any[],
       },
-      currentDatabase: null as any
+      currentSchema: null as any
     })
     const notFinishMsgRef = ref('')
     const isFinishRef = computed(() => {
@@ -159,46 +155,58 @@ export default defineComponent({
       }
     })
 
-    const getDatabaseList = async() => {
-      state.database.spinning = true
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(0)
-        }, 500)
-      })
-      state.database.list = [{ name: 'database1' }, { name: 'database2' }]
-      const current = state.database.list.find((item: any) => item.name === state.currentDatabase?.name)
-      state.currentDatabase = current || state.database.list[0] || null
-      state.database.spinning = false
+    const handleGetSchemaList = async() => {
+      state.schema.spinning = true
+      const result = await getSchemaList()
+      if (result.meta.success) {
+        const META_SCHEMA = [
+          'SYSTEM',
+          'CT',
+        ]
+        state.schema.list = (result.data ?? [])
+          .filter((schema: any) => !META_SCHEMA.includes(schema.TABLE_SCHEM))
+          .map((schema: any) => {
+            return {
+              name: schema.TABLE_SCHEM
+            }
+          })
+      } else {
+        state.schema.list = []
+        message.error(`获取模式失败：${result.meta.message}`)
+      }
+      const current = state.schema.list.find((item: any) => item.name === state.currentSchema?.name)
+      state.currentSchema = current || state.schema.list[0] || null
+      state.schema.spinning = false
     }
 
-    const getTableList = async() => {
+    const handleGetTableList = async() => {
+      if (!state.currentSchema) return
       state.table.spinning = true
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(0)
-        }, 500)
+      const result = await getTableList({
+        schemaName: state.currentSchema.name,
+        tableName: state.table.searchValue,
+        limit: -1,
+        offset: 0
       })
-      const data: any[] = [
-        { name: 'table1', primary: 'columnP', columns: [{ name: 'columnP' }, { name: 'column1' }, { name: 'column2' }, { name: 'column3' }] },
-        { name: 'table2', primary: 'columnP', columns: [{ name: 'columnP' }, { name: 'column1' }, { name: 'column2' }, { name: 'column3' }] },
-        { name: 'table3', primary: 'columnP1', columns: [{ name: 'columnP1' }, { name: 'column1' }, { name: 'column2' }, { name: 'column3' }] }
-      ]
-      for (const each of data) {
-        if (props.selectTableList.findIndex((item: any) => item.name === each.name) === -1) {
-          each.selected = false
-          continue
-        }
-        each.selected = true
+
+      if (result.meta.success) {
+        state.table.list = (result.data.data ?? []).map((table: any) => ({
+          schema: state.currentSchema.name,
+          name: table.TABLE_NAME,
+          selected: props.selectTableList.findIndex((item: any) => item.name === table.name && item.schema === table.schema) !== -1,
+
+        }))
+      } else {
+        message.error(`刷新表失败：${result.meta.message}`)
       }
-      state.table.list = data
+
       state.table.spinning = false
     }
 
     const removeTableTag = (table: any) => {
       const _table = state.table.list.find((item: any) => item.name === table.name)
       if (_table) _table.selected = false
-      const selectTableList = props.selectTableList.filter((item: any) => item.name !== table.name)
+      const selectTableList = props.selectTableList.filter((item: any) => item.name !== table.name || item.schema !== table.schema)
       context.emit('update:selectTableList', selectTableList)
     }
 
@@ -211,26 +219,26 @@ export default defineComponent({
       }
     }
 
-    const refreshDatabaseList = throttle(async() => {
-      await getDatabaseList()
+    const refreshSchemaList = throttle(async() => {
+      await handleGetSchemaList()
     }, 500)
 
     const refreshTableList = throttle(async() => {
-      await getTableList()
+      await handleGetTableList()
     }, 500)
 
-    const handleDatabaseOnSearch = debounce(async() => {
-      await getDatabaseList()
+    const handleSchemaOnSearch = debounce(async() => {
+      await handleGetSchemaList()
     }, 500)
 
     const handleTableOnSearch = debounce(async() => {
-      await getTableList()
+      await handleGetTableList()
     }, 500)
 
-    const selectCurrentDatabase = debounce(async(database: any) => {
-      if (database === state.currentDatabase) return
-      state.currentDatabase = database
-      await getTableList()
+    const selectCurrentSchema = debounce(async(schema: any) => {
+      if (schema.name === state.currentSchema.name) return
+      state.currentSchema = schema
+      await handleGetTableList()
     }, 500)
 
     const isDisabled = (table: any) => {
@@ -240,9 +248,9 @@ export default defineComponent({
       return true
     }
 
-    onBeforeMount(() => {
-      getDatabaseList()
-      getTableList()
+    onBeforeMount(async() => {
+      await handleGetSchemaList()
+      await handleGetTableList()
     })
 
     return {
@@ -251,13 +259,13 @@ export default defineComponent({
       notFinishMsgRef,
       isFinishRef,
 
-      getDatabaseList,
-      getTableList,
-      refreshDatabaseList,
+      handleGetSchemaList,
+      handleGetTableList,
+      refreshSchemaList,
       refreshTableList,
-      handleDatabaseOnSearch,
+      handleSchemaOnSearch,
       handleTableOnSearch,
-      selectCurrentDatabase,
+      selectCurrentSchema,
 
       removeTableTag,
       onChangeTableSelected,
@@ -319,7 +327,7 @@ export default defineComponent({
     height: 0;
     display: flex;
 
-    .connection-table-settings-database-container {
+    .connection-table-settings-schema-container {
       padding: 10px 0;
       width: 40%;
       border-right: 1px solid #D5D8D8;

@@ -35,6 +35,7 @@ import Icon from '@/components/Icon.vue'
 import smartUI from '@/smart-ui-vue/index.js'
 import { message } from 'ant-design-vue-3'
 import { RuleObject } from 'ant-design-vue/es/form/interface'
+import { checkIsInstanceName } from '@/lib/regexp'
 
 export default defineComponent({
   name: 'addSearchTable',
@@ -57,6 +58,10 @@ export default defineComponent({
         notFinishMsgRef.value = '请填写查询表名称'
         return false
       } else {
+        if (!checkIsInstanceName(props.basicForm.name)) {
+          notFinishMsgRef.value = '请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的查询表名称'
+          return false
+        }
         if (props.initAlreadyExistNameList?.includes(props.basicForm.name)) {
           notFinishMsgRef.value = '该查询表名称名已存在'
           return false
@@ -70,6 +75,9 @@ export default defineComponent({
       if (value === '') {
         return Promise.reject('请填写查询表名称')
       } else {
+        if (!checkIsInstanceName(value)) {
+          return Promise.reject('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串')
+        }
         if (props.initAlreadyExistNameList?.includes(props.basicForm.name)) {
           return Promise.reject('该查询表名称名已存在')
         }

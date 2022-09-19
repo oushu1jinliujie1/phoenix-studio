@@ -3,17 +3,20 @@
  */
 export const TYPE_OPTION_LIST = [
   {
-    label: 'INTEGER',
-    value: 'INTEGER',
+    label: 'BIGINT',
+    value: 'BIGINT',
+  }, {
+    label: 'VARCHAR',
+    value: 'VARCHAR',
   }, {
     label: 'UNSIGNED_INT',
     value: 'UNSIGNED_INT',
   }, {
-    label: 'BIGINT',
-    value: 'BIGINT',
-  }, {
     label: 'UNSIGNED_LONG',
     value: 'UNSIGNED_LONG',
+  }, {
+    label: 'INTEGER',
+    value: 'INTEGER',
   }, {
     label: 'TINYINT',
     value: 'TINYINT',
@@ -62,9 +65,6 @@ export const TYPE_OPTION_LIST = [
   }, {
     label: 'UNSIGNED_TIMESTAMP',
     value: 'UNSIGNED_TIMESTAMP',
-  }, {
-    label: 'VARCHAR',
-    value: 'VARCHAR',
   }, {
     label: 'CHAR',
     value: 'CHAR',

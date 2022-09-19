@@ -358,7 +358,7 @@ export function getDefaultColumn(pk?: 'isPrimary'): any {
     id: columnIdCount,
     columnDeletePopConfirmVisible: false,
     name: `column_${columnIdCount++}`,
-    type: 'INTEGER',
+    type: 'BIGINT',
     comment: '',
     columnFamily: '',
     isPrimary: pk ? true : false,

@@ -12,8 +12,6 @@
                 <template #title>{{ userInfoRef.name_remark || '姓名' }}</template>
                 <h2 :class="{ 'no-name': !userInfoRef.name_remark }">{{ userInfoRef.name_remark || '姓名' }}</h2>
               </x-tooltip>
-              <x-tag v-if="userTypeRef">主用户</x-tag>
-              <x-tag v-else color-type="gray">子用户</x-tag>
             </div>
             <div class="v-common-header-user-center-info-root">
               <x-tooltip>
@@ -40,7 +38,6 @@
 import { computed, defineComponent } from 'vue'
 import XDropdown from '@/smart-ui-vue/XDropdown.vue'
 import SmartAvatar from '@/components/SmartAvatar.vue'
-import XTag from '@/smart-ui-vue/XTag.vue'
 import XTooltip from '@/smart-ui-vue/XTooltip.vue'
 import Icon from '@/components/Icon.vue'
 import { message, notification } from 'ant-design-vue-3'
@@ -51,7 +48,7 @@ import { logout } from '@/api/login'
 
 export default defineComponent({
   name: 'HeaderUserCenter',
-  components: { XButton, Icon, XTooltip, XTag, SmartAvatar, XDropdown },
+  components: { XButton, Icon, XTooltip, SmartAvatar, XDropdown },
   props: {
     userInfoRef: {
       type: Object,

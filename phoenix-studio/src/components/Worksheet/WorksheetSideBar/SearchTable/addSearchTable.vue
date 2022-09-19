@@ -59,6 +59,7 @@ import DrawerStepsFooter from '@/components/DrawerSteps/Footer.vue'
 import BasicInfoForm from '@/components/Worksheet/WorksheetSideBar/SearchTable/ConnectionSteps/basicInfoForm.vue'
 import ConnectionTableSettings from '@/components/Worksheet/WorksheetSideBar/SearchTable/ConnectionSteps/connectionTableSettings.vue'
 import ConnectionColumnSettings from '@/components/Worksheet/WorksheetSideBar/SearchTable/ConnectionSteps/connectionColumnSettings.vue'
+import { createSearchTable } from '@/api'
 
 const END_STEP = 2
 
@@ -77,7 +78,7 @@ export default defineComponent({
     ConnectionTableSettings,
     ConnectionColumnSettings
   },
-  emits: ['confirm'],
+  emits: ['close'],
   setup(props, context) {
     const state = reactive({
       step: 0,
@@ -97,13 +98,42 @@ export default defineComponent({
 
     const isDisableNextStepRef = computed(() => getIsDisableNextStepRef(state, basicRef, tableSettingsRef, columnSettingsRef))
 
+    const tablesComputed = computed(() => state.selectTableList)
+
+    watch(tablesComputed, (tables) => {
+      state.columnSettings = []
+    })
+
     /**
      * 提交表单
      */
-    const handleConfirm = () => {
-      context.emit('confirm', {
+    const handleConfirm = async() => {
 
+      const resp = await createSearchTable({
+        queryName: state.basicForm.name,
+        chineseName: state.basicForm.comment,
+        description: state.basicForm.description,
+        tableNames: state.selectTableList.map(table => {
+          return {
+            schemaName: table.schema,
+            tableName: table.name
+          }
+        }),
+        columns: state.columnSettings.map(column => {
+          return {
+            columnName: column.name,
+            dataType: column.type
+          }
+        })
       })
+
+      if (resp.meta.success) {
+        message.success('创建查询表成功')
+        context.emit('close', true)
+      } else {
+        message.error(`创建查询表失败：${resp.meta.message}`)
+      }
+
     }
 
     return {

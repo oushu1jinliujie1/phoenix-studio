@@ -1,7 +1,7 @@
 <template>
   <x-form layout="vertical" :label-col="{ style: { height: '30px' } }">
     <x-form-item label="索引名">
-      <x-input v-model:value="name" :rules="indexNameRules" placeholder="请填写列名">
+      <x-input v-model:value="name" :rules="indexNameRules" placeholder="请填写索引名">
         <template #prefix>
           <icon image name="worksheet/secondary_index_two_color"/>
         </template>
@@ -13,7 +13,14 @@
       </x-input>
     </x-form-item>
     <x-form-item label="索引列">
-      <x-select :disabled="extra.length" v-model:value="columns" :options="initialColumns" mode="multiple" is-in-form show-search :placeholder="extra.length ? '索引列与额外列不能同时选择' : '请选择需要索引的列'">
+      <x-select
+        v-model:value="columns"
+        :options="columnsOptions"
+        mode="multiple"
+        is-in-form
+        show-search
+        :placeholder="'请选择需要索引的列'"
+      >
         <template #prefixIcon>
           <icon
             image
@@ -23,7 +30,14 @@
       </x-select>
     </x-form-item>
     <x-form-item label="额外列">
-      <x-select :disabled="columns.length" v-model:value="extra" :options="initialColumns" mode="multiple" is-in-form show-search :placeholder="columns.length ? '索引列与额外列不能同时选择' : '请选择需要额外索引的列'">
+      <x-select
+        v-model:value="extra"
+        :options="extraOptions"
+        mode="multiple"
+        is-in-form
+        show-search
+        :placeholder="'请选择需要额外索引的列'"
+      >
         <template #prefixIcon>
           <icon
             image
@@ -50,13 +64,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref, reactive, toRefs } from 'vue'
+import { defineComponent, PropType, ref, reactive, toRefs, computed } from 'vue'
 import Icon from '@/components/Icon.vue'
 import useClipboard from 'vue-clipboard3'
 // @ts-ignore
 import smartUI from '@/smart-ui-vue/index.js'
 import { message } from 'ant-design-vue-3'
 import { RuleObject } from 'ant-design-vue/es/form/interface'
+import { checkIsInstanceName } from '@/lib/regexp'
 
 export default defineComponent({
   name: 'createIndex',
@@ -78,16 +93,31 @@ export default defineComponent({
 
     const formState = reactive({
       name: '',
-      columns: [],
-      extra: []
+      columns: [] as string[],
+      extra: [] as string[]
+    })
+
+    const columnsOptions = computed(() => {
+      return props.initialColumns.filter((option: any) => {
+        return !formState.extra.includes(option.value)
+      })
+    })
+
+    const extraOptions = computed(() => {
+      return props.initialColumns.filter((option: any) => {
+        return !formState.columns.includes(option.value)
+      })
     })
 
     const validatePass = (rule: RuleObject, value: string) => {
       if (value === '') {
-        return Promise.reject('请填写列名')
+        return Promise.reject('请填写索引名')
       } else {
+        if (!checkIsInstanceName(value)) {
+          return Promise.reject('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串')
+        }
         if (props.initAlreadyExistNameList?.includes(formState.name)) {
-          return Promise.reject('该列名已存在')
+          return Promise.reject('该索引名已存在')
         }
 
         return Promise.resolve('')
@@ -116,6 +146,22 @@ export default defineComponent({
      * 提交表单
      */
     const handleConfirm = () => {
+      if (!formState.name) {
+        message.error('请填写索引名')
+        return
+      }
+      if (!checkIsInstanceName(formState.name)) {
+        message.error('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串')
+        return
+      }
+      if (props.initAlreadyExistNameList?.includes(formState.name)) {
+        message.error('该索引名已存在')
+        return
+      }
+      if (!formState.columns.length) {
+        message.error('请至少选择一个索引列')
+        return
+      }
       context.emit('confirm', {
         ...formState,
       })
@@ -128,6 +174,9 @@ export default defineComponent({
     return {
       ...toRefs(formState),
       indexNameRules,
+
+      columnsOptions,
+      extraOptions,
 
       handleCopyValue,
       handleConfirm,

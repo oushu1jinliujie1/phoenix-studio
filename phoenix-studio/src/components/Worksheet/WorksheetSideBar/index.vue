@@ -517,7 +517,10 @@
     <AddSearchTable
       :init-already-exist-name-list="searchTable.list.map(item => item.name)"
       :schema="schemaSelectedName"
-      @confirm="handleRefreshSearchTable()"
+      @close="(success: any) => {
+        addSchemaDrawerVisible=false;
+        if (success) handleRefreshSchema()
+      }"
     />
   </x-drawer>
 
@@ -576,6 +579,7 @@ import {
   getTableList,
   deleteTable,
   getSearchTableList,
+deleteSearchTable,
 } from '@/api'
 import { ColumnResData, Table } from '@/components/Worksheet/type'
 import AddOrUpdateSchema from '@/components/Worksheet/WorksheetSideBar/addOrUPdateSchema.vue'
@@ -977,6 +981,8 @@ export default defineComponent({
               primary: Boolean(column.KEY_SEQ)
             }
           }) : []
+        } else {
+          message.error(`刷新列失败：${result.meta.message}`)
         }
       } catch (e) {
         message.error(`刷新列失败：${e}`)
@@ -1076,7 +1082,7 @@ export default defineComponent({
       state.searchTable.spinning = true
       const result = await getSearchTableList({
         schemaName: state.schemaSelectedName,
-        tableName: state.searchTable.searchValue || '',
+        queryName: state.searchTable.searchValue || '',
         offset: (state.searchTable.current - 1) * state.searchTable.pageSize,
         limit: state.searchTable.pageSize,
       })
@@ -1128,22 +1134,22 @@ export default defineComponent({
     /**
      * 删除查询表
      */
-    const handleDeleteSearchTable = () => {
+    const handleDeleteSearchTable = async() => {
       if (state.schemaSelectedName === undefined) return
       if (!state.searchTableToDelete) return
 
       state.searchTableDeleteLoading = true
 
-      // 删除
+      const resp = await deleteSearchTable(state.searchTableToDelete.name)
+
+      if (resp.meta?.success) {
+        message.success('删除查询表成功')
+        handleRefreshSearchTable()
+      } else {
+        message.error(`删除查询表失败: ${resp.meta?.message || '无失败提示'}`)
+      }
 
       state.searchTableDeleteLoading = false
-    }
-
-    /**
-     * 新建 SQL 查询（弹出 modal or drawer）
-     */
-    const handleAddSQLQueryIconClick = () => {
-      message.info('developing～敬请期待～')
     }
 
     /**
@@ -1240,7 +1246,6 @@ export default defineComponent({
       handleSearchTableJumpToLastPage,
       handleSearchTablePaginationChange,
       handleSearchTableOnSearch,
-      handleAddSQLQueryIconClick,
 
       // @ts-ignore
       // 有 bug，记得给 antd 提 issue

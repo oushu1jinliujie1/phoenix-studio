@@ -35,7 +35,7 @@ import { message } from 'ant-design-vue-3'
 import { useStore } from 'vuex'
 import { useI18n } from 'vue-i18n'
 import { translateErrorMessage } from 'lava-fe-lib/lib-common/i18n'
-import { login, toGetInitialPasswordFormat } from '../../api/login'
+import { login } from '../../api/login'
 import XButton from '../../smart-ui-vue/XButton.vue'
 import Icon from '../Icon.vue'
 import FormPwd from './FormPwd'
@@ -58,8 +58,7 @@ export default {
     const loginErroe = ref(0)
     const logonParams = reactive({
       params: {
-        login_type: 1,
-        name: '',
+        userName: '',
         password: '',
       }
     })
@@ -77,23 +76,30 @@ export default {
         disabledBoolean.value = false
         if (resp.meta.success) {
           reset401Status()
-          window.localStorage.setItem('userId', resp.data.id)
-          window.localStorage.setItem('userInfo', JSON.stringify(resp.data))
+          window.localStorage.setItem('userId', 1)
+          window.localStorage.setItem('userInfo', JSON.stringify({
+            id: 1,
+            name_remark: 'OUSHU',
+            username: 'oushu',
+            userType: 'rootuser'
+          }))
           // 将用户信息同步到 GlobalState
-          store.commit('setGlobalState', { userInfo: resp.data })
+          store.commit('setGlobalState', { 
+            userInfo: {
+              id: 1,
+              name_remark: 'OUSHU',
+              username: 'oushu',
+              userType: 'rootuser'
+            }
+          })
           router.push('/')
           return
         }
         if (resp.meta.success === false) {
           message.error({
-            content: translateErrorMessage(t)(resp),
+            content: `登录失败: ${resp.meta.message}`,
             duration: 3,
           })
-          if (resp.meta.params !== null) loginErroe.value = resp.meta.params[0]
-          if (loginErroe.value >= 3) showModal.value = true
-          if (resp.meta.status_code === 'lava.error.login.passwordReset') {
-            window.localStorage.setItem('userId', resp.data.id)
-          }
         }
       })
 
@@ -101,7 +107,7 @@ export default {
     // 接收组件传递来的账号密码
     const sendParams = (item) => {
       disabledBoolean.value = item.status
-      logonParams.params.name = item.value.name
+      logonParams.params.userName = item.value.name
       logonParams.params.password = item.value.password
     }
 
@@ -112,16 +118,6 @@ export default {
     const autofill = (value) => {
       disabledBoolean.value = value.status
     }
-
-    const initialPasswordFormat = async() => {
-      const { meta, data } = await toGetInitialPasswordFormat()
-      if (meta.success) {
-        window.localStorage.setItem('RegExp', data.RegExp)
-        window.localStorage.setItem('ErrorMessage', data.ErrorMessage)
-      }
-    }
-
-    onMounted(initialPasswordFormat())
 
     return {
       autofill,
