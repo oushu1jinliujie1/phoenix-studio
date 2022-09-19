@@ -120,6 +120,22 @@ public class MetaServiceImpl implements MetaService {
     }
 
     /**
+     * @param tableParam
+     * @return
+     */
+    @Override
+    public long getIdxCount(BasicTableParam tableParam) {
+        Map<Integer,Object> param = new HashMap<>();
+        param.put(1, tableParam.getSchemaName());
+        param.put(2, tableParam.getTableName());
+        String sql = "SELECT COUNT(1) AS COUNT " +
+                "FROM SYSTEM.CATALOG " +
+                "WHERE TABLE_SCHEM = ? AND TABLE_NAME = ? AND TABLE_TYPE = 'i' ";
+        JsonObject jsonObject = pq.executeQuery(sql, param);
+        return jsonObject.get("COUNT").getAsLong();
+    }
+
+    /**
      * @return
      */
     @Override
@@ -158,11 +174,27 @@ public class MetaServiceImpl implements MetaService {
      * @return
      */
     @Override
+    public long getTableColumnCount(String schemaName, String tableName) {
+        Map<Integer,Object> param = new HashMap<>();
+        param.put(1, schemaName);
+        param.put(2, tableName);
+        String sql = "select COUNT(1) AS COUNT " +
+                "from system.catalog  " +
+                "where table_schem = ? and TABLE_NAME = ? AND COLUMN_NAME IS NOT null  ";
+        return pq.executeQuery(sql, param).get("COUNT").getAsLong();
+    }
+
+    /**
+     * @param schemaName
+     * @param tableName
+     * @return
+     */
+    @Override
     public List<JsonObject> getTableColumns(String schemaName, String tableName) {
         Map<Integer,Object> param = new HashMap<>();
         param.put(1, schemaName);
         param.put(2, tableName);
-        String sql = "select table_schem,TABLE_NAME,COLUMN_NAME,COLUMN_FAMILY,KEY_SEQ,ORDINAL_POSITION " +
+        String sql = "select table_schem,TABLE_NAME,COLUMN_NAME,COLUMN_FAMILY,KEY_SEQ,ORDINAL_POSITION,DATA_TYPE " +
                 "from system.catalog  " +
                 "where table_schem = ? and TABLE_NAME = ? AND COLUMN_NAME IS NOT null  " +
                 "ORDER BY KEY_SEQ, ORDINAL_POSITION";
@@ -197,7 +229,7 @@ public class MetaServiceImpl implements MetaService {
         param.put(2, tableParam.getTableName());
         param.put(3, tableParam.getLimit());
         param.put(4, tableParam.getOffset());
-        String sql = "select table_schem,TABLE_NAME,COLUMN_NAME,COLUMN_FAMILY,KEY_SEQ,ORDINAL_POSITION " +
+        String sql = "select table_schem,TABLE_NAME,COLUMN_NAME,COLUMN_FAMILY,KEY_SEQ,ORDINAL_POSITION,DATA_TYPE " +
                 "from system.catalog  " +
                 "where table_schem = ? and TABLE_NAME = ? AND COLUMN_NAME IS NOT null  " +
                 "ORDER BY KEY_SEQ, ORDINAL_POSITION  LIMIT ? OFFSET ?";

@@ -6,6 +6,7 @@ import com.oushu.service.MetaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.JDBCType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -113,7 +114,8 @@ public class MetaController {
             idxItem.setIncludesAttrs(includesAttr);
             result.add(idxItem);
         }
-        return responseModel.success(result);
+        long idxCount = this.metaService.getIdxCount(param);
+        return responseModel.success(new PageResult(idxCount, result));
     }
 
     @PostMapping("/secondary_index/delete")
@@ -142,8 +144,15 @@ public class MetaController {
         } else {
             tableColumns = this.metaService.getTableColumnsWithLimit(param);
         }
+        for (int i = 0; i < tableColumns.size(); i++) {
+            JsonObject jsonObject = tableColumns.get(i);
+            int data_type = jsonObject.get("DATA_TYPE").getAsInt();
+            String name = JDBCType.valueOf(data_type).name();
+            jsonObject.addProperty("DATA_TYPE_NAME", name);
+        }
+        long tableColumnCount = this.metaService.getTableColumnCount(param.getSchemaName(), param.getTableName());
         ResponseModel responseModel = new ResponseModel();
-        return responseModel.success(tableColumns.toArray());
+        return responseModel.success(new PageResult(tableColumnCount, tableColumns));
     }
 
     @PostMapping("/basic_table/column/duplicate")
