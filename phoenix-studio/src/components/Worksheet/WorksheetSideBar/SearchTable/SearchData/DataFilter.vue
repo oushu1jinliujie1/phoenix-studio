@@ -32,9 +32,10 @@
             mode="multiple"
             show-search
             allow-clear
+            label-in-value
             placeholder="请选择返回列"
             :options="tableColumns"
-            :fieldNames="{ label: 'name', value: 'name' }"
+            :fieldNames="{ label: 'key', value: 'key' }"
             v-model:value="returnColumns"
           ></x-select>
         </div>
@@ -68,7 +69,7 @@
               class="raw search-data-filter-form-input-short"
               data-test-id="search-data-filter-form-search-input"
               placeholder="请输入您要寻找的内容"
-              :value="searchValue[column]"
+              :value="searchValue.get(column)"
               @change="(e: any) => { changeSearchValue(column, e)}"
             />
           </div>
@@ -121,7 +122,7 @@ export default defineComponent({
           secondaryIndex: undefined,
           returnColumns: [],
           limit: undefined,
-          searchValue: {},
+          searchValue: new Map() as Map<string, string>,
         }
       }
     },
@@ -137,15 +138,15 @@ export default defineComponent({
         return { label: index * 100 + 100, value: index * 100 + 100 }
       }),
       limit: undefined as number | undefined,
-      searchValue: {} as any
+      searchValue: new Map() as Map<string, string>
     })
 
     const resetFilters = () => {
       if (state.secondaryIndex === props.filterOptions.secondaryIndex) {
-        for (const key in state.searchValue) {
+        for (const key in state.searchValue.keys()) {
           const _ref = document.getElementById('searchValue_' + state.secondaryIndex + key)?.getElementsByTagName('input')[0]
           if (_ref) {
-            _ref.value = props.filterOptions.searchValue[key] || ''
+            _ref.value = props.filterOptions.searchValue.get(key) || ''
             _ref.dispatchEvent(new Event('input'))
           }
         }
@@ -165,16 +166,16 @@ export default defineComponent({
     })
 
     watch(() => state.secondaryIndex, () => {
-      state.searchValue = {}
-      let _searchValue: any = {}
+      state.searchValue = new Map()
+      let _searchValue: Map<string, string> = new Map()
       if (props.filterOptions.secondaryIndex === state.secondaryIndex) _searchValue = props.filterOptions.searchValue
       for (const each of props.tableIndexList.find((item: any) => item.name === state.secondaryIndex)?.columns || []) {
-        state.searchValue[each] = _searchValue[each] || ''
+        state.searchValue.set(each, _searchValue.get(each) || '')
       }
     })
 
     const changeSearchValue = (column: any, e: any) => {
-      state.searchValue[column] = e.target.value
+      state.searchValue.set(column, e.target.value)
     }
 
     /**

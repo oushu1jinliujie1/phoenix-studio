@@ -111,9 +111,9 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  * @params
  * {
  *   secondaryIndex: string,
- *   returnColumns: Array<{ familyName: string, columnName: string, dataType: string, scale: number, pk: boolean }>
+ *   returnColumns: Array<{ columnName: string, dataType: string }>
  *   limit: number,
- *   searchValue: string
+ *   searchValue: { [key: string]: string }
  * }
  */
  export const filterData = (
@@ -124,7 +124,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
     searchValue
   } : {
     secondaryIndex: string,
-    returnColumns: Array<any>
+    returnColumns: Array<{ columnName: string, dataType: string }>
     limit: number,
     searchValue: { [key: string]: string }
   }

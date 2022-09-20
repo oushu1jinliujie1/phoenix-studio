@@ -8,7 +8,7 @@
         <div class="search-result-list-tags">
           <x-tag
             v-for="tag of filterTags" :key="tag.key + tag.value"
-            closable
+            :closable="isClosable(tag)"
             class="search-result-list-tag"
             :class="tag.type"
             @close="removeFilter(tag)">
@@ -32,9 +32,9 @@
                 {{ index + 1 }}
               </template>
             </a-table-column>
-            <a-table-column v-for="column of filterOptions.returnColumns" :key="column" :title="column" width="160px">
+            <a-table-column v-for="column of filterOptions.returnColumns" :key="column.option.key" :title="column.option.key" width="160px">
               <template #default="{ record }">
-                {{ record[column] }}
+                {{ record[column.option.key] }}
               </template>
             </a-table-column>
           </x-table>
@@ -49,7 +49,6 @@ import { defineComponent, ref, reactive, toRefs, PropType, computed } from 'vue'
 import Icon from '@/components/Icon.vue'
 // @ts-ignore
 import smartUI from '@/smart-ui-vue/index.js'
-import { forIn } from 'lodash'
 
 export default defineComponent({
   name: 'previewSearchTable',
@@ -61,29 +60,14 @@ export default defineComponent({
           secondaryIndex: undefined,
           returnColumns: [],
           limit: undefined,
-          searchValue: {},
+          searchValue: new Map() as Map<string, string>,
         }
       }
     },
     searchResults: {
       type: Array as PropType<any[]>,
       default: () => {
-        return [
-          { column1: 'column1v', column2: 'column2v' },
-          { column1: 'column1v', column2: 'column2v' },
-          { column1: 'column1v', column2: 'column2v' },
-          { column1: 'column1v', column2: 'column2v' },
-          { column1: 'column1v', column2: 'column2v' },
-          { column1: 'column1v', column2: 'column2v' },
-          { column1: 'column1v', column2: 'column2v' },
-          { column1: 'column1v', column2: 'column2v' },
-          { column1: 'column1v', column2: 'column2v' },
-          { column1: 'column1v', column2: 'column2v' },
-          { column1: 'column1v', column2: 'column2v' },
-          { column1: 'column1v', column2: 'column2v' },
-          { column1: 'column1v', column2: 'column2v' },
-          { column1: 'column1v', column2: 'column2v' }
-        ]
+        return []
       }
     },
     resultLoading: Boolean
@@ -96,16 +80,33 @@ export default defineComponent({
       const tags: any[] = []
       if (props.filterOptions.limit) tags.push({ type: 'limit', value: props.filterOptions.limit, key: '行数限制', color: '#CCA236', icon: 'worksheet/limit' })
       for (const column of props.filterOptions.returnColumns) {
-        tags.push({ type: 'column', value: column, key: '返回列', color: '#CE7FFF', icon: 'worksheet/column' })
+        tags.push({ type: 'column', value: column.option.key, key: '返回列', color: '#CE7FFF', icon: 'worksheet/column' })
       }
       if (props.filterOptions.secondaryIndex) tags.push({ type: 'index', value: props.filterOptions.secondaryIndex, key: '二级索引', color: '#A0D744', icon: 'worksheet/column' })
-      forIn(props.filterOptions.searchValue, (value: any, key: string) => {
+      props.filterOptions.searchValue.forEach((value: any, key: string) => {
         if (value) {
           tags.push({ type: 'searchValue', value: value, key: key, color: '#336CFF', icon: 'worksheet/search' })
         }
       })
       return tags
     })
+
+    const isClosable = (tag: any) => {
+      switch (tag.type) {
+        case 'index':
+          return false
+        case 'column':
+          if (props.filterOptions.returnColumns.length > 1) return true
+          return false
+        case 'limit':
+          return false
+        case 'searchValue':
+          if (Array.from(props.filterOptions.searchValue.keys())[0] === tag.key) return false
+          return true
+        default:
+          return true
+      }
+    }
 
     const removeFilter = (tag: any) => {
       context.emit('removeFilter', tag)
@@ -117,6 +118,8 @@ export default defineComponent({
 
     return {
       filterTags,
+
+      isClosable,
 
       removeFilter,
       showFilters

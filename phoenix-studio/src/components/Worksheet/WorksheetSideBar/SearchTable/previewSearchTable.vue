@@ -10,6 +10,7 @@
     <ResultList
       v-if="resultVisible"
       :filter-options="filterOptions"
+      :search-results="searchResults"
       @show-filters="() => { filterDrawerVisible = true }"
       @remove-filter="removeFilter"
     />
@@ -42,14 +43,13 @@ import smartUI from '@/smart-ui-vue/index.js'
 
 import DataFilter from '@/components/Worksheet/WorksheetSideBar/SearchTable/SearchData/DataFilter.vue'
 import ResultList from '@/components/Worksheet/WorksheetSideBar/SearchTable/SearchData/ResultList.vue'
+import { filterData, getColumnList, getSecondaryIndexList } from '@/api'
+import { message } from 'ant-design-vue-3'
+import { isEmpty, unionWith } from 'lodash'
 
 export default defineComponent({
   name: 'previewSearchTable',
   props: {
-    schemaName: {
-      type: String,
-      default: ''
-    },
     searchTable: {
       type: Object as PropType<any>,
       default: () => {
@@ -67,20 +67,53 @@ export default defineComponent({
       filterOptions: {
         secondaryIndex: undefined,
         returnColumns: [],
-        limit: undefined,
-        searchValue: {}
-      } as any,
-      filterDrawerVisible: false
+        limit: 100,
+        searchValue: new Map() as Map<string, string>
+      },
+      filterDrawerVisible: false,
+      searchResults: [] as any[]
     })
 
     /** 
      * 提交表单
      */
-    const handleConfirm = (filters: any) => {
-      console.log(filters)
+    const handleConfirm = async(filters: any) => {
       state.filterOptions = filters
-      state.resultVisible = true
-      state.filterDrawerVisible = false
+      if (!state.filterOptions.secondaryIndex) {
+        message.error('请选择二级索引')
+        return
+      }
+      if (isEmpty(state.filterOptions.returnColumns)) {
+        message.error('请至少选择一个返回列')
+        return
+      }
+      if (!state.filterOptions.limit) {
+        message.error('请选择行数限制')
+        return
+      }
+      if (!Array.from(state.filterOptions.searchValue.values())[0]) {
+        message.error('请输入第一索引列的搜索内容')
+        return
+      }
+      console.log(filters)
+      const resp = await filterData({
+        secondaryIndex: state.filterOptions.secondaryIndex || '',
+        returnColumns: state.filterOptions.returnColumns.map((item: any) => {
+          return {
+            columnName: item.option.name,
+            dataType: item.option.type
+          }
+        }),
+        limit: state.filterOptions.limit,
+        searchValue: Array.from(state.filterOptions.searchValue.entries()).reduce((main, [key, value]) => ({...main, [key]: value}), {})
+      })
+      if (resp.meta.success) {
+        state.searchResults = resp.data
+        state.resultVisible = true
+        state.filterDrawerVisible = false
+      } else {
+        message.error(`查询数据失败: ${resp.meta.message}`)
+      }
     }
     const handleCancel = () => {
       context.emit('close')
@@ -89,43 +122,87 @@ export default defineComponent({
     const removeFilter = (filterTag: any) => {
       switch (filterTag.type) {
         case 'index':
-          state.filterOptions.secondaryIndex = undefined
-          state.filterOptions.searchValue = {}
           break
         case 'column':
-          state.filterOptions.returnColumns = state.filterOptions.returnColumns.filter((item: any) => item !== filterTag.value)
+          state.filterOptions.returnColumns = state.filterOptions.returnColumns.filter((item: any) => item.option.key !== filterTag.value)
           break
         case 'limit':
-          state.filterOptions.limit = undefined
           break
         case 'searchValue':
-          delete state.filterOptions.searchValue[filterTag.key]
+          state.filterOptions.searchValue.delete(filterTag.key)
           break
         default:
           //
       }
-      
     }
 
-    onMounted(() => {
-      state.tableIndexList = [
-        { name: 'index1', columns: ['c1', 'c2'] },
-        { name: 'index2', columns: ['c1', 'c2'] },
-        { name: 'index3', columns: ['c1', 'c2'] },
-        { name: 'index4', columns: ['c1', 'c2'] },
-        { name: 'index5', columns: ['c1', 'c2'] },
-        { name: 'index6', columns: ['c1', 'c2'] },
-      ]
-      state.tableColumns = [
-        { name: 'column1' },
-        { name: 'column2' },
-        { name: 'column3' },
-        { name: 'column4' },
-        { name: 'column5' },
-        { name: 'column6' },
-        { name: 'column7' },
-        { name: 'column8' }
-      ]
+    const getSecondaryIndexOfSearchTable = async() => {
+      const tableStrList = props.searchTable.tables.split(',')
+      for (const str of tableStrList) {
+        const resp = await getSecondaryIndexList({
+          schemaName: str.split('.')[0],
+          tableName: str.split('.')[1],
+          offset: 0,
+          limit: -1
+        })
+        if (resp.meta.success) {
+          state.tableIndexList = [
+            ...state.tableIndexList,
+            ...resp.data.data.map((item: any) => {
+              return {
+                name: item.indexName,
+                columns: item.idxAttrs,
+                extra: item.includesAttrs,
+                status: item.indexState
+              }
+            })
+          ]
+        } else {
+          message.error(`获取${str}的二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
+        }
+      }
+    }
+
+    const getColumnsOfSearchTable = async() => {
+      const tableStrList = props.searchTable.tables.split(',')
+      for (const str of tableStrList) {
+        const resp = await getColumnList({
+          schemaName: str.split('.')[0],
+          tableName: str.split('.')[1],
+          offset: 0,
+          limit: -1
+        })
+        if (resp.meta.success) {
+          state.tableColumns = unionWith(
+            state.tableColumns,
+            resp.data?.data ? resp.data.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
+              return {
+                key: `${column.COLUMN_NAME}(${column.DATA_TYPE_NAME})`,
+                name: column.COLUMN_NAME,
+                type: column.DATA_TYPE_NAME,
+                schema: column.TABLE_SCHEM,
+                table: column.TABLE_NAME,
+                column_family: column.COLUMN_FAMILY,
+                order: column.ORDINAL_POSITION,
+                primary: Boolean(column.KEY_SEQ)
+              }
+            }) : [],
+            (a: any, b: any) => {
+              if (a.key === b.key) {
+                return true
+              }
+              return false
+            }
+          )
+        } else {
+          message.error(`获取${str}的列失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
+        }
+      }
+    }
+
+    onMounted(async() => {
+      await getSecondaryIndexOfSearchTable()
+      await getColumnsOfSearchTable()
     })
 
     return {

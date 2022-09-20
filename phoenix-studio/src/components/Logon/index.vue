@@ -68,19 +68,19 @@ export default {
         disabledBoolean.value = false
         if (resp.meta.success) {
           reset401Status()
-          window.localStorage.setItem('userId', 1)
+          window.localStorage.setItem('userId', 0)
           window.localStorage.setItem('userInfo', JSON.stringify({
-            id: 1,
-            name_remark: 'OUSHU',
-            username: 'oushu',
+            id: 0,
+            name_remark: '用户名',
+            username: resp.data.user || 'oushu',
             userType: 'rootuser'
           }))
           // 将用户信息同步到 GlobalState
           store.commit('setGlobalState', { 
             userInfo: {
-              id: 1,
-              name_remark: 'OUSHU',
-              username: 'oushu',
+              id: 0,
+              name_remark: '用户名',
+              username: resp.data.user || 'oushu',
               userType: 'rootuser'
             }
           })

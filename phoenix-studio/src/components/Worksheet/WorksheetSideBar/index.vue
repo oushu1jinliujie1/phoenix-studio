@@ -549,7 +549,6 @@
     @close="() => { previewSearchTableDrawerVisible = false }"
   >
     <PreviewSearchTable
-      :schema-name="schemaSelectedName"
       :search-table="searchTableToPreview"
       @close="() => { previewSearchTableDrawerVisible = false }"
     />
