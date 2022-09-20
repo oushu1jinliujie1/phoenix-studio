@@ -50,9 +50,9 @@ public class QueryController {
         boolean success = this.queryService.delQueryName(queryTableName);
         ResponseModel responseModel = new ResponseModel();
         if (success){
-            return responseModel.failure("名称重复");
+            return responseModel.success("删除成功");
         } else {
-            return responseModel.success();
+            return responseModel.failure("删除失败");
         }
     }
 

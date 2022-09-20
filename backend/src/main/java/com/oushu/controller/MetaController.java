@@ -60,6 +60,12 @@ public class MetaController {
             Map<String, Object> item = tableList.get(i);
             List<JsonObject> tableColumns = this.metaService.getTablePKColumns(
                     param.getSchemaName(), item.get("TABLE_NAME").toString());
+            for (int j = 0; j < tableColumns.size(); j++) {
+                JsonObject jsonObject = tableColumns.get(j);
+                int data_type = jsonObject.get("DATA_TYPE").getAsInt();
+                String name = JDBCType.valueOf(data_type).name();
+                jsonObject.addProperty("DATA_TYPE_NAME", name);
+            }
             item.put("PK_COLUMNS", tableColumns);
         }
         ResponseModel responseModel = new ResponseModel();
