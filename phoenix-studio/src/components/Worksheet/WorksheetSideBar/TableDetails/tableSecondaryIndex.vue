@@ -12,7 +12,7 @@
     </template>
     <div class="v-oushudb-worksheet-table-detail-table-struct">
       <x-table
-        :dataSource="data"
+        :dataSource="tableData"
         :columns="columns"
         :pagination="false"
         auto-calc-empty-height
@@ -23,12 +23,12 @@
         </template>
         <template #columns="{ record }">
           <div class="v-secondary-index-columns">
-            <x-tag v-for="column of record.columns.split(',')" :key="column" color-type="gray">{{ column }}</x-tag>
+            <x-tag v-for="column of record.columns" :key="column" color-type="gray">{{ column }}</x-tag>
           </div>
         </template>
         <template #extra="{ record }">
           <div class="v-secondary-index-columns">
-            <x-tag v-for="column of record.extra.split(',')" :key="column" color-type="gray">{{ column }}</x-tag>
+            <x-tag v-for="column of record.extra" :key="column" color-type="gray">{{ column }}</x-tag>
           </div>
         </template>
         <template #status="{ record }">
@@ -57,7 +57,7 @@
         width="800"
         @close="() => { createIndexVisible = false }">
         <CreateIndex
-          :init-already-exist-name-list="[]"
+          :schema="schema"
           :initial-columns="table.columns?.map(column => { return { value: column.name } })"
           @close="() => { createIndexVisible=false }"
           @confirm="handleConfirmCreateIndex"
@@ -68,7 +68,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref, reactive, toRefs, onMounted } from 'vue'
+import { defineComponent, PropType, ref, reactive, toRefs, onMounted, watch } from 'vue'
 import Icon from '@/components/Icon.vue'
 import { throttle } from 'lodash'
 // @ts-ignore
@@ -76,7 +76,7 @@ import smartUI from '@/smart-ui-vue/index.js'
 import { message } from 'ant-design-vue-3'
 import { useModel } from '@/smart-ui-vue/utils'
 import { Table } from '@/components/Worksheet/type'
-import { getSecondaryIndexList, createSecondaryIndex, deleteSecondaryIndex, duplicateTable } from '@/api'
+import { getSecondaryIndexList, createSecondaryIndex, deleteSecondaryIndex, duplicateTable, executeSql } from '@/api'
 import CreateIndex from '@/components/Worksheet/WorksheetSideBar/TableDetails/createIndex.vue'
 
 export default defineComponent({
@@ -131,7 +131,7 @@ export default defineComponent({
       }
     }
     // 表格数据
-    const data: any = ref([])
+    const tableData: any = ref([])
     // 表格加载状态
     const loading = ref(false)
 
@@ -211,7 +211,18 @@ export default defineComponent({
         limit: state.limit
       })
       if (resp.meta.success) {
-        data.value = [...data.value, ...resp.data]
+        tableData.value = [
+          ...tableData.value,
+          ...resp.data.data.map((item: any) => {
+            return {
+              name: item.indexName,
+              columns: item.idxAttrs,
+              extra: item.includesAttrs,
+              status: item.indexState
+            }
+          })
+        ]
+        state.moreVisible = state.offset + state.limit < resp.data.count
       } else {
         message.error(`获取二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
       }
@@ -232,9 +243,14 @@ export default defineComponent({
         includesAttrs: form.extra
       })
       if (resp.meta.success) {
-        message.success('新建二级索引成功')
-        initSecondaryIndexList()
-        state.createIndexVisible = false
+        const result = await executeSql(resp.data)
+        if (result.meta.success) {
+          message.success('新建二级索引成功')
+          initSecondaryIndexList()
+          state.createIndexVisible = false
+        } else {
+          message.error(`新建二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
+        }
       } else {
         message.error(`新建二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
       }
@@ -250,21 +266,33 @@ export default defineComponent({
         limit: state.limit
       })
       if (resp.meta.success) {
-        data.value = resp.data
+        tableData.value = resp.data.data.map((item: any) => {
+          return {
+            name: item.indexName,
+            columns: item.idxAttrs,
+            extra: item.includesAttrs,
+            status: item.indexState
+          }
+        })
+        state.moreVisible = state.offset + state.limit < resp.data.count
       } else {
         message.error(`获取二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
       }
     }
 
-    onMounted(() => {
-      initSecondaryIndexList()
+    const visibleLocal = useModel('visible', props, context)
+
+    watch(visibleLocal, (visible) => {
+      if (visible) {
+        initSecondaryIndexList()
+      }
     })
 
     return {
       ...toRefs(state),
       statusMap,
-      visibleLocal: useModel('visible', props, context),
-      data,
+      visibleLocal,
+      tableData,
       columns,
       loading,
 
@@ -283,8 +311,11 @@ export default defineComponent({
     flex-wrap: wrap;
     gap: 8px;
 
-    .antv-tag {
+    .x-tag:not(.raw).antv-tag.x-tag-gray {
       margin: 0;
+      color: #85888c;
+      background-color: #e5e5e5;
+      border-color: #e5e5e5;
     }
   }
 

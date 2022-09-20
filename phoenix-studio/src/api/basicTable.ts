@@ -120,7 +120,7 @@ export const getColumnList = ({
  *   familyName: string
  * }
  */
- export const getSqlForCreateColumn = (
+export const getSqlForCreateColumn = (
   {
     schemaName,
     tableName,
@@ -160,7 +160,7 @@ export const getColumnList = ({
  * @param family 列族
  * @param columnName 列名称
  */
- export const deleteColumn = ({ schemaName, tableName, family, columnName } : { schemaName: string, tableName: string, family: string, columnName: string }): Promise<Response<any>> => {
+export const deleteColumn = ({ schemaName, tableName, family, columnName } : { schemaName: string, tableName: string, family: string, columnName: string }): Promise<Response<any>> => {
   return http.post('basic_table/column/delete', { schemaName, tableName, family, columnName })
 }
 
@@ -184,7 +184,7 @@ export const duplicateColumn = ({ schemaName, tableName, columnName } : { schema
  *   limit: number
  * }
  */
- export const getSecondaryIndexList = (
+export const getSecondaryIndexList = (
   {
     schemaName,
     tableName,
@@ -211,7 +211,7 @@ export const duplicateColumn = ({ schemaName, tableName, columnName } : { schema
  *   includesAttrs: string[]
  * }
  */
- export const createSecondaryIndex = (
+export const createSecondaryIndex = (
   {
     schemaName,
     tableName,
@@ -235,9 +235,16 @@ export const duplicateColumn = ({ schemaName, tableName, columnName } : { schema
  * @param tableName 基础表名称
  * @param indexName 索引名称
  */
- export const deleteSecondaryIndex = ({ schemaName, tableName, indexName } : { schemaName: string, tableName: string, indexName: string }): Promise<Response<any>> => {
+export const deleteSecondaryIndex = ({ schemaName, tableName, indexName } : { schemaName: string, tableName: string, indexName: string }): Promise<Response<any>> => {
   return http.post('secondary_index/delete', { schemaName, tableName, indexName })
 }
 
-
+/**
+ * 获取关联的查询表列表
+ * @param schemaName Schema名称
+ * @param tableName 基础表名称
+ */
+export const getConnectionList = ({ schemaName, tableName } : { schemaName: string, tableName: string }): Promise<Response<any>> => {
+  return http.post('basic_table/connect_search_table/list', { schemaName, tableName })
+}
 

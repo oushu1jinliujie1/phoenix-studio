@@ -102,65 +102,15 @@ export interface Schema {
  * 表
  */
 export interface Table {
-  oid: string,
   name: string,
   split_on: string,
   salt_buckets: number,
-  owner: string,
   schema: string,
-  table_space: string,
-  partitioned_table: boolean,
   comment: string,
-  columns: null | ColumnResData[],
-  drop_cascade: boolean,
-  partition_keys: [] | null,
-  partition_type: any | '',
-  partition_default: string,
-  sub_partitions: {
-    name: string,
-    partition_table: boolean,
-    partition_type: string,
-    partition_keys: null,
-    range: string,
-    in_value: string,
-    modulus: number,
-    remainder: number,
-    sub_partitions: [],
-    schema: string,
-  }[] | null,
-  privileges: null,
-  table_type: string,
-  hawq_sub_partitioned: boolean,
-  hawq_sub_partition_type: any | '',
-  hawq_sub_partition_keys: [] | null,
-  hawq_sub_partitions: {
-    name: string,
-    partition_table: boolean,
-    partition_type: string,
-    partition_keys: null,
-    range: string,
-    in_value: string,
-    modulus: number,
-    remainder: number,
-    sub_partitions: [],
-    schema: string,
-  }[] | null,
-  hawq_partition_default: string,
-  hawq_pk: string,
-  hawq_dk: {
-    att_num?: string,
-    column_name: string
-  }[] | null,
-  location: string,
-  external: boolean,
-  // 自定义属性：记录是否收藏
-  collected?: boolean,
-  // 自定义属性: 记录收藏的 id
-  collectedId?: number,
+  columns?: ColumnResData[],
+  primary_columns?: any[],
   // 自定义属性：记录是否 hover
   ellipsisHover?: boolean,
-  // 自定义属性，记录 table 当前 database
-  databaseName?: string,
 }
 
 /**

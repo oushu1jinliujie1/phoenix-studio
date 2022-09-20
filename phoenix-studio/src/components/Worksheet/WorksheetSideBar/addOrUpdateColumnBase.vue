@@ -1,16 +1,25 @@
 <template>
   <x-form :label-col="{ style: { width: '108px', height: '50px' } }">
     <x-form-item label="列名">
-      <x-input v-if="isAdd" v-model:value="name" :rules="columnNameRules" placeholder="请填写列名">
-        <template #prefix>
-          <icon image name="worksheet/column_two_color"/>
+      <x-tooltip
+        v-if="isAdd"
+        :visible="isSubmitDisabled?undefined:false"
+        :overlayStyle="{ 'pointer-events': 'none' }"
+      >
+        <template #title>
+          <div style="color: #D74472;">{{ columnNameValidate }}</div>
         </template>
-        <template #suffix>
-          <x-tooltip placement="bottomLeft" title="复制">
-            <icon color="primary" name="worksheet/copy" @click="() => handleCopyValue(name)"/>
-          </x-tooltip>
-        </template>
-      </x-input>
+        <x-input v-model:value="name" :rules="columnNameRules" placeholder="请填写列名">
+          <template #prefix>
+            <icon image name="worksheet/column_two_color"/>
+          </template>
+          <template #suffix>
+            <x-tooltip placement="bottomLeft" title="复制">
+              <icon color="primary" name="worksheet/copy" @click="() => handleCopyValue(name)"/>
+            </x-tooltip>
+          </template>
+        </x-input>
+      </x-tooltip>
       <div style="padding: 15px 0;" v-else>{{ name || '--' }}</div>
     </x-form-item>
     <x-form-item label="中文名（选填）">
@@ -58,7 +67,7 @@
       <div style="padding: 15px 0;" v-else>{{ precision || '--' }}</div>
     </x-form-item>
     <x-form-item label="主键">
-      <x-switch :disabled="!isAdd" v-model:checked="isPrimary"/>
+      <x-switch :disabled="isUpdateTable || !isAdd" v-model:checked="isPrimary"/>
     </x-form-item>
   </x-form>
   <!-- SQL 详情挂载 -->
@@ -79,15 +88,23 @@
   </div>
   <!-- 提交、取消按钮组 -->
   <div v-if="isAdd" class="v-oushudb-edit-column-form-btn-container">
-    <x-button
-      :disabled="isSubmitDisabled"
-      :loading="execLoading"
-      type="primary"
-      @click="handleConfirm"
+    <x-tooltip
+      :visible="isSubmitDisabled?undefined:false"
+      :overlayStyle="{ 'pointer-events': 'none' }"
     >
-      <icon name="worksheet/submit"/>
-      确认
-    </x-button>
+      <template #title>
+        <div style="color: #D74472;">{{ columnNameValidate }}</div>
+      </template>
+      <x-button
+        :disabled="isSubmitDisabled"
+        :loading="execLoading"
+        type="primary"
+        @click="handleConfirm"
+      >
+        <icon name="worksheet/submit"/>
+        确认
+      </x-button>
+    </x-tooltip>
     <x-button @click="handleCancel">
       <icon name="worksheet/cancel"/>
       取消
@@ -107,7 +124,7 @@ import useClipboard from 'vue-clipboard3'
 import { TYPE_WITH_SCALE, TYPE_REQUIRED_SCALE, TYPE_WITH_PRECISION, TYPE_OPTION_LIST } from './constant'
 import { COLOR_PRIMARY_BLUE } from 'lava-fe-lib/lib-common/constant'
 import { debounce } from 'lodash'
-import { getSqlForCreateColumn } from '@/api'
+import { duplicateColumn, getSqlForCreateColumn } from '@/api'
 import { Table } from '@/components/Worksheet/type'
 import { format } from 'sql-formatter'
 import { checkIsInstanceName } from '@/lib/regexp'
@@ -162,10 +179,6 @@ export default defineComponent({
       type: Object,
       required: true,
     },
-    initAlreadyExistNameList: {
-      type: Array,
-      required: true,
-    },
     storageFormat: {
       type: String as PropType<string | undefined>,
       required: true,
@@ -196,6 +209,9 @@ export default defineComponent({
       isPrimary: props.initialColumn.isPrimary,
       scale: props.initialColumn.scale,
       precision: props.initialColumn.precision,
+
+      isSubmitDisabled: false,
+      columnNameValidate: ''
     })
 
     watch(() => props.initialColumn, () => {
@@ -210,16 +226,29 @@ export default defineComponent({
 
     const validatePass = (rule: RuleObject, value: string) => {
       if (value === '') {
+        formState.columnNameValidate = '请填写列名'
         return Promise.reject('请填写列名')
       } else {
         if (!checkIsInstanceName(value)) {
+          formState.columnNameValidate = '请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串'
           return Promise.reject('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串')
         }
-        if (props.initAlreadyExistNameList?.includes(formState.name)) {
-          return Promise.reject('该列名已存在')
-        }
 
-        return Promise.resolve('')
+        return new Promise((resolve, reject) => {
+          duplicateColumn({
+            schemaName: props.schemaName,
+            tableName: props.table?.name || '',
+            columnName: formState.name
+          }).then((resp) => {
+            if (resp.meta.success) {
+              formState.columnNameValidate = ''
+              resolve('')
+            } else {
+              formState.columnNameValidate = '该列名已存在，请检查后重新填写'
+              reject('该列名已存在，请检查后重新填写')
+            }
+          })
+        })
       }
     }
 
@@ -319,15 +348,29 @@ export default defineComponent({
       editor?.dispose()
     })
 
-    const isSubmitDisabled = computed(() => {
-      return formState.name === '' || !checkIsInstanceName(formState.name) || props.initAlreadyExistNameList?.includes(formState.name)
+    const columnName = computed(() => formState.name)
+    watch(columnName, async() => {
+      if (columnName.value === '' || !checkIsInstanceName(columnName.value)) {
+        formState.isSubmitDisabled = true
+        return
+      }
+      const resp = await duplicateColumn({
+        schemaName: props.schemaName,
+        tableName: props.table?.name || '',
+        columnName: columnName.value
+      })
+      if (!resp.meta.success) {
+        message.warning('该表名已存在，请重新填写！')
+        formState.isSubmitDisabled = true
+        return
+      }
+      formState.isSubmitDisabled = false
     })
 
     return {
       COLOR_PRIMARY_BLUE,
 
       disabledRef: computed(() => !props.isAdd),
-      isSubmitDisabled,
 
       ...toRefs(formState),
 
@@ -395,6 +438,9 @@ export default defineComponent({
 
     .#{$ant-prefix}-btn:not(:last-child) {
       margin-right: 10px;
+    }
+    &>span {
+      margin-right: 10px
     }
   }
 </style>

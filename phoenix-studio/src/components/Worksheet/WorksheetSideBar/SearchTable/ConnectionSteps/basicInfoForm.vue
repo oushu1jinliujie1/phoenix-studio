@@ -29,13 +29,14 @@
 <script lang="ts">
 /* eslint-disable vue/no-side-effects-in-computed-properties */
 
-import { defineComponent, computed, ref } from 'vue'
+import { defineComponent, computed, ref, reactive, watch } from 'vue'
 import Icon from '@/components/Icon.vue'
 // @ts-ignore
 import smartUI from '@/smart-ui-vue/index.js'
 import { message } from 'ant-design-vue-3'
 import { RuleObject } from 'ant-design-vue/es/form/interface'
 import { checkIsInstanceName } from '@/lib/regexp'
+import { duplicateSearchTable } from '@/api'
 
 export default defineComponent({
   name: 'addSearchTable',
@@ -44,32 +45,42 @@ export default defineComponent({
       type: Object,
       required: true,
     },
-    initAlreadyExistNameList: {
-      type: Array,
+    initialName: {
+      type: String,
       required: true,
     },
   },
   components: { ...smartUI, Icon },
   emits: ['update:basicForm'],
   setup(props, context) {
-    const notFinishMsgRef = ref('')
-    const isFinishRef = computed(() => {
-      if (props.basicForm.name === '') {
-        notFinishMsgRef.value = '请填写查询表名称'
-        return false
-      } else {
-        if (!checkIsInstanceName(props.basicForm.name)) {
-          notFinishMsgRef.value = '请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的查询表名称'
-          return false
-        }
-        if (props.initAlreadyExistNameList?.includes(props.basicForm.name)) {
-          notFinishMsgRef.value = '该查询表名称名已存在'
-          return false
-        }
-        notFinishMsgRef.value = ''
-        return true
-      }
+    const state = reactive({
+      nameDisabled: false
     })
+    const notFinishMsgRef = ref('')
+    const nameComputed = computed(() => props.basicForm.name)
+    watch(nameComputed, async() => {
+      if (nameComputed.value === '') {
+        notFinishMsgRef.value = '请填写查询表名称'
+        state.nameDisabled = true
+        return
+      }
+      if (!checkIsInstanceName(nameComputed.value)) {
+        notFinishMsgRef.value = '请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的查询表名称'
+        state.nameDisabled = true
+        return
+      }
+      if (props.basicForm.name !== props.initialName) {
+        const resp = await duplicateSearchTable(props.basicForm.name || '')
+        if (!resp.meta.success) {
+          notFinishMsgRef.value = '该查询表名称名已存在'
+          state.nameDisabled = true
+          return
+        }
+      }
+      notFinishMsgRef.value = ''
+      state.nameDisabled = false
+    })
+    const isFinishRef = computed(() => !state.nameDisabled)
 
     const validatePass = (rule: RuleObject, value: string) => {
       if (value === '') {
@@ -78,8 +89,18 @@ export default defineComponent({
         if (!checkIsInstanceName(value)) {
           return Promise.reject('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串')
         }
-        if (props.initAlreadyExistNameList?.includes(props.basicForm.name)) {
-          return Promise.reject('该查询表名称名已存在')
+        if (value !== props.initialName) {
+          return new Promise((resolve, reject) => {
+            duplicateSearchTable(value || '').then((resp) => {
+              if (resp.meta.success) {
+                resolve('')
+              } else {
+                reject('该查询表名称名已存在，请检查后重新填写')
+              }
+            }).catch(() => {
+              reject('查询表名称查重失败')
+            })
+          })
         }
 
         return Promise.resolve('')

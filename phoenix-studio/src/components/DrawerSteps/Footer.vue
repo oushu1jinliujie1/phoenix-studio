@@ -1,13 +1,19 @@
 <template>
   <div class="drawer-steps-footer">
     <div class="drawer-steps-footer-button-group">
-      <x-tooltip v-if="step!==0" :title="prevStepTooltip" :visible="nextStepTooltip===''?false:undefined">
+      <x-tooltip v-if="step!==0" :visible="nextStepTooltip===''?false:undefined">
+        <template #title>
+          <div style="color: #D74472;">{{ prevStepTooltip }}</div>
+        </template>
         <x-button :disabled="disablePrevStep" style="margin-right: 10px;" @click="prevStep">
           <icon color="" name="prev"></icon>
           <span style="margin-left: 5px;">上一步</span>
         </x-button>
       </x-tooltip>
-      <x-tooltip v-if="step<maxStep" :title="nextStepTooltip" :visible="nextStepTooltip===''?false:undefined">
+      <x-tooltip v-if="step<maxStep" :visible="nextStepTooltip===''?false:undefined">
+        <template #title>
+          <div style="color: #D74472;">{{ nextStepTooltip }}</div>
+        </template>
         <x-button :disabled="disableNextStep" type="primary" @click="nextStep">
           <icon color="" name="next"></icon>
           <span style="margin-left: 5px;">下一步</span>

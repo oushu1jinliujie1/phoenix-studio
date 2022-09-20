@@ -97,9 +97,10 @@
                   <icon v-show="_table.selected" name="worksheet/table_selected"/>
                   {{ _table.name }}
                 </div>
-                <div class="item-content-half" :title="_table.primary">
+                <div class="item-content-half" :title="_table.primary_columns[0].name">
                   <icon name="worksheet/key"/>
-                  {{ _table.primary }}
+                  <span>{{ _table.primary_columns[0].name }}</span>&nbsp;
+                  <span>{{ '(' + _table.primary_columns[0].type + ')' }}</span>
                 </div>
               </div>
             </x-tooltip>
@@ -112,7 +113,7 @@
 
 <script lang="ts">
 /* eslint-disable vue/no-side-effects-in-computed-properties */
-import { defineComponent, ref, computed, reactive, toRefs, onBeforeMount, PropType } from 'vue'
+import { defineComponent, ref, computed, reactive, toRefs, onBeforeMount, PropType, watch } from 'vue'
 import Icon from '@/components/Icon.vue'
 // @ts-ignore
 import smartUI from '@/smart-ui-vue/index.js'
@@ -190,12 +191,24 @@ export default defineComponent({
       })
 
       if (result.meta.success) {
-        state.table.list = (result.data.data ?? []).map((table: any) => ({
-          schema: state.currentSchema.name,
-          name: table.TABLE_NAME,
-          selected: props.selectTableList.findIndex((item: any) => item.name === table.name && item.schema === table.schema) !== -1,
-
-        }))
+        state.table.list = (result.data.data ?? []).map((table: any) => {
+          return {
+            schema: state.currentSchema.name,
+            name: table.TABLE_NAME,
+            primary_columns: table.PK_COLUMNS.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
+              return {
+                name: column.COLUMN_NAME,
+                type: column.DATA_TYPE_NAME,
+                schema: column.TABLE_SCHEM,
+                table: column.TABLE_NAME,
+                column_family: column.COLUMN_FAMILY,
+                order: column.ORDINAL_POSITION,
+                primary: true
+              }
+            }),
+            selected: props.selectTableList.findIndex((item: any) => item.name === table.TABLE_NAME && item.schema === state.currentSchema.name) !== -1,
+          }
+        })
       } else {
         message.error(`刷新表失败：${result.meta.message}`)
       }
@@ -243,8 +256,9 @@ export default defineComponent({
 
     const isDisabled = (table: any) => {
       if (!props.selectTableList.length) return false
-      const primary = props.selectTableList[0].primary
-      if (table.primary === primary) return false
+      const primary = props.selectTableList[0].primary_columns[0]
+      const pk = table.primary_columns[0]
+      if (pk.name === primary.name && pk.type === primary.type) return false
       return true
     }
 

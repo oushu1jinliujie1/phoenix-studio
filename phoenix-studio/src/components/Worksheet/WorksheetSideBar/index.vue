@@ -388,7 +388,7 @@
       </div>
   </div>
 
-  <!-- （数据库｜模式）（新建｜查看）-->
+  <!-- 模式新建 -->
   <x-drawer
     title="新建模式"
     :visible="addSchemaDrawerVisible"
@@ -398,7 +398,6 @@
     @close="() => { addSchemaDrawerVisible = false }"
   >
     <addOrUpdateSchema
-      :init-already-exist-name-list="schemaList.map(schema => schema.name)"
       @close="(success: any) => {
         addSchemaDrawerVisible=false;
         if (success) handleRefreshSchema()
@@ -421,7 +420,6 @@
       </x-tooltip> -->
     </template>
     <AddOrUpdateTable
-      :init-already-exist-name-list="table.list.map(item => item.name)"
       :init-table="tableToEdit"
       :is-add="isAddTable"
       :schema="schemaSelectedName"
@@ -435,7 +433,6 @@
   <!-- 字段（新建｜查看） -->
   <AddOrUpdateColumnForExistTable
     v-model:visible="addOrEditColumnDrawerVisible"
-    :init-already-exist-name-list="tableInWhichColumnToOperateReside?.columns?.filter(item => item.name !== columnToEdit?.name).map(item => item.name)"
     :initial-column="columnToEdit"
     :is-add="isAddColumn"
     :schema-name="schemaSelectedName"
@@ -515,11 +512,10 @@
     @close="() => { addSearchTableDrawerVisible = false }"
   >
     <AddSearchTable
-      :init-already-exist-name-list="searchTable.list.map(item => item.name)"
       :schema="schemaSelectedName"
       @close="(success: any) => {
-        addSchemaDrawerVisible=false;
-        if (success) handleRefreshSchema()
+        addSearchTableDrawerVisible = false
+        if (success) handleRefreshSearchTable()
       }"
     />
   </x-drawer>
@@ -536,8 +532,10 @@
     <EditSearchTable
       :schema-name="schemaSelectedName"
       :search-table="searchTableToPreview"
-      @confirm="handleEditSearchTable"
-      @close="() => { editSearchTableDrawerVisible = false }"
+      @close="(success: any) => {
+        editSearchTableDrawerVisible = false
+        if (success) handleRefreshSearchTable(false)
+      }"
     />
   </x-drawer>
 
@@ -820,7 +818,17 @@ export default defineComponent({
         // todo: 为空时返回的是 null，应返回 []，记得和后端对接
         state.table.list = (result.data.data ?? []).map((table: any) => ({
           name: table.TABLE_NAME,
-
+          primary_columns: table.PK_COLUMNS.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
+            return {
+              name: column.COLUMN_NAME,
+              type: column.DATA_TYPE_NAME,
+              schema: column.TABLE_SCHEM,
+              table: column.TABLE_NAME,
+              column_family: column.COLUMN_FAMILY,
+              order: column.ORDINAL_POSITION,
+              primary: true
+            }
+          }),
           loading: false,
           offset: 0,
           limit: 10
@@ -929,26 +937,25 @@ export default defineComponent({
     /**
      * 跳到首页
      */
-    const handleTableJumpToFirstPage = () => {
+    const handleTableJumpToFirstPage = debounce(async() => {
       state.table.current = 1
-      handleGetTableList()
-    }
+      await handleGetTableList()
+    }, 500)
 
     /**
      * 跳到最后一夜
      */
-    const handleTableJumpToLastPage = () => {
+    const handleTableJumpToLastPage = debounce(async() => {
       state.table.current = Math.ceil(state.table.total / state.table.pageSize)
-      handleGetTableList()
-    }
+      await handleGetTableList()
+    }, 500)
 
     /**
      * 页码改变的回调
      */
-    const handleTablePaginationChange = () => {
-      console.log('changePage', Date.now())
-      handleGetTableList()
-    }
+    const handleTablePaginationChange = debounce(async() => {
+      await handleGetTableList()
+    }, 500)
 
 
     // -----------------------------
@@ -971,10 +978,11 @@ export default defineComponent({
         })
 
         if (result.meta.success) {
-          table.columns = result.data ? result.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
+          table.columns = result.data?.data ? result.data.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
             return {
               name: column.COLUMN_NAME,
               schema: column.TABLE_SCHEM,
+              type: column.DATA_TYPE_NAME,
               table: column.TABLE_NAME,
               column_family: column.COLUMN_FAMILY,
               order: column.ORDINAL_POSITION,
@@ -1025,10 +1033,22 @@ export default defineComponent({
       if (state.columnToDelete === undefined || state.tableInWhichColumnToOperateReside === undefined) return
 
       state.columnToDeleteLoading = true
-      const tableInWhichColumnToOperateReside = state.tableInWhichColumnToOperateReside
 
-      // 获取删除字段SQL，执行SQL
+      const resp = await deleteColumn({
+        schemaName: state.schemaSelectedName,
+        tableName: state.tableInWhichColumnToOperateReside.name,
+        family: state.columnToDelete.column_family,
+        columnName: state.columnToDelete.name
+      })
+
+      if (resp.meta?.success) {
+        message.success('删除列成功')
+        handleRefreshColumnsClick(state.tableInWhichColumnToOperateReside)
+      } else {
+        message.error(`删除列失败: ${resp.meta?.message || '无失败提示'}`)
+      }
       state.columnToDeleteLoading = false
+      state.columnToDeleteModalVisible = false
     }
 
     watch(() => state.tableCollapseKeys, async(now, pre) => {
@@ -1049,10 +1069,11 @@ export default defineComponent({
           })
 
           if (result.meta.success) {
-            table.columns = result.data ? result.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
+            table.columns = result.data?.data ? result.data.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
               return {
                 name: column.COLUMN_NAME,
                 schema: column.TABLE_SCHEM,
+                type: column.DATA_TYPE_NAME,
                 table: column.TABLE_NAME,
                 column_family: column.COLUMN_FAMILY,
                 order: column.ORDINAL_POSITION,
@@ -1076,12 +1097,9 @@ export default defineComponent({
     /**
      *  获取 searchTable 数据
      */
-    const handleGetSearchTableData = async() => {
-      if (state.schemaSelectedName === undefined) return
-
+    const handleGetSearchTableList = async() => {
       state.searchTable.spinning = true
       const result = await getSearchTableList({
-        schemaName: state.schemaSelectedName,
         queryName: state.searchTable.searchValue || '',
         offset: (state.searchTable.current - 1) * state.searchTable.pageSize,
         limit: state.searchTable.pageSize,
@@ -1089,9 +1107,16 @@ export default defineComponent({
 
       if (result.meta.success) {
         // 全部数据
-        // todo: 数据为空时返回的是 null，应为 []
-        state.searchTable.list = result.data?.data ?? []
-        state.searchTable.total = result.data.totalCount
+        state.searchTable.list = result.data ? result.data.map((item: any) => {
+          return {
+            name: item.QUERYNAME,
+            comment: item.CHINESENAME,
+            description: item.DESCRIPTION,
+            tables: item.TABLENAMES,
+            columns: item.CONNECTION
+          }
+        }) : []
+        state.searchTable.total = result.data.count
       } else {
         message.error(`刷新查询表失败：${getError(result)}`)
       }
@@ -1106,7 +1131,7 @@ export default defineComponent({
         state.searchTable.current = 1
       state.searchTable.list = []
       state.searchTable.searchValue = ''
-      await handleGetSearchTableData()
+      await handleGetSearchTableList()
     }
 
     /**
@@ -1150,6 +1175,7 @@ export default defineComponent({
       }
 
       state.searchTableDeleteLoading = false
+      state.searchTableDeleteModalVisible = false
     }
 
     /**
@@ -1160,10 +1186,6 @@ export default defineComponent({
       state.editSearchTableDrawerVisible = true
     }
 
-    const handleEditSearchTable = (searchTable: any) => {
-      console.log(searchTable)
-    }
-
     /**
      * 预览查询表数据
      */
@@ -1172,22 +1194,24 @@ export default defineComponent({
       state.previewSearchTableDrawerVisible = true
     }
 
-    const handleSearchTableJumpToFirstPage = () => {
+    const handleSearchTableJumpToFirstPage = debounce(async() => {
       state.searchTable.current = 1
-    }
+      await handleGetSearchTableList()
+    }, 500)
 
-    const handleSearchTableJumpToLastPage = () => {
+    const handleSearchTableJumpToLastPage = debounce(async() => {
       state.searchTable.current = Math.ceil(state.searchTable.total / state.searchTable.pageSize)
-    }
+      await handleGetSearchTableList()
+    }, 500)
 
-    const handleSearchTablePaginationChange = (page: number) => {
-      // 查询表页面跳转
-    }
+    const handleSearchTablePaginationChange = debounce(async() => {
+      await handleGetSearchTableList()
+    }, 500)
 
-    const handleSearchTableOnSearch = () => {
+    const handleSearchTableOnSearch = debounce(async() => {
       state.searchTable.current = 1
-      state.searchTable.searchValue = state.searchTable.searchValue
-    }
+      await handleGetSearchTableList()
+    }, 500)
 
 
     onBeforeMount(() => {
@@ -1240,7 +1264,6 @@ export default defineComponent({
       handleDeleteSearchTableIconClick,
       handleDeleteSearchTable,
       handleEditSearchTableIconClick,
-      handleEditSearchTable,
       handlePreviewSearchTableDataClick,
       handleSearchTableJumpToFirstPage,
       handleSearchTableJumpToLastPage,

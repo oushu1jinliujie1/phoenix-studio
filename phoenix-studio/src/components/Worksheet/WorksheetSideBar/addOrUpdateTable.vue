@@ -41,7 +41,7 @@
             </div>
           </div>
           <!-- split on -->
-          <div class="v-oushudb-add-table-form-container-item">
+          <div v-if="isAdd" class="v-oushudb-add-table-form-container-item">
             <div class="v-oushudb-add-table-form-container-item-label">
               split on
             </div>
@@ -76,7 +76,7 @@
                   :min="0"
                 />
               </div>
-              <div style="padding: 15px 0;" v-else>{{ table.split_on || '--' }}</div>
+              <div style="padding: 15px 0;" v-else>{{ table.salt_buckets || '--' }}</div>
             </div>
           </div>
           <!-- 列信息 -->
@@ -118,13 +118,14 @@
                     <div style="color: #D74472;">{{ validateColumnName(record.name) }}</div>
                   </template>
                   <x-input
-                    :disabled="!isAdd"
+                    v-if="isAdd"
                     v-model:value="record.name"
                     :rules="columnNameRules"
                     no-underline
                     origin-form
                     placeholder="请输入列名"
                   />
+                  <div v-if="!isAdd">{{ record.name || '--' }}</div>
                 </x-tooltip>
               </div>
             </template>
@@ -133,25 +134,27 @@
               <!-- 根据 hover 控制 display 来切换编辑状态 -->
               <div>
                 <x-input
-                  :disabled="!isAdd"
+                  v-if="isAdd"
                   v-model:value="record.comment"
                   no-underline
                   origin-form
                   placeholder="输入中文名"
                 />
+                <div v-if="!isAdd">{{ record.comment || '--' }}</div>
               </div>
             </template>
             <!-- 类型 -->
             <template #type="{ record }">
               <!-- 仅有编辑状态 -->
               <x-select
-                :disabled="!isAdd"
+                v-if="isAdd"
                 v-model:value="record.type"
                 :options="TYPE_OPTION_LIST"
                 class="raw"
                 @change="(value: any) => handleColumnTypeChange(value, record)"
               >
               </x-select>
+              <div v-if="!isAdd">{{ record.type || '--' }}</div>
             </template>
             <!-- 列族 -->
             <template #columnFamily="{ record }">
@@ -165,13 +168,14 @@
                   <div style="color: #D74472;text-align: justify;">{{ validateColumnFamily(record.columnFamily) }}</div>
                 </template>
                 <x-input
-                  :disabled="!isAdd"
+                  v-if="isAdd"
                   v-model:value="record.columnFamily"
                   :rules="columnFamilyRules"
                   no-underline
                   origin-form
                   placeholder="--"
                 />
+                <div v-if="!isAdd">{{ record.columnFamily || '--' }}</div>
               </x-tooltip>
               <div v-else>
                 --
@@ -183,12 +187,13 @@
               <div v-if="TYPE_WITH_SCALE.includes(record.type)"
                    class="v-oushudb-add-table-basic-info-table-cell">
                 <x-input-number
-                  :disabled="!isAdd"
+                  v-if="isAdd"
                   v-model:value="record.scale"
                   :max="record.type === 'DECIMAL' ? 38 : Infinity"
                   :min="TYPE_REQUIRED_SCALE.includes(record.type) ? 1 : 0"
                   placeholder="--"
                   class="raw"/>
+                <div v-if="!isAdd">{{ record.scale || '--' }}</div>
               </div>
               <div v-else>
                 --
@@ -198,7 +203,8 @@
             <template #precision="{ record }">
               <!-- 根据 hover 控制 display 来切换编辑状态 -->
               <div v-if="TYPE_WITH_PRECISION.includes(record.type)" class="v-oushudb-add-table-basic-info-table-cell">
-                <x-input-number :disabled="!isAdd" v-model:value="record.precision" :max="Math.max(record.scale - 1, 0)" :min='0' placeholder="--" class="raw"/>
+                <x-input-number v-if="isAdd" v-model:value="record.precision" :max="Math.max(record.scale - 1, 0)" :min='0' placeholder="--" class="raw"/>
+                <div v-if="!isAdd">{{ record.precision || '--' }}</div>
               </div>
               <div v-else>
                 --
@@ -278,7 +284,6 @@
     @close="() => { columnDrawerVisible = false }"
   >
     <add-or-update-column-base
-      :init-already-exist-name-list="table.columnList.filter(item => item.id !== columnWillEdit.id).map(item => item.name)"
       :initial-column="columnWillEdit"
       :schema-name="schema"
       :table="table"
@@ -314,7 +319,7 @@ import { useStore } from 'vuex'
 import { Table } from '@/components/Worksheet/type'
 import { useI18n } from 'vue-i18n'
 import { translateErrorMessage } from 'lava-fe-lib/lib-common/i18n'
-import { executeSql, getColumnList, getSqlForCreateTable, getTableDetails } from '@/api'
+import { duplicateTable, executeSql, getColumnList, getSqlForCreateTable, getTableDetails } from '@/api'
 import { checkIsInstanceName } from '@/lib/regexp'
 import { format } from 'sql-formatter'
 
@@ -372,10 +377,6 @@ export default defineComponent({
   name: 'AddOrUpdateTable',
   components: { addOrUpdateColumnBase, Icon, ...smartUUI },
   props: {
-    initAlreadyExistNameList: {
-      type: Array,
-      required: true,
-    },
     // 编辑时table的初始值
     initTable: {
       type: Object,
@@ -455,11 +456,18 @@ export default defineComponent({
         return Promise.reject('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串')
       }
 
-      if (props.initAlreadyExistNameList?.filter(alreadyName => alreadyName !== props.initTable?.name).includes(state.table.name)) {
-        return Promise.reject('该表名已存在，请检查后重新填写')
-      }
-
-      return Promise.resolve('')
+      return new Promise((resolve, reject) => {
+        duplicateTable({
+          schemaName: props.schema,
+          tableName: state.table.name
+        }).then((resp) => {
+          if (resp.meta.success) {
+            resolve('')
+          } else {
+            reject('该表名已存在，请检查后重新填写')
+          }
+        })
+      })
     }
 
     /**
@@ -608,8 +616,48 @@ export default defineComponent({
         }
       }, 800)
 
+    /**
+     * 参数检查
+     */
+    const tableBasicInfoCheck = async() => {
+      if (state.table.name === '') {
+        message.warning('请输入表名！')
+        return false
+      }
+      if (!checkIsInstanceName(state.table.name)) {
+        message.warning('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的表名')
+        return false
+      }
+      const resp = await duplicateTable({
+        schemaName: props.schema,
+        tableName: state.table.name
+      })
+      if (!resp.meta.success) {
+        message.warning('该表名已存在，请重新填写！')
+        return false
+      }
+      // @ts-ignore
+      if (state.table.columnList.length === 0) {
+        message.warning('请至少输入一个列信息！')
+        return false
+      }
+      if (state.table.columnList.some(column => {
+        return column.name === ''
+          || (!TYPE_OPTION_LIST.map(item => item.value).includes(column.type))
+      })) {
+        message.warning('请检查所有列名、选择列类型是否已输入！')
+        return false
+      }
+      if (state.table.columnList.every(column => !column.isPrimary)) {
+        message.warning('请至少勾选一个主键列！')
+        return false
+      }
+      return true
+    }
+
     const handleSubmit = async() => {
-      if (!tableBasicInfoCheck()) {
+      const checked = await tableBasicInfoCheck()
+      if (!checked) {
         return
       }
 
@@ -623,45 +671,6 @@ export default defineComponent({
         context.emit('close', true)
       } else {
         message.error(`${props.isAdd ? '创建' : '修改'}表失败: ${executeResult.meta?.message || getError(executeResult) || '无失败提示'}`, 5)
-      }
-
-      /**
-       * 参数检查
-       */
-      function tableBasicInfoCheck(): boolean {
-        if (state.table.name === '') {
-          message.warning('请输入表名！')
-          return false
-        }
-
-        if (!checkIsInstanceName(state.table.name)) {
-          message.warning('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的表名')
-          return false
-        }
-
-        if (props.initAlreadyExistNameList?.filter(alreadyName => alreadyName !== props.initTable?.name).includes(state.table.name)) {
-          message.warning('该表名已存在，请重新填写！')
-          return false
-        }
-
-        // @ts-ignore
-        if (state.table.columnList.length === 0) {
-          message.warning('请至少输入一个列信息！')
-          return false
-        }
-        if (state.table.columnList.some(column => {
-          return column.name === ''
-            || (!TYPE_OPTION_LIST.map(item => item.value).includes(column.type))
-        })) {
-          message.warning('请检查所有列名、选择列类型是否已输入！')
-          return false
-        }
-        if (state.table.columnList.every(column => !column.isPrimary)) {
-          message.warning('请至少勾选一个主键列！')
-          return false
-        }
-
-        return true
       }
     }
 
@@ -810,15 +819,12 @@ export default defineComponent({
       })
 
       if (getDetailResult.meta.success) {
-        for (const key in initTable) {
-          // 以下属性在 details 中不会返回
-          if (['columns'].includes(key)) continue
-
-          if (Object.prototype.hasOwnProperty.call(initTable, key)) {
-            // @ts-ignore
-            initTable[key] = getDetailResult.data[key] ? (getDetailResult.data)[key] : initTable[key]
-          }
+        const details = {
+          name: getDetailResult.data.TABLE_NAME,
+          salt_buckets: getDetailResult.data.SALT_BUCKETS,
+          split_on: getDetailResult.data.SPLIT_ON
         }
+        Object.assign(initTable, details)
       } else {
         message.error(`获取表详细信息失败：${getError(getDetailResult)}`)
         return
@@ -833,9 +839,10 @@ export default defineComponent({
       })
 
       if (getColumnListResult.meta.success) {
-        initTable.columns = getColumnListResult.data ? getColumnListResult.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
+        initTable.columns = getColumnListResult.data?.data ? getColumnListResult.data.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
           return {
             name: column.COLUMN_NAME,
+            type: column.DATA_TYPE_NAME,
             schema: column.TABLE_SCHEM,
             table: column.TABLE_NAME,
             column_family: column.COLUMN_FAMILY,
@@ -862,7 +869,7 @@ export default defineComponent({
           columnDeletePopConfirmVisible: false,
           // 列名，也可做唯一值
           name: column.name,
-          type: column.type || 'INTEGER',
+          type: column.type || 'VARCHAR',
           comment: column.comment,
           columnFamily: column.column_family,
           // 是否允许为空
@@ -1074,76 +1081,6 @@ export default defineComponent({
         margin-bottom: 10px;
         margin-left: 10px;
       }
-    }
-  }
-
-  // 分区信息
-  .v-oushudb-add-table-partition-container {
-    margin-bottom: 20px;
-    // 开关
-    .v-oushudb-add-table-partition-container-switch-container {
-      > span {
-        display: inline-flex;
-        width: 60px;
-        margin-right: 10px;
-
-        @include font-small();
-        color: $color-primary-black;
-      }
-
-      .icon {
-        margin-left: 10px;
-      }
-    }
-
-    // 分区
-    .v-oushudb-add-table-partition-container-partition-container {
-      // header
-      .v-oushudb-add-table-partition-container-partition-header {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 10px;
-        margin-bottom: 10px;
-
-        .v-oushudb-add-table-partition-container-partition-header-left {
-          display: flex;
-
-          > div {
-            margin-right: 10px;
-          }
-
-          .v-oushudb-add-table-partition-container-select-with-prefix {
-            position: relative;
-
-            .#{$ant-prefix}-select-selector {
-              padding-left: 38px;
-            }
-
-            .v-oushudb-add-table-partition-container-select-prefix-icon {
-              position: absolute;
-              top: 6px;
-              left: 11px;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .v-oushudb-add-table-partition-container-disabled {
-    position: relative;
-
-    &::before {
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      z-index: 1;
-      cursor: not-allowed;
-      content: '';
-      user-select: none;
-      background-color: rgba(255, 255, 255, .6);
     }
   }
 

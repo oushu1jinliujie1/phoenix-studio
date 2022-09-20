@@ -11,8 +11,8 @@
           </template>
           <BasicInfoForm
             ref="basicRef"
-            :init-already-exist-name-list="[]"
             v-model:basic-form="basicForm"
+            :initial-name="searchTable.name"
           />
         </x-tab-pane>
         <x-tab-pane key="connectionInformation" forceRender>
@@ -33,9 +33,10 @@
       </x-tabs>
     </x-spin>
     <div class="search-data-filter-form-btn-container">
-      <x-tooltip
-        :title="notFinishMsg"
-        :visible="isDisableRef?undefined:false">
+      <x-tooltip :visible="isDisableRef?undefined:false">
+        <template #title>
+          <div style="color: #D74472;">{{ notFinishMsg }}</div>
+        </template>
         <x-button
           :disabled="isDisableRef"
           :loading="execLoading"
@@ -91,7 +92,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, reactive, toRefs, onMounted, computed } from 'vue'
+import { defineComponent, ref, reactive, toRefs, onMounted, computed, PropType } from 'vue'
 import Icon from '@/components/Icon.vue'
 // @ts-ignore
 import smartUI from '@/smart-ui-vue/index.js'
@@ -101,10 +102,17 @@ import BasicInfoForm from '@/components/Worksheet/WorksheetSideBar/SearchTable/C
 import ConnectionTableSettings from '@/components/Worksheet/WorksheetSideBar/SearchTable/ConnectionSteps/connectionTableSettings.vue'
 import ConnectionColumnSettings from '@/components/Worksheet/WorksheetSideBar/SearchTable/ConnectionSteps/connectionColumnSettings.vue'
 import { FinishCheckItem, getIsFinish } from '@/lib/common'
+import { editSearchTable, getTableList } from '@/api'
 
 export default defineComponent({
   name: 'editSearchTable',
   props: {
+    searchTable: {
+      type: Object as PropType<any>,
+      default: () => {
+        return {}
+      }
+    },
     execLoading: Boolean
   },
   components: { Icon, ...smartUI, BasicInfoForm, ConnectionTableSettings, ConnectionColumnSettings },
@@ -146,35 +154,78 @@ export default defineComponent({
     /**
      * 提交表单
      */
-    const handleConfirm = () => {
-      context.emit('confirm', {
-
+    const handleConfirm = async() => {
+      const resp = await editSearchTable({
+        queryName: state.basicForm.name,
+        chineseName: state.basicForm.comment,
+        description: state.basicForm.description,
+        tableNames: state.initialSelectTableList.map(table => {
+          return {
+            schemaName: table.schema,
+            tableName: table.name
+          }
+        }),
+        columns: state.columnSettings.map(column => {
+          return {
+            columnName: column.name
+          }
+        })
       })
+
+      if (resp.meta.success) {
+        message.success('编辑查询表成功')
+        context.emit('close', true)
+      } else {
+        message.error(`编辑查询表失败：${resp.meta.message}`)
+      }
     }
     const handleCancel = () => {
       context.emit('close')
     }
 
-    onMounted(() => {
+    onMounted(async() => {
       state.getTableDetailLoading = true
-      setTimeout(() => {
-        state.basicForm = {
-          name: 'basic',
-          comment: 'basic',
-          description: 'basic'
+      state.basicForm = {
+        name: props.searchTable.name,
+        comment: props.searchTable.comment || '',
+        description: props.searchTable.description || ''
+      }
+      for (const str of props.searchTable.tables.split(',')) {
+        let result: any = {}
+        const resp = await getTableList({
+          schemaName: str.split('.')[0],
+          tableName: str.split('.')[1],
+          offset: 0,
+          limit: 1
+        })
+        if (resp.meta.success) {
+          result = (resp.data.data ?? []).map((table: any) => ({
+            name: table.TABLE_NAME,
+            schema: str.split('.')[0],
+            primary_columns: table.PK_COLUMNS.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
+              return {
+                name: column.COLUMN_NAME,
+                type: column.DATA_TYPE_NAME,
+                schema: column.TABLE_SCHEM,
+                table: column.TABLE_NAME,
+                column_family: column.COLUMN_FAMILY,
+                order: column.ORDINAL_POSITION,
+                primary: true
+              }
+            }),
+          }))[0]
+        } else {
+          message.error(`获取表信息失败：${resp.meta.message}`)
         }
-        state.selectTableList = [
-          { name: 'table1', primary: 'columnP', columns: [{ name: 'columnP' }, { name: 'column1' }, { name: 'column2' }, { name: 'column3' }] },
-          { name: 'table2', primary: 'columnP', columns: [{ name: 'columnP' }, { name: 'column1' }, { name: 'column2' }, { name: 'column3' }] }
-        ]
-        state.initialSelectTableList = state.selectTableList
-        state.columnSettings = [
-          { table1: 'columnP', table2: 'columnP' },
-          { table1: 'column1', table2: 'column1' },
-          { table1: 'column2', table2: 'column2' },
-        ]
-        state.getTableDetailLoading = false
-      }, 500)
+        state.selectTableList = [...state.selectTableList, result]
+      }
+      state.initialSelectTableList = state.selectTableList
+      state.columnSettings = props.searchTable.columns.split(',').map((columnName: any) => {
+        return {
+          name: columnName
+        }
+      })
+      state.getTableDetailLoading = false
     })
 
     return {

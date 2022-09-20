@@ -24,7 +24,6 @@
         <Icon class="right-top" image name='login/right-top' />
         <Icon class="right-bottom" image name='login/right-bottom' />
       </div>
-      <SecureVerifyModal v-if="showModal" :showModalStatus="showModal" @showModalStatus="showModalStatus" />
     </div>
   </div>
 </template>
@@ -33,13 +32,10 @@ import { useRouter } from 'vue-router'
 import { reactive, ref, computed, onMounted } from 'vue'
 import { message } from 'ant-design-vue-3'
 import { useStore } from 'vuex'
-import { useI18n } from 'vue-i18n'
-import { translateErrorMessage } from 'lava-fe-lib/lib-common/i18n'
-import { login } from '../../api/login'
+import { login } from '@/api'
 import XButton from '../../smart-ui-vue/XButton.vue'
 import Icon from '../Icon.vue'
 import FormPwd from './FormPwd'
-import SecureVerifyModal from './SecureVerifyModal'
 
 export default {
   name: 'Logon',
@@ -47,15 +43,11 @@ export default {
     XButton,
     Icon,
     FormPwd,
-    SecureVerifyModal,
   },
   setup() {
     const store = useStore()
     const router = useRouter()
-    const { t } = useI18n()
-    const showModal = ref(false)
     const disabledBoolean = ref(true)
-    const loginErroe = ref(0)
     const logonParams = reactive({
       params: {
         userName: '',
@@ -111,9 +103,6 @@ export default {
       logonParams.params.password = item.value.password
     }
 
-    const showModalStatus = (item) => {
-      showModal.value = item
-    }
     // 是否自动填充
     const autofill = (value) => {
       disabledBoolean.value = value.status
@@ -123,9 +112,6 @@ export default {
       autofill,
       confirmLogin,
       sendParams,
-      showModalStatus,
-      showModal,
-      loginErroe,
       disabledBoolean,
       logonParams,
       loginLoadding,

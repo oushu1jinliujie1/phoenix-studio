@@ -4,7 +4,6 @@
     <div v-show="step===0">
       <BasicInfoForm
         ref="basicRef"
-        :init-already-exist-name-list="[]"
         v-model:basic-form="basicForm"
       />
     </div>
@@ -28,10 +27,10 @@
     :max-step="END_STEP"
     :next-step-tooltip="notFinishMsg">
     <template #option>
-      <x-tooltip
-        v-if="step===END_STEP"
-        :title="notFinishMsg"
-        :visible="isDisableNextStepRef?undefined:false">
+      <x-tooltip v-if="step===END_STEP" :visible="isDisableNextStepRef?undefined:false">
+        <template #title>
+          <div style="color: #D74472;">{{ notFinishMsg }}</div>
+        </template>
         <x-button
           :disabled="isDisableNextStepRef"
           type="primary"
@@ -121,8 +120,7 @@ export default defineComponent({
         }),
         columns: state.columnSettings.map(column => {
           return {
-            columnName: column.name,
-            dataType: column.type
+            columnName: column.name
           }
         })
       })

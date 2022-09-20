@@ -101,11 +101,9 @@ export default defineComponent({
         return false
       } else {
         for (const each of props.columnSettings) {
-          for (const key in each) {
-            if (!each[key]) {
-              notFinishMsgRef.value = '请确认每条关联中所有表都已选择关联列'
-              return false
-            }
+          if (!each.name) {
+            notFinishMsgRef.value = '请确认每条关联都已选择关联列'
+            return false
           }
         }
         notFinishMsgRef.value = ''
@@ -118,7 +116,7 @@ export default defineComponent({
       for (const each of props.columnSettings) {
         const obj: any = {}
         for (const table of props.tables) {
-          obj[table.name] = each
+          obj[table.name] = each.name
         }
         res.push(obj)
       }
@@ -149,13 +147,13 @@ export default defineComponent({
         })
 
         if (result.meta.success) {
-          table.columns = result.data ? result.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
+          table.columns = result.data?.data ? result.data.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
             return {
               name: column.COLUMN_NAME,
               schema: column.TABLE_SCHEM,
               table: column.TABLE_NAME,
               column_family: column.COLUMN_FAMILY,
-              type: column.DATA_TYPE,
+              type: column.DATA_TYPE_NAME,
               order: column.ORDINAL_POSITION,
               primary: Boolean(column.KEY_SEQ)
             }
@@ -171,7 +169,6 @@ export default defineComponent({
       let res: any[] = []
       const values: any[] = props.tables.map((table: any) => table.columns) || []
       if (values.length > 1) {
-        console.log('columns', values)
         res = intersectionWith(...values, (a: any, b: any) => {
           if (a.name === b.name && a.type === b.type) {
             return true
@@ -181,12 +178,11 @@ export default defineComponent({
       } else {
         res = values[0] || []
       }
-      console.log('joined', res)
       return res
     })
     const getColumnsOption = (record: any) => {
       const res = columnsJoined.value.filter((column: any) => {
-        if (props.columnSettings.find((columnName: any) => columnName === column.name && record !== column.name)) return false
+        if (props.columnSettings.find((setting: any) => setting.name === column.name && record !== column.name)) return false
         return true
       })
       return res
@@ -194,13 +190,12 @@ export default defineComponent({
 
     const changeColumn = (index: number, value: any) => {
       const settings = JSON.parse(JSON.stringify(props.columnSettings))
-      settings[index] = value
+      settings[index] = columnsJoined.value.find((column: any) => column.name === value)
       context.emit('update:columnSettings', settings)
     }
 
     const handleAddConnectionWithDebounce = throttle(() => {
-      context.emit('update:columnSettings', [...props.columnSettings, ''])
-      console.log('add connection')
+      context.emit('update:columnSettings', [...props.columnSettings, { name: '', type: '' }])
     }, 500)
 
     const handelShowConnectionTableSettings = () => {
@@ -208,9 +203,8 @@ export default defineComponent({
     }
 
     const deleteConnection = (row: any) => {
-      const settings = props.columnSettings.filter((item: any) => item !== row[props.tables[0]?.name])
+      const settings = props.columnSettings.filter((item: any) => item.name !== row[props.tables[0]?.name])
       context.emit('update:columnSettings', settings)
-      console.log('delete connection')
     }
 
     return {

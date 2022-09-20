@@ -15,7 +15,7 @@
           <template #prefix>
             <icon class="hover-translateY-2" image name="worksheet/database_two_color"/>
           </template>
-          <template v-if="!disabled" #suffix>
+          <template #suffix>
             <a-tooltip placement="bottomLeft" title="复制">
               <icon
                 class="hover-translateY-2" color="primary"
@@ -69,13 +69,21 @@
   </div>
   <!-- 提交、取消按钮组 -->
   <div class="v-oushudb-add-db-form-btn-container">
-    <x-button
-      :disabled="isSubmitDisabled"
-      data-test-id="oushudb-worksheet-database-schema-submit-add-edit-btn" type="primary"
-      @click="handleSubmit">
-      <icon name="worksheet/submit"/>
-      提交
-    </x-button>
+    <x-tooltip
+      :visible="isSubmitDisabled?undefined:false"
+      :overlayStyle="{ 'pointer-events': 'none' }"
+    >
+      <template #title>
+        <div style="color: #D74472;">{{ nameValidate }}</div>
+      </template>
+      <x-button
+        :disabled="isSubmitDisabled"
+        data-test-id="oushudb-worksheet-database-schema-submit-add-edit-btn" type="primary"
+        @click="handleSubmit">
+        <icon name="worksheet/submit"/>
+        提交
+      </x-button>
+    </x-tooltip>
     <x-button data-test-id="oushudb-worksheet-database-schema-cancel-add-edit-btn" @click="handleCancel">
       <icon name="worksheet/cancel"/>
       取消
@@ -97,7 +105,7 @@ import { debounce } from 'lodash'
 import { RuleObject } from 'ant-design-vue/es/form/interface'
 import { useI18n } from 'vue-i18n'
 import { translateErrorMessage } from 'lava-fe-lib/lib-common/i18n'
-import { executeSql, getSqlForCreateSchema } from '@/api'
+import { duplicateSchema, executeSql, getSqlForCreateSchema } from '@/api'
 import { checkIsInstanceName } from '@/lib/regexp'
 
 import('monaco-themes/themes/Tomorrow.json')
@@ -134,10 +142,6 @@ export default defineComponent({
   name: 'addOrUpdateSchema',
   components: { Icon, ...smartUI },
   props: {
-    initAlreadyExistNameList: {
-      type: Array,
-      default: (): [] => [],
-    },
   },
   emits: ['close'],
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -146,23 +150,34 @@ export default defineComponent({
 
     const state = reactive({
       // 初始名字得再优化一下
-      schemaName: (props.initSchemaName || '') as string,
-      comment: props.initComment,
-      disabled: false,
+      schemaName: '' as string,
+      comment: '',
+
+      isSubmitDisabled: false,
+      nameValidate: ''
     })
 
     const validatePass = (rule: RuleObject, value: string) => {
       if (value === '') {
+        state.nameValidate = '请填写列名'
         return Promise.reject('请填写模式名')
       } else {
         if (!checkIsInstanceName(value)) {
+          state.nameValidate = '请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串'
           return Promise.reject('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串')
         }
-        if (props.initAlreadyExistNameList?.includes(state.schemaName)) {
-          return Promise.reject('该模式名已存在，请检查后重新填写')
-        }
 
-        return Promise.resolve('')
+        return new Promise((resolve, reject) => {
+          duplicateSchema(value).then((resp) => {
+            if (resp.meta.success) {
+              state.nameValidate = ''
+              resolve('')
+            } else {
+              state.nameValidate = '该模式名已存在，请检查后重新填写'
+              reject('该模式名已存在，请检查后重新填写')
+            }
+          })
+        })
       }
     }
 
@@ -170,12 +185,6 @@ export default defineComponent({
     const rules = [
       // 非空
       { required: true, validator: validatePass },
-      {
-        validator: () => {
-          return props.initAlreadyExistNameList?.includes(state.schemaName)
-        },
-        message: '该模式名已存在，请检查后重新填写',
-      },
     ]
 
     /**
@@ -262,12 +271,20 @@ export default defineComponent({
       editor.dispose()
     })
 
-    const isSubmitDisabled = computed(() => {
-      return state.schemaName === '' || !checkIsInstanceName(state.schemaName) || props.initAlreadyExistNameList?.includes(state.schemaName)
-    })
-
-    watch([() => state.schemaName, () => state.comment], () => {
-      handleRefreshSQLDetail(isSubmitDisabled.value)
+    watch([() => state.schemaName], async() => {
+      if (state.schemaName === '' || !checkIsInstanceName(state.schemaName)) {
+        state.isSubmitDisabled = true
+        handleRefreshSQLDetail(state.isSubmitDisabled)
+        return
+      }
+      const resp = await duplicateSchema(state.schemaName)
+      if (!resp.meta.success) {
+        state.isSubmitDisabled = true
+        handleRefreshSQLDetail(state.isSubmitDisabled)
+        return
+      }
+      state.isSubmitDisabled = false
+      handleRefreshSQLDetail(state.isSubmitDisabled)
     })
 
     onMounted(() => {
@@ -285,7 +302,6 @@ export default defineComponent({
       handleCancel,
       handleCopySQLDetail,
       handleRefreshSQLDetail,
-      isSubmitDisabled,
     }
   },
 })
@@ -420,6 +436,9 @@ export default defineComponent({
 
   .#{$ant-prefix}-btn:not(:last-child) {
     margin-right: 10px;
+  }
+  &>span {
+    margin-right: 10px
   }
 }
 

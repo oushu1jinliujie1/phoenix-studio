@@ -7,13 +7,11 @@
   >
     <add-or-update-column-base
       :execLoading="execLoadingRef"
-      :init-already-exist-name-list="initAlreadyExistNameList"
       :initial-column="initColumnRef"
       :is-add="isAdd"
       :schemaName="schemaName"
       :table="table"
       is-update-table
-      :storage-format="table?.table_type"
       @close="() => localVisibleRef = false"
       @confirm="handleSubmit"
     />
@@ -49,10 +47,6 @@ export default defineComponent({
     },
     initialColumn: {
       type: Object as PropType<ColumnResData>,
-    },
-    initAlreadyExistNameList: {
-      type: Array,
-      required: true,
     },
     isAdd: {
       type: Boolean,

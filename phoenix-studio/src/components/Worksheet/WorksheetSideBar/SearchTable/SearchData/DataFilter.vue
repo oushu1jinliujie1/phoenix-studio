@@ -17,7 +17,7 @@
             show-search
             allow-clear
             data-test-id="search-data-filter-form-index-select"
-            placeholder="请选择索引列"
+            placeholder="请选择二级索引"
             :options="tableIndexList"
             :fieldNames="{ label: 'name', value: 'name' }"
             v-model:value="secondaryIndex"

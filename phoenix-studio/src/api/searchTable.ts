@@ -12,18 +12,16 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  */
  export const getSearchTableList = (
   {
-    schemaName,
     queryName,
     offset,
     limit 
   } : {
-    schemaName:string,
     queryName: string,
     offset: number,
     limit: number
   }
 ): Promise<Response<any>> => {
-  return http.post('search_table/list', { schemaName, queryName, offset, limit })
+  return http.post('search_table/list', { queryName, offset, limit })
 }
 
 /**
@@ -34,7 +32,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  *   chineseName: string,
  *   description: string,
  *   tableNames: Array<{ schemaName: string, tableName: string }>,
- *   columns: Array<{ familyName: string, columnName: string, dataType: string, scale: number, pk: boolean }>
+ *   columns: Array<{ columnName: string }>
  * }
  */
  export const createSearchTable = (
@@ -49,7 +47,36 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
     chineseName: string,
     description: string,
     tableNames: Array<{ schemaName: string, tableName: string }>,
-    columns: Array<{ columnName: string, dataType: string }>
+    columns: Array<{ columnName: string }>
+  }
+): Promise<Response<any>> => {
+  return http.post('search_table/create', { queryName, chineseName, description, tableNames, columns })
+}
+
+/**
+ * 编辑查询表 (复用新建API，只要queryName相同，就会更新别的字段。queryName不允许修改)
+ * @params
+ * {
+ *   queryName:string,
+ *   chineseName: string,
+ *   description: string,
+ *   tableNames: Array<{ schemaName: string, tableName: string }>,
+ *   columns: Array<{ columnName: string }>
+ * }
+ */
+ export const editSearchTable = (
+  {
+    queryName,
+    chineseName,
+    description,
+    tableNames,
+    columns
+  } : {
+    queryName: string,
+    chineseName: string,
+    description: string,
+    tableNames: Array<{ schemaName: string, tableName: string }>,
+    columns: Array<{ columnName: string }>
   }
 ): Promise<Response<any>> => {
   return http.post('search_table/create', { queryName, chineseName, description, tableNames, columns })

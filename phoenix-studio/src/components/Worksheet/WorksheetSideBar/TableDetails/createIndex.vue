@@ -72,13 +72,14 @@ import smartUI from '@/smart-ui-vue/index.js'
 import { message } from 'ant-design-vue-3'
 import { RuleObject } from 'ant-design-vue/es/form/interface'
 import { checkIsInstanceName } from '@/lib/regexp'
+import { duplicateTable } from '@/api'
 
 export default defineComponent({
   name: 'createIndex',
   props: {
-    initAlreadyExistNameList: {
-      type: Array,
-      required: true
+    schema: {
+      type: String,
+      default: ''
     },
     initialColumns: {
       type: Array,
@@ -116,11 +117,19 @@ export default defineComponent({
         if (!checkIsInstanceName(value)) {
           return Promise.reject('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串')
         }
-        if (props.initAlreadyExistNameList?.includes(formState.name)) {
-          return Promise.reject('该索引名已存在')
-        }
 
-        return Promise.resolve('')
+        return new Promise((resolve, reject) => {
+          duplicateTable({
+            schemaName: props.schema,
+            tableName: value
+          }).then((resp) => {
+            if (resp.meta.success) {
+              resolve('')
+            } else {
+              reject('该索引名已存在，请检查后重新填写')
+            }
+          })
+        })
       }
     }
 
@@ -145,7 +154,7 @@ export default defineComponent({
     /**
      * 提交表单
      */
-    const handleConfirm = () => {
+    const handleConfirm = async() => {
       if (!formState.name) {
         message.error('请填写索引名')
         return
@@ -154,8 +163,9 @@ export default defineComponent({
         message.error('请输入不以数字作为开始的由字母/数字/下划线组成的50位以内的字符串')
         return
       }
-      if (props.initAlreadyExistNameList?.includes(formState.name)) {
-        message.error('该索引名已存在')
+      const resp = await duplicateTable({ schemaName: props.schema, tableName: formState.name })
+      if (!resp.meta.success) {
+        message.error('该索引名已存在，请检查后重新填写')
         return
       }
       if (!formState.columns.length) {
