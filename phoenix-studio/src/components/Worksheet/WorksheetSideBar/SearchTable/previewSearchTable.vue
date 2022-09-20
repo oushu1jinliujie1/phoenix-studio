@@ -105,7 +105,7 @@ export default defineComponent({
           }
         }),
         limit: state.filterOptions.limit,
-        searchValue: Array.from(state.filterOptions.searchValue.entries()).reduce((main, [key, value]) => ({...main, [key]: value}), {})
+        searchValue: [...state.filterOptions.searchValue.entries()].reduce((obj: any, [key, value]) => (obj[key] = value, obj), {})
       })
       if (resp.meta.success) {
         state.searchResults = resp.data
@@ -134,6 +134,7 @@ export default defineComponent({
         default:
           //
       }
+      handleConfirm(state.filterOptions)
     }
 
     const getSecondaryIndexOfSearchTable = async() => {
