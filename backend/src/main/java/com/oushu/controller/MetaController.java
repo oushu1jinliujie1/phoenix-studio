@@ -3,6 +3,7 @@ package com.oushu.controller;
 import com.google.gson.JsonObject;
 import com.oushu.model.*;
 import com.oushu.service.MetaService;
+import com.oushu.util.MyJDBCType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,7 +64,7 @@ public class MetaController {
             for (int j = 0; j < tableColumns.size(); j++) {
                 JsonObject jsonObject = tableColumns.get(j);
                 int data_type = jsonObject.get("DATA_TYPE").getAsInt();
-                String name = JDBCType.valueOf(data_type).name();
+                String name = MyJDBCType.valueOf(data_type).name();
                 jsonObject.addProperty("DATA_TYPE_NAME", name);
             }
             item.put("PK_COLUMNS", tableColumns);
@@ -153,7 +154,7 @@ public class MetaController {
         for (int i = 0; i < tableColumns.size(); i++) {
             JsonObject jsonObject = tableColumns.get(i);
             int data_type = jsonObject.get("DATA_TYPE").getAsInt();
-            String name = JDBCType.valueOf(data_type).name();
+            String name = MyJDBCType.valueOf(data_type).name();
             jsonObject.addProperty("DATA_TYPE_NAME", name);
         }
         long tableColumnCount = this.metaService.getTableColumnCount(param.getSchemaName(), param.getTableName());

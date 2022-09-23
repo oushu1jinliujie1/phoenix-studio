@@ -3,6 +3,7 @@ package com.oushu.controller;
 
 import com.oushu.model.LoginParam;
 import com.oushu.model.ResponseModel;
+import com.oushu.model.User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,7 +36,7 @@ public class LoginController {
         if (param.getUserName().equals("oushu") && param.getPassword().equals("oushu")){
             HttpSession session = request.getSession();
             session.setAttribute("oushu", "oushu");
-            return responseModel.success("登录成功");
+            return responseModel.success(new User(param.getUserName()));
         } else {
             return responseModel.success("登录失败");
         }
