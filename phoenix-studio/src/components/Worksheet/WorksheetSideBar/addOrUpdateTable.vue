@@ -232,7 +232,7 @@
                 :visible="record.columnDeletePopConfirmVisible"
                 cancel-text="取消"
                 ok-text="确认"
-                title="该列作用于分布键，确认删除？"
+                title="该列为主键列，确认删除？"
                 @cancel="() => record.columnDeletePopConfirmVisible = false"
                 @confirm="() => handleDeleteColumn(record)"
                 @visibleChange="(visible: any) => handleDeleteVisibleChange(visible, record)"
