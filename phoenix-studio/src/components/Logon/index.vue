@@ -72,7 +72,7 @@ export default {
           window.localStorage.setItem('userInfo', JSON.stringify({
             id: 0,
             name_remark: '用户名',
-            username: resp.data.user || 'oushu',
+            username: resp.data.userName || 'oushu',
             userType: 'rootuser'
           }))
           // 将用户信息同步到 GlobalState
@@ -80,7 +80,7 @@ export default {
             userInfo: {
               id: 0,
               name_remark: '用户名',
-              username: resp.data.user || 'oushu',
+              username: resp.data.userName || 'oushu',
               userType: 'rootuser'
             }
           })
