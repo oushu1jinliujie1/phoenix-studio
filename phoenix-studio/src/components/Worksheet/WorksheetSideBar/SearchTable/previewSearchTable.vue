@@ -105,7 +105,10 @@ export default defineComponent({
           }
         }),
         limit: state.filterOptions.limit,
-        searchValue: [...state.filterOptions.searchValue.entries()].reduce((obj: any, [key, value]) => (obj[key] = value, obj), {})
+        searchValue: [...state.filterOptions.searchValue.entries()].reduce((obj: any, [key, value]) => {
+          obj[key] = value
+          return obj
+        }, {})
       })
       if (resp.meta.success) {
         state.searchResults = resp.data

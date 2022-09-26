@@ -3,11 +3,23 @@ import Login from '@/pages/Logon.vue'
 
 import Worksheet from './pages/worksheet/index.vue'
 
+// 需要登录状态的页面跳转时统一操作
+const beforeSessionPagesRouteEnter = (to: any, from: any) => {
+  const is401 = sessionStorage.getItem('is401')
+  if (is401) {
+    console.log('未登录', to.fullPath)
+    sessionStorage.setItem('LAST_VISITED_PAGE', to.fullPath)
+    return { path: '/login' }
+  }
+  return true
+}
+
 const routes = [
   {
     path: '/',
     name: 'Worksheet',
-    component: Worksheet
+    component: Worksheet,
+    beforeEnter: beforeSessionPagesRouteEnter
   },
   {
     path: '/login',

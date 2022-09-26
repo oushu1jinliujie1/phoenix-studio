@@ -74,10 +74,11 @@ export const TYPE_OPTION_LIST = [
   }, {
     label: 'VARBINARY',
     value: 'VARBINARY',
-  }, {
-    label: 'ARRAY',
-    value: 'ARRAY',
   }
+  // , {
+  //   label: 'ARRAY',
+  //   value: 'ARRAY',
+  // }
 ]
 
 export const TYPE_WITH_SCALE = [
@@ -85,7 +86,7 @@ export const TYPE_WITH_SCALE = [
   'VARCHAR',
   'CHAR',
   'BINARY',
-  'ARRAY'
+  // 'ARRAY'
 ]
 
 export const TYPE_REQUIRED_SCALE = [

@@ -918,6 +918,10 @@ export default defineComponent({
       columnSelectChange,
 
       handleColumnTypeChange: (value: string, record: any) => {
+        if (!TYPE_REQUIRED_SCALE.includes(value)) {
+          record.scale = 0
+          record.precision = 0
+        }
         if (['timetz', 'timestamptz'].includes(value)) {
           record.scale = undefined
           record.precision = undefined

@@ -350,6 +350,7 @@ export default defineComponent({
 
     const columnName = computed(() => formState.name)
     watch(columnName, async() => {
+      if (!props.isAdd) return
       if (columnName.value === '' || !checkIsInstanceName(columnName.value)) {
         formState.isSubmitDisabled = true
         return
@@ -360,7 +361,7 @@ export default defineComponent({
         columnName: columnName.value
       })
       if (!resp.meta.success) {
-        message.warning('该表名已存在，请重新填写！')
+        message.warning('该列名已存在，请重新填写！')
         formState.isSubmitDisabled = true
         return
       }
