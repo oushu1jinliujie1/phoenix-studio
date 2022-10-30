@@ -3,6 +3,7 @@ package com.oushu.controller;
 import com.google.gson.JsonObject;
 import com.oushu.model.*;
 import com.oushu.service.MetaService;
+import com.oushu.service.SqlService;
 import com.oushu.util.MyJDBCType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,9 @@ public class MetaController {
 
     @Autowired
     private MetaService metaService;
+
+    @Autowired
+    private SqlService sqlService;
 
     @PostMapping("/schema/list")
     public ResponseModel schemaList(){
@@ -156,6 +160,9 @@ public class MetaController {
             int data_type = jsonObject.get("DATA_TYPE").getAsInt();
             String name = MyJDBCType.valueOf(data_type).name();
             jsonObject.addProperty("DATA_TYPE_NAME", name);
+            String column_comment = this.sqlService.getColumnComment(param.getSchemaName(), param.getTableName(),
+                    jsonObject.get("COLUMN_NAME").getAsString());
+            jsonObject.addProperty("COMMENT", column_comment);
         }
         long tableColumnCount = this.metaService.getTableColumnCount(param.getSchemaName(), param.getTableName());
         ResponseModel responseModel = new ResponseModel();

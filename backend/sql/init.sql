@@ -1,9 +1,14 @@
+-- 元数据
 create schema ct;
 create table ct.os_meta(queryName varchar primary key,
 chineseName VARCHAR, description VARCHAR,
 tableNames VARCHAR, connection VARCHAR);
 upsert into ct.os_meta values ('t1', 't1', 't1_desc', 'us.userA,us.userB', 'id,classId');
-
+create table ct.os_table(schemaName VARCHAR, tableName VARCHAR, comment VARCHAR,
+CONSTRAINT pk PRIMARY KEY(schemaName, tableName));
+create table ct.os_column(schemaName VARCHAR, tableName VARCHAR, columnName VARCHAR, comment VARCHAR,
+CONSTRAINT pk PRIMARY KEY(schemaName, tableName, columnName));
+-- 示例数据
 create schema "us";
 create table "us"."userA" ("id" bigint not null, "classId" bigint not null, "pkId" bigint not
  null, "nameA" varchar, "adderA" varchar, constraint userA_pk PRIMARY KEY("id", "classId", "pkId"));

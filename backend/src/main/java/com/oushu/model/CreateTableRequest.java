@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 public class CreateTableRequest {
     private String schemaName;
     private String tableName;
+    private String comment;
     private String splitOn;
     private int saltBuckets;
     private Column[] columns;

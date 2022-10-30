@@ -29,4 +29,6 @@ public interface MetaService {
     JsonObject getTableInfo(String schemaName, String tableName);
     boolean delColumn(Column column);
 
+    Map<String, Integer> getColumnDataType(String[] tables);
+
 }

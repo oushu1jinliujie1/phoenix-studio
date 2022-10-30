@@ -13,6 +13,12 @@ public class TableName {
         return "\"" + schemaName + "\".\"" + tableName + "\"";
     }
 
+    public String getQuoteNameWithColumnName(String columnName){
+        return "\"" + schemaName + "\".\""
+                + tableName + "\".\""
+                + columnName + "\"" ;
+    }
+
     public String getNameWithoutQuote(){
         return schemaName + "." + tableName;
     }

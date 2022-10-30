@@ -6,6 +6,8 @@ import com.oushu.model.Column;
 import com.oushu.model.IdxParam;
 import com.oushu.phoenix.jdbc.PhoenixQuery;
 import com.oushu.service.MetaService;
+import com.oushu.service.SqlService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -15,6 +17,9 @@ import java.util.Map;
 @Service
 public class MetaServiceImpl implements MetaService {
     private PhoenixQuery pq = new PhoenixQuery();
+
+    @Autowired
+    private SqlService sqlService;
 
     /**
      * @return
@@ -115,6 +120,8 @@ public class MetaServiceImpl implements MetaService {
      */
     @Override
     public boolean delTable(String schemaName, String tableName) {
+        this.sqlService.delTableComment(schemaName, tableName);
+        this.sqlService.delColumnComment(schemaName, tableName);
         String dropSql = "drop table \"" + schemaName + "\"." + "\"" + tableName + "\"";
         return pq.execute(dropSql, new HashMap<>()) == 0;
     }
@@ -259,7 +266,10 @@ public class MetaServiceImpl implements MetaService {
         param.put(2, tableName);
         String sql = "SELECT COLUMN_COUNT, TABLE_NAME, SALT_BUCKETS FROM  SYSTEM.CATALOG " +
                 "WHERE TABLE_SCHEM = ? AND TABLE_NAME = ? AND TABLE_TYPE = 'u'";
-        return pq.executeQuery(sql, param);
+        JsonObject result = pq.executeQuery(sql, param);
+        String tableComment = this.sqlService.getTableComment(schemaName, tableName);
+        result.addProperty("COMMENT", tableComment);
+        return result;
     }
 
     /**
@@ -271,5 +281,29 @@ public class MetaServiceImpl implements MetaService {
         String sql = "alter table " + column.getQuoteName()
                 + " drop column " + column.getColumnNameWithQuote();
         return pq.execute(sql, new HashMap<>()) >= 0;
+    }
+
+    /**
+     * @param tables
+     * @return
+     */
+    @Override
+    public Map<String, Integer> getColumnDataType(String[] tables) {
+        Map<String, Integer> result = new HashMap<>();
+        for (int i = 0; i < tables.length; i++) {
+            String schemaName = tables[i].split("\\.")[0];
+            String tableName = tables[i].split("\\.")[1];
+            String sql = "select DATA_TYPE, COLUMN_NAME from SYSTEM.CATALOG " +
+                    " where TABLE_SCHEM = ? and TABLE_NAME = ? and COLUMN_NAME is not null";
+            Map<Integer, Object> param = new HashMap<>();
+            param.put(1, schemaName);
+            param.put(2, tableName);
+            List<JsonObject> list = pq.getList(sql, param);
+            for (JsonObject jsonObject : list) {
+                result.put(tableName + "." + jsonObject.get("COLUMN_NAME").getAsString(),
+                        jsonObject.get("DATA_TYPE").getAsInt());
+            }
+        }
+        return result;
     }
 }

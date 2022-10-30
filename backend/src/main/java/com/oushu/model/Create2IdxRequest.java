@@ -2,6 +2,8 @@ package com.oushu.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -40,5 +42,13 @@ public class Create2IdxRequest extends TableName {
         }
         sql += " ASYNC";
         return sql;
+    }
+
+    public String getRunIndexShell(){
+        Configuration entries = HBaseConfiguration.create();
+        String znode = entries.get("zookeeper.znode.parent");
+        return "hbase org.apache.phoenix.mapreduce.index.IndexTool --schema \\\"" + this.getSchemaName() + "\\\" " +
+                "--data-table \\\"" + this.getTableName() + "\\\" --index-table \\\"" + this.getIndexName() + "\\\" " +
+                "--output-path " + znode + "/data/" + this.getSchemaName() + "/" + this.getIndexName() + " --run-foreground";
     }
 }

@@ -11,6 +11,7 @@ import java.util.List;
 public class Column extends TableName{
     private String columnName;
     private String chineseName;
+    private String comment;
     private String dataType;
     private String familyName;
     private int scale;

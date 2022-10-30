@@ -19,6 +19,13 @@ public class QueryController {
     @PostMapping("/search_table/create")
     public ResponseModel createQueryTable(@RequestBody OsMeta meta){
         ResponseModel responseModel = new ResponseModel();
+        if (meta.getColumns().length == 0){
+            return responseModel.failure("没有关联键");
+        }
+        boolean valide = this.queryService.CheckValide(meta);
+        if (!valide){
+            return responseModel.failure("存在重复列，无法创建");
+        }
         boolean hasSuccess = this.queryService.CreateQuery(meta);
         if (hasSuccess){
             return responseModel.success();
@@ -30,8 +37,10 @@ public class QueryController {
     @PostMapping("/search_table/list")
     public ResponseModel tableList(@RequestBody QueryTableName param){
         List<Map<String, Object>> queryTableList = this.queryService.getQueryTableList(param);
+        long queryTableCount = this.queryService.getQueryTableCount(param);
+        LazyLoadResult lazyLoadResult = new LazyLoadResult(queryTableCount, queryTableList);
         ResponseModel responseModel = new ResponseModel();
-        return responseModel.success(queryTableList);
+        return responseModel.success(lazyLoadResult);
     }
 
     @PostMapping("/search_table/duplicate")
@@ -68,5 +77,26 @@ public class QueryController {
         List<Map<String, Object>> connectedQueryTableList = this.queryService.getConnectedQueryTableList(tableName);
         ResponseModel responseModel = new ResponseModel();
         return responseModel.success(connectedQueryTableList);
+    }
+
+    @PostMapping("/search_table/search/data")
+    public ResponseModel tableData(@RequestBody SearchTableDataRequest tableName){
+        List<Map<String, Object>> result = this.queryService.querySearchTableData(tableName);
+        ResponseModel responseModel = new ResponseModel();
+        return responseModel.success(result);
+    }
+
+    @PostMapping("/search_table/search/data/pk")
+    public ResponseModel tableDataWithPK(@RequestBody SearchTableDataRequest tableName){
+        List<Map<String, Object>> result = this.queryService.querySearchTableDataWithPK(tableName);
+        ResponseModel responseModel = new ResponseModel();
+        return responseModel.success(result);
+    }
+
+    @PostMapping("/basic_table/search/data")
+    public ResponseModel basicTableData(@RequestBody SearchTableDataRequest tableName){
+        List<Map<String, Object>> result = this.queryService.queryBasicTableData(tableName);
+        ResponseModel responseModel = new ResponseModel();
+        return responseModel.success(result);
     }
 }
