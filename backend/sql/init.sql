@@ -2,13 +2,17 @@
 create schema ct;
 create table ct.os_meta(queryName varchar primary key,
 chineseName VARCHAR, description VARCHAR,
-tableNames VARCHAR, connection VARCHAR);
-upsert into ct.os_meta values ('t1', 't1', 't1_desc', 'us.userA,us.userB', 'id,classId');
+tableNames VARCHAR);
+create table ct.os_meta_connection(queryName varchar,
+orderNum bigint not null, connections VARCHAR, CONSTRAINT pk PRIMARY KEY(queryName, orderNum));
 create table ct.os_table(schemaName VARCHAR, tableName VARCHAR, comment VARCHAR,
 CONSTRAINT pk PRIMARY KEY(schemaName, tableName));
 create table ct.os_column(schemaName VARCHAR, tableName VARCHAR, columnName VARCHAR, comment VARCHAR,
 CONSTRAINT pk PRIMARY KEY(schemaName, tableName, columnName));
 -- 示例数据
+upsert into ct.os_meta values ('t1', 't1', 't1_desc', 'us.userA,us.userB');
+upsert into ct.os_meta_connection values ('t1', 1, 'us.userA.id,us.userB.id');
+upsert into ct.os_meta_connection values ('t1', 2, 'us.userA.classId,us.userB.classId');
 create schema "us";
 create table "us"."userA" ("id" bigint not null, "classId" bigint not null, "pkId" bigint not
  null, "nameA" varchar, "adderA" varchar, constraint userA_pk PRIMARY KEY("id", "classId", "pkId"));

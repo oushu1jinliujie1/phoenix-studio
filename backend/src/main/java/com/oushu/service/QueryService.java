@@ -15,7 +15,7 @@ public interface QueryService {
     long getQueryTableCount(QueryTableName param);
     boolean queryNameDup(String queryTableName);
     boolean delQueryName(String queryTableName);
-    JsonObject queryTableInfo(String queryTableName);
+    MetaInfo queryTableInfo(String queryTableName);
     boolean editQuery(OsMeta meta);
     List<Map<String, Object>> getConnectedQueryTableList(TableName tableName);
 

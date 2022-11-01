@@ -1,5 +1,6 @@
 package com.oushu.service.impl;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.oushu.model.*;
 import com.oushu.phoenix.jdbc.PhoenixQuery;
@@ -18,6 +19,8 @@ public class QueryServiceImpl implements QueryService {
 
     private String metaTableName = "ct.os_meta";
 
+    private String metaConnectionsTableName = "ct.os_meta_connection";
+
     private PhoenixQuery pq = new PhoenixQuery();
 
     @Autowired
@@ -29,11 +32,12 @@ public class QueryServiceImpl implements QueryService {
      */
     @Override
     public boolean CheckValide(OsMeta meta) {
-        Column[] columns = meta.getColumns();
+        List<Column[]> metaColumns = meta.getConnections();
         HashMap<String, Boolean> connectionMap = new HashMap<>();
-        for (int i = 0; i < columns.length; i++) {
-            Column item = columns[i];
-            connectionMap.put(item.getColumnName(), true);
+        for (Column[] metaColumn : metaColumns) {
+            for (Column column : metaColumn) {
+                connectionMap.put(column.getColumnName(), true);
+            }
         }
         HashMap<String, Boolean> AllColumn = new HashMap<>();
         TableName[] tableNames = meta.getTableNames();
@@ -69,13 +73,18 @@ public class QueryServiceImpl implements QueryService {
                 .map(item -> item.getNameWithoutQuote())
                 .collect(Collectors.joining(","));
         param.put(4, tables);
-        String columns = Arrays.stream(meta.getColumns())
-                .map(item -> item.getColumnName())
-                .collect(Collectors.joining(","));
-        param.put(5, columns);
-        String upSertSql = "upsert into " + metaTableName + " values ( ?, ?, ?, ?, ? )";
-        int execute = pq.execute(upSertSql, param);
-        return execute > 0;
+        String upSertSql = "upsert into " + metaTableName + " values ( ?, ?, ?, ? )";
+        pq.execute(upSertSql, param);
+        List<String> listConnections = meta.getListConnections();
+        for (int i = 0; i < listConnections.size(); i++) {
+            param.clear();
+            param.put(1, meta.getQueryName());
+            param.put(2, i+1);
+            param.put(3, listConnections.get(i));
+            upSertSql = "upsert into " + metaConnectionsTableName + " values (?, ?, ?)";
+            pq.execute(upSertSql, param);
+        }
+        return true;
     }
 
     /**
@@ -139,21 +148,41 @@ public class QueryServiceImpl implements QueryService {
                 + " where queryName = ?";
         Map<Integer,Object> sqlParam = new HashMap<>();
         sqlParam.put(1, queryTableName);
-        int execute = pq.execute(sql, sqlParam);
-        return execute >= 0;
+        pq.execute(sql, sqlParam);
+        sql = "delete from " + this.metaConnectionsTableName
+                + " where queryName = ?";
+        pq.execute(sql, sqlParam);
+        return true;
     }
 
+    //TODO 同步到查询jar包
     /**
      * @param queryTableName
      * @return
      */
     @Override
-    public JsonObject queryTableInfo(String queryTableName) {
+    public MetaInfo queryTableInfo(String queryTableName) {
         String sql = "select * from " + this.metaTableName
                 + " where queryName = ?";
         Map<Integer,Object> sqlParam = new HashMap<>();
         sqlParam.put(1, queryTableName);
-        return pq.executeQuery(sql, sqlParam);
+        JsonObject result = pq.executeQuery(sql, sqlParam);
+        sql = "select * from " + this.metaConnectionsTableName
+                + " where queryName = ? order by ORDERNUM";
+        List<JsonObject> dataConnections = pq.getList(sql, sqlParam);
+        List<Column[]> connections = new ArrayList<>();
+        for (JsonObject dataConnection : dataConnections) {
+            String attrConn = dataConnection.get("CONNECTIONS").getAsString();
+            String[] column_str = attrConn.split(",");
+            Column[] columnItem = new Column[column_str.length];
+            for (int i = 0; i < column_str.length; i++) {
+                String[] split = column_str[i].split("\\.");
+                columnItem[i] = new Column(split[0], split[1], split[2]);
+            }
+            connections.add(columnItem);
+        }
+        result.add("CONNECTIONS", new Gson().toJsonTree(connections));
+        return new Gson().fromJson(result, MetaInfo.class);
     }
 
     /**
@@ -186,14 +215,11 @@ public class QueryServiceImpl implements QueryService {
     public List<Map<String, Object>> querySearchTableData(SearchTableDataRequest tableName) {
 
         // 查询元数据
-        String sql = "select * from " + this.metaTableName
-                + " where QUERYNAME = ?";
-        Map<Integer,Object> sqlParam = new HashMap<>();
-        sqlParam.put(1, tableName.getSearchTableName());
-        JsonObject queryTableInfo = pq.executeQuery(sql, sqlParam);
-        String connections = queryTableInfo.get("CONNECTION").getAsString();
-        String[] tables = queryTableInfo.get("TABLENAMES").getAsString().split(",");
+        MetaInfo metaInfo = this.queryTableInfo(tableName.getSearchTableName());
+        String[] tables = metaInfo.getTableNames().split(",");
         Map<String, Integer> columnDataType = metaService.getColumnDataType(tables);
+        List<TableName> tableNames = getTableNames(tables);
+        List<MetaInfo.ColumnConnection[]> connections = metaInfo.getConnections();
         // 第1次查询，查询关联键
         String select = getSelectForPK(connections, columnDataType, tableName.getTableName());
         String conditionForPK = getConditionForPK(tableName.getSearchValue(),
@@ -204,10 +230,9 @@ public class QueryServiceImpl implements QueryService {
         List<JsonObject> keyList = pq.getList(keyListSql, new HashMap<>());
         // 第2次查询，查询最终结果
         String finallySelectSql = tableName.getFinallySelectSql();
-        List<TableName> tableNames = getTableNames(tables);
         List<String> temp = tableNames.stream().map(item -> item.getQuoteName()).collect(Collectors.toList());
         String finallyFromSql = String.join(" , ", temp);
-        String pkLinkCondition = getPKLinkCondition(tableNames, connections);
+        String pkLinkCondition = getPKLinkCondition(connections);
         String pkCondition = getPKCondition(tableNames, connections, keyList);
         String finallySql = "select " + finallySelectSql
                 + " from " + finallyFromSql
@@ -223,21 +248,17 @@ public class QueryServiceImpl implements QueryService {
     @Override
     public List<Map<String, Object>> querySearchTableDataWithPK(SearchTableDataRequest tableName) {
         // 查询元数据
-        String sql = "select * from " + this.metaTableName
-                + " where QUERYNAME = ?";
-        Map<Integer,Object> sqlParam = new HashMap<>();
-        sqlParam.put(1, tableName.getSearchTableName());
-        JsonObject queryTableInfo = pq.executeQuery(sql, sqlParam);
-        String connections = queryTableInfo.get("CONNECTION").getAsString();
-        String[] tables = queryTableInfo.get("TABLENAMES").getAsString().split(",");
+        MetaInfo metaInfo = this.queryTableInfo(tableName.getSearchTableName());
+        String[] tables = metaInfo.getTableNames().split(",");
         Map<String, Integer> columnDataType = metaService.getColumnDataType(tables);
+        List<TableName> tableNames = getTableNames(tables);
+        List<MetaInfo.ColumnConnection[]> connections = metaInfo.getConnections();
 
         // 查询最终结果
         String finallySelectSql = tableName.getFinallySelectSql();
-        List<TableName> tableNames = getTableNames(tables);
         List<String> temp = tableNames.stream().map(item -> item.getQuoteName()).collect(Collectors.toList());
         String finallyFromSql = String.join(" , ", temp);
-        String pkLinkCondition = getPKLinkCondition(tableNames, connections);
+        String pkLinkCondition = getPKLinkCondition(connections);
         String conditionForPK = getConditionForPK(tableName.getSearchValue(),
                 tableName.getSchemaName(), tableName.getTableName(), columnDataType);
         String finallySql = "select " + finallySelectSql
@@ -267,21 +288,23 @@ public class QueryServiceImpl implements QueryService {
         return pq.getListMap(finallySql, new HashMap<>());
     }
 
-    private String getPKLinkCondition(List<TableName> tableNames, String connections) {
-        String[] attrs = connections.split(",");
+    //TODO 同步到查询jar包
+    private String getPKLinkCondition(List<MetaInfo.ColumnConnection[]> connections) {
         List<String> temp = new ArrayList<>();
-        for (int i = 0; i < tableNames.size()-1; i++) {
+        for (int i = 0; i < connections.size(); i++) {
+            MetaInfo.ColumnConnection[] columnConnections = connections.get(i);
             List<String> innerTemp = new ArrayList<>();
-            for (int j = 0; j < attrs.length; j++) {
-                innerTemp.add(tableNames.get(i).getQuoteNameWithColumnName(attrs[j]) + " = "
-                + tableNames.get(i+1).getQuoteNameWithColumnName(attrs[j]));
+            for (int j = 0; j < columnConnections.length-1; j++) {
+                innerTemp.add(columnConnections[j].getQuoteName() + " = " + columnConnections[j+1].getQuoteName());
             }
             temp.add(String.join(" and ", innerTemp));
         }
         return String.join(" and ", temp);
     }
 
-    private String getPKCondition(List<TableName> tableNames, String connections, List<JsonObject> keyList) {
+    //TODO 同步到查询jar包
+    private String getPKCondition(List<TableName> tableNames, List<MetaInfo.ColumnConnection[]> connections,
+                                  List<JsonObject> keyList) {
         List<String> temp = new ArrayList<>();
         for (JsonObject jsonObject : keyList) {
             temp.add(jsonObject.get("keyList").getAsString());
@@ -296,11 +319,15 @@ public class QueryServiceImpl implements QueryService {
         return String.join(" and ", temp);
     }
 
-    private String getTableWithKey(TableName tableName, String connections) {
+    private String getTableWithKey(TableName tableName, List<MetaInfo.ColumnConnection[]> connections) {
         List<String> temp = new ArrayList<>();
-        String[] attrs = connections.split(",");
-        for (String attr : attrs) {
-            temp.add(tableName.getQuoteNameWithColumnName(attr));
+        for (MetaInfo.ColumnConnection[] connection : connections) {
+            for (MetaInfo.ColumnConnection columnConnection : connection) {
+                if (columnConnection.getTableName().equals(tableName.getTableName()) &&
+                        columnConnection.getSchemaName().equals(tableName.getSchemaName())){
+                    temp.add(columnConnection.getQuoteName());
+                }
+            }
         }
         return String.join(", ", temp);
     }
@@ -318,10 +345,12 @@ public class QueryServiceImpl implements QueryService {
         return result;
     }
 
-    private String getSelectForPK(String connections,
+    private String getSelectForPK(List<MetaInfo.ColumnConnection[]> connections,
                                   Map<String, Integer> columnDataType, String tableName) {
         List<String> temp = new ArrayList<>();
-        for (String columnName : connections.split(",")) {
+        for (MetaInfo.ColumnConnection[] connection : connections) {
+            Optional<MetaInfo.ColumnConnection> column = Arrays.stream(connection).filter(item -> item.getTableName().equals(tableName)).findFirst();
+            String columnName = column.get().getColumnName();
             Integer dataType = columnDataType.getOrDefault(tableName + "." + columnName, Types.VARCHAR);
             if (DataType.isNumber(dataType)){
                 temp.add("\"" + columnName + "\"");

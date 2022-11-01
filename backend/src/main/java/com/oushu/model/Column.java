@@ -18,6 +18,12 @@ public class Column extends TableName{
     private int precision;
     private boolean pk;
 
+    public Column(String schemaName, String tableName, String columnName) {
+        this.setSchemaName(schemaName);
+        this.setTableName(tableName);
+        this.columnName = columnName;
+    }
+
     public String getColumnSql(){
         String columnSql = "";
         if (this.familyName != null && this.familyName.length() > 0){
@@ -52,5 +58,9 @@ public class Column extends TableName{
             return "\"" + this.familyName + "\".\"" + this.getColumnName() + "\"";
         }
         return "\"" + this.getColumnName() + "\"";
+    }
+
+    public String getFullPathColumnName(){
+        return this.getNameWithoutQuote() + "." + this.columnName;
     }
 }

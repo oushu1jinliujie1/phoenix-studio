@@ -19,7 +19,7 @@ public class QueryController {
     @PostMapping("/search_table/create")
     public ResponseModel createQueryTable(@RequestBody OsMeta meta){
         ResponseModel responseModel = new ResponseModel();
-        if (meta.getColumns().length == 0){
+        if (meta.getConnections().size() == 0){
             return responseModel.failure("没有关联键");
         }
         boolean valide = this.queryService.CheckValide(meta);
@@ -32,6 +32,29 @@ public class QueryController {
         } else {
             return responseModel.failure();
         }
+    }
+
+    @PostMapping("/search_table/import")
+    public ResponseModel importQueryTable(@RequestBody List<OsMeta> metas){
+        ResponseModel responseModel = new ResponseModel();
+        for (OsMeta meta : metas) {
+            boolean tableExists = this.queryService.queryNameDup(meta.getQueryName());
+            if (tableExists){
+                this.queryService.delQueryName(meta.getQueryName());
+            }
+            if (meta.getConnections().size() == 0){
+                return responseModel.failure("没有关联键");
+            }
+            boolean valide = this.queryService.CheckValide(meta);
+            if (!valide){
+                return responseModel.failure("存在重复列，无法创建");
+            }
+            boolean hasSuccess = this.queryService.CreateQuery(meta);
+            if (!hasSuccess){
+                return responseModel.failure();
+            }
+        }
+        return responseModel.success();
     }
 
     @PostMapping("/search_table/list")
@@ -67,7 +90,7 @@ public class QueryController {
 
     @GetMapping("/search_table/info/{queryTableName}")
     public ResponseModel queryTableInfo(@PathVariable("queryTableName") String queryTableName){
-        JsonObject info = this.queryService.queryTableInfo(queryTableName);
+        MetaInfo info = this.queryService.queryTableInfo(queryTableName);
         ResponseModel responseModel = new ResponseModel();
         return responseModel.success(info);
     }
