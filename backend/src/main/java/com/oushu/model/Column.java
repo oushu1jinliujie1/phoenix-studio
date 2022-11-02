@@ -26,7 +26,8 @@ public class Column extends TableName{
 
     public String getColumnSql(){
         String columnSql = "";
-        if (this.familyName != null && this.familyName.length() > 0){
+        // 0是主键的列族
+        if (this.familyName != null && this.familyName.length() > 0 && !this.familyName.equals("0")){
             columnSql = "\"" + this.familyName + "\".";
         }
         columnSql += "\"" + this.columnName + "\" ";

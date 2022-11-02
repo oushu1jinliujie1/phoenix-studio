@@ -15,6 +15,8 @@ public interface MetaService {
     boolean delSchema(String schemaName);
     boolean schemaExist(String schemaName);
     List<Map<String, Object>> getTableList(BasicTableParam param);
+
+    List<Map<String, Object>> getALLTableList();
     long getTableNumWithSearch(String schemaName, String tableName);
     boolean tableExist(String schemaName, String tableName);
     boolean delTable(String schemaName, String tableName);
@@ -22,7 +24,11 @@ public interface MetaService {
     List<Map<String, Object>> getIdxList(BasicTableParam param);
     String getIdxState(String schemaName, String tableName);
     long getTableColumnCount(String schemaName, String tableName);
+
+    //Deprecated
     List<JsonObject> getTableColumns(String schemaName, String tableName);
+
+    List<JsonObject> getTableColumnsWithComment(String schemaName, String tableName);
     List<JsonObject> getTablePKColumns(String schemaName, String tableName);
     List<JsonObject> getTableColumnsWithLimit(BasicTableParam param);
     boolean delIdx(IdxParam param);

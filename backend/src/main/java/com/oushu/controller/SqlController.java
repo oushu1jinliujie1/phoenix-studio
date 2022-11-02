@@ -1,15 +1,26 @@
 package com.oushu.controller;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.write.metadata.WriteSheet;
 import com.google.gson.JsonObject;
 import com.oushu.model.*;
+import com.oushu.service.ExcelService;
 import com.oushu.service.MetaService;
 import com.oushu.service.SqlService;
+import com.sun.deploy.net.URLEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -20,6 +31,9 @@ public class SqlController {
 
     @Autowired
     private MetaService metaService;
+
+    @Autowired
+    private ExcelService excelService;
 
     @PostMapping("/sql/execute")
     public ResponseModel execSQL(@RequestBody ExecSql sql){
@@ -87,6 +101,28 @@ public class SqlController {
             this.sqlService.saveTableComment(param);
         }
         return responseModel.success("批量导入成功");
+    }
+
+    @GetMapping("/basic_table/export")
+    public void exportBasicTable(HttpServletResponse response) throws UnsupportedEncodingException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("utf-8");
+        String fileName = URLEncoder.encode("基础表的定义", "UTF-8").replaceAll("\\+", "%20");
+        response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+        List<Map<String, Object>> allTableList = this.metaService.getALLTableList();
+        try (ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream()).build()) {
+            for (int i = 0; i < allTableList.size(); i++) {
+                String schemaName = allTableList.get(i).get("TABLE_SCHEM").toString();
+                String tableName = allTableList.get(i).get("TABLE_NAME").toString();
+                //表信息
+                List<List<Object>> excelData = this.excelService.getBasicTableExcelData(schemaName, tableName);
+                WriteSheet writeSheet = EasyExcel.writerSheet(i, tableName).build();
+                excelWriter.write(excelData, writeSheet);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @PostMapping("/secondary_index/create")

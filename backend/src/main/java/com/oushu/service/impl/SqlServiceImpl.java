@@ -97,6 +97,20 @@ public class SqlServiceImpl implements SqlService {
     /**
      * @param schemaName
      * @param tableName
+     * @return
+     */
+    @Override
+    public List<Map<String, Object>> getColumnComment(String schemaName, String tableName) {
+        String sql = "select comment, columnName from ct.os_column where schemaName = ? and tableName = ? ";
+        Map<Integer,Object> param = new HashMap<>();
+        param.put(1, schemaName);
+        param.put(2, tableName);
+        return pq.getListMap(sql, param);
+    }
+
+    /**
+     * @param schemaName
+     * @param tableName
      */
     @Override
     public void delColumnComment(String schemaName, String tableName) {

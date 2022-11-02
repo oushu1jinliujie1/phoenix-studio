@@ -7,12 +7,14 @@ import com.oushu.model.IdxParam;
 import com.oushu.phoenix.jdbc.PhoenixQuery;
 import com.oushu.service.MetaService;
 import com.oushu.service.SqlService;
+import com.oushu.util.MyJDBCType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class MetaServiceImpl implements MetaService {
@@ -81,6 +83,17 @@ public class MetaServiceImpl implements MetaService {
                 " where TABLE_SCHEM = ? and TABLE_TYPE = 'u' and TABLE_NAME like ?" +
                 " group by TABLE_NAME limit ? offset ?";
         return pq.getListMap(tableListSql, param);
+    }
+
+    /**
+     * @return
+     */
+    @Override
+    public List<Map<String, Object>> getALLTableList() {
+        String tableListSql = "select TABLE_NAME, TABLE_SCHEM from system.catalog " +
+                " where TABLE_SCHEM <> 'CT' and TABLE_TYPE = 'u' " +
+                " group by TABLE_NAME, TABLE_SCHEM ";
+        return pq.getListMap(tableListSql, new HashMap<>());
     }
 
     /**
@@ -192,11 +205,13 @@ public class MetaServiceImpl implements MetaService {
     }
 
     /**
+     * Deprecated
      * @param schemaName
      * @param tableName
      * @return
      */
     @Override
+    //Deprecated
     public List<JsonObject> getTableColumns(String schemaName, String tableName) {
         Map<Integer,Object> param = new HashMap<>();
         param.put(1, schemaName);
@@ -206,6 +221,42 @@ public class MetaServiceImpl implements MetaService {
                 "where table_schem = ? and TABLE_NAME = ? AND COLUMN_NAME IS NOT null  " +
                 "ORDER BY KEY_SEQ, ORDINAL_POSITION";
         return pq.getList(sql, param);
+    }
+
+    /**
+     * @param schemaName
+     * @param tableName
+     * @return
+     */
+    @Override
+    public List<JsonObject> getTableColumnsWithComment(String schemaName, String tableName) {
+        Map<Integer,Object> param = new HashMap<>();
+        param.put(1, schemaName);
+        param.put(2, tableName);
+        String sql = "select table_schem,TABLE_NAME,COLUMN_NAME,COLUMN_FAMILY,KEY_SEQ,ORDINAL_POSITION,DATA_TYPE,COLUMN_SIZE,DECIMAL_DIGITS " +
+                "from system.catalog  " +
+                "where table_schem = ? and TABLE_NAME = ? AND COLUMN_NAME IS NOT null  " +
+                "ORDER BY KEY_SEQ, ORDINAL_POSITION";
+        List<JsonObject> list = pq.getList(sql, param);
+        for (int i = 0; i < list.size(); i++) {
+            JsonObject jsonObject = list.get(i);
+            int data_type = jsonObject.get("DATA_TYPE").getAsInt();
+            String name = MyJDBCType.valueOf(data_type).name();
+            jsonObject.addProperty("DATA_TYPE_NAME", name);
+        }
+        List<Map<String, Object>> columnComments = this.sqlService.getColumnComment(schemaName, tableName);
+        for (JsonObject jsonObject : list) {
+            Optional<Map<String, Object>> current = columnComments.stream().filter(item ->
+                    item.getOrDefault("COLUMNNAME", "").toString().equals(
+                            jsonObject.get("COLUMN_NAME").getAsString())).findFirst();
+            if (current.isPresent()){
+                String columnComment = current.get().getOrDefault("COMMENT", "").toString();
+                jsonObject.addProperty("COMMENT", columnComment);
+            } else {
+                jsonObject.addProperty("COMMENT", "");
+            }
+        }
+        return list;
     }
 
     /**
