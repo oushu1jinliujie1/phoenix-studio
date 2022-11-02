@@ -59,7 +59,7 @@ public class QueryController {
 
     @PostMapping("/search_table/list")
     public ResponseModel tableList(@RequestBody QueryTableName param){
-        List<Map<String, Object>> queryTableList = this.queryService.getQueryTableList(param);
+        List<MetaInfo> queryTableList = this.queryService.getQueryTableList(param);
         long queryTableCount = this.queryService.getQueryTableCount(param);
         LazyLoadResult lazyLoadResult = new LazyLoadResult(queryTableCount, queryTableList);
         ResponseModel responseModel = new ResponseModel();

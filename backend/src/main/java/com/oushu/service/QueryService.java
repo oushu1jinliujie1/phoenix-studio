@@ -10,7 +10,7 @@ public interface QueryService {
 
     boolean CheckValide(OsMeta meta);
     boolean CreateQuery(OsMeta meta);
-    List<Map<String, Object>> getQueryTableList(QueryTableName param);
+    List<MetaInfo> getQueryTableList(QueryTableName param);
 
     long getQueryTableCount(QueryTableName param);
     boolean queryNameDup(String queryTableName);

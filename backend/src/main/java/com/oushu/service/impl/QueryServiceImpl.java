@@ -92,7 +92,7 @@ public class QueryServiceImpl implements QueryService {
      * @return
      */
     @Override
-    public List<Map<String, Object>> getQueryTableList(QueryTableName param) {
+    public List<MetaInfo> getQueryTableList(QueryTableName param) {
         Map<Integer,Object> sqlParam = new HashMap<>();
         int paramNum = 1;
         String sql = "select * from " + metaTableName;
@@ -103,7 +103,13 @@ public class QueryServiceImpl implements QueryService {
         sql += " limit ? offset ?";
         sqlParam.put(paramNum++, param.getLimit());
         sqlParam.put(paramNum++, param.getOffset());
-        return pq.getListMap(sql, sqlParam);
+        List<Map<String, Object>> queryTables = pq.getListMap(sql, sqlParam);
+        List<MetaInfo> result = new ArrayList<>();
+        for (int i = 0; i < queryTables.size(); i++) {
+            MetaInfo queryname = this.queryTableInfo(queryTables.get(i).get("QUERYNAME").toString());
+            result.add(queryname);
+        }
+        return result;
     }
 
     /**
