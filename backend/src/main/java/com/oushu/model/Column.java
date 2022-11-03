@@ -26,8 +26,8 @@ public class Column extends TableName{
     }
 
     public CommonError checkValide(){
-        if (this.isPk() && this.familyName.length() > 0 && !this.familyName.equals("0")){
-            return new CommonError(true, "familyName:" + familyName + "非法！");
+        if (this.isPk() && this.familyName != null && this.familyName.length() > 0 && !this.familyName.equals("0")){
+            return new CommonError(true, "主键列" + this.columnName + "不能设置列族:" + familyName);
         }
         return CommonError.NonError;
     }
@@ -55,6 +55,9 @@ public class Column extends TableName{
         }
         String dataType = this.dataType + size;
         columnSql += dataType;
+        if (this.isPk()){
+            columnSql += " NOT NULL ";
+        }
         return columnSql;
     }
     public String getColumnSqlWithPK(){

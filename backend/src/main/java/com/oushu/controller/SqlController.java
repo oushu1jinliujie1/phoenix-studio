@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.oushu.model.*;
 import com.oushu.service.ExcelService;
 import com.oushu.service.MetaService;
+import com.oushu.service.QueryService;
 import com.oushu.service.SqlService;
 import com.oushu.util.CommonError;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,19 +37,24 @@ public class SqlController {
     @Autowired
     private ExcelService excelService;
 
+    @Autowired
+    private QueryService queryService;
+
     @PostMapping("/sql/execute")
     public ResponseModel execSQL(@RequestBody ExecSql sql){
-        boolean hasSuccess = this.sqlService.execSQL(sql.getSql());
+        this.sqlService.execSQL(sql.getSql());
         ResponseModel responseModel = new ResponseModel();
-        if (hasSuccess){
-            return responseModel.success();
-        } else {
-            return responseModel.failure();
-        }
+        return responseModel.success();
     }
 
     @PostMapping("/schema/sql/create")
     public ResponseModel createSchemaSQL(@RequestBody SchemaName name){
+        ResponseModel responseModel = new ResponseModel();
+        return responseModel.success(name.getCreateSchemaSql());
+    }
+
+    @PostMapping("/schema/create")
+    public ResponseModel createSchema(@RequestBody SchemaName name){
         ResponseModel responseModel = new ResponseModel();
         return responseModel.success(name.getCreateSchemaSql());
     }
@@ -68,20 +74,20 @@ public class SqlController {
             return responseModel.failure(commonError.getErrorString());
         }
         String sql = param.getCreateSql();
-        boolean success = this.sqlService.execSQL(sql);
-        if (!success){
-            return responseModel.failure("创建失败");
-        }
-        success = this.sqlService.saveTableComment(param);
-        if (!success){
-            return responseModel.failure("保存表的comment失败");
-        }
+        this.sqlService.execSQL(sql);
+        this.sqlService.saveTableComment(param);
         return responseModel.success("创建成功");
     }
 
     @PostMapping("/basic_table/import")
     public ResponseModel importBasicTable(@RequestBody List<CreateTableRequest> params){
         ResponseModel responseModel = new ResponseModel();
+        for (CreateTableRequest param : params) {
+            CommonError commonError = param.checkValide();
+            if (commonError != CommonError.NonError){
+                return responseModel.failure(commonError.getErrorString());
+            }
+        }
         for (CreateTableRequest param : params) {
             boolean isExist = this.metaService.tableExist(param.getSchemaName(), param.getTableName());
             if (isExist){
@@ -127,7 +133,26 @@ public class SqlController {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    @GetMapping("/query_table/export")
+    public void exportQueryTable(HttpServletResponse response) throws UnsupportedEncodingException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("utf-8");
+        String fileName = URLEncoder.encode("查询表的定义", "UTF-8").replaceAll("\\+", "%20");
+        response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+        List<Map<String, Object>> allQueryTable = this.queryService.getALLQueryTable();
+        try (ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream()).build()) {
+            for (int i = 0; i < allQueryTable.size(); i++) {
+                String queryName = allQueryTable.get(i).get("QUERYNAME").toString();
+                //表信息
+                List<List<Object>> excelData = this.excelService.getQueryTableExcelData(queryName);
+                WriteSheet writeSheet = EasyExcel.writerSheet(i, queryName).build();
+                excelWriter.write(excelData, writeSheet);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @PostMapping("/secondary_index/create")
@@ -147,5 +172,16 @@ public class SqlController {
         String sql = "ALTER TABLE " + column.getQuoteName() + " ADD "
                 + column.getColumnSqlWithPK();
         return responseModel.success(sql);
+    }
+
+    @PostMapping("/basic_table/column_create")
+    public ResponseModel addColumn(@RequestBody Column column){
+        ResponseModel responseModel = new ResponseModel();
+        String sql = "ALTER TABLE " + column.getQuoteName() + " ADD "
+                + column.getColumnSqlWithPK();
+        this.sqlService.execSQL(sql);
+        this.sqlService.saveColumnComment(column.getSchemaName(), column.getTableName(),
+                column.getColumnName(), column.getComment());
+        return responseModel.success("新增列成功");
     }
 }

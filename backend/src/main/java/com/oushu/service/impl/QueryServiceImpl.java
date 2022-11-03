@@ -88,6 +88,15 @@ public class QueryServiceImpl implements QueryService {
     }
 
     /**
+     * @return
+     */
+    @Override
+    public List<Map<String, Object>> getALLQueryTable() {
+        String sql = "select * from " + metaTableName;
+        return pq.getListMap(sql, new HashMap<>());
+    }
+
+    /**
      * @param param
      * @return
      */

@@ -1,7 +1,7 @@
 <configuration>
     <property>
         <name>hbase.zookeeper.quorum</name>
-        <value>43.138.5.30,43.140.212.62,43.138.118.224</value>
+        <value>43.138.122.76,43.138.117.100,43.140.220.161</value>
         <description>集群zookeeper节点信息</description>
     </property>
     <property>

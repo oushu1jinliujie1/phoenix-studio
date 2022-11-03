@@ -1,7 +1,7 @@
 -- 元数据
 create schema ct;
 create table ct.os_meta(queryName varchar primary key,
-chineseName VARCHAR, description VARCHAR,
+chineseName VARCHAR default '', description VARCHAR default '',
 tableNames VARCHAR);
 create table ct.os_meta_connection(queryName varchar,
 orderNum bigint not null, connections VARCHAR, CONSTRAINT pk PRIMARY KEY(queryName, orderNum));

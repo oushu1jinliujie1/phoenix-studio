@@ -7,9 +7,13 @@ import java.util.List;
 import java.util.Map;
 
 public interface SqlService {
-    boolean execSQL(String sql);
+    int execSQL(String sql);
 
-    boolean saveTableComment(CreateTableRequest param);
+    void saveTableComment(CreateTableRequest param);
+
+    boolean saveSchemaComment(String schemaName, String comment);
+
+    void saveColumnComment(String schemaName, String tableName, String columnName, String comment);
 
     void delTableComment(String schemaName, String tableName);
 

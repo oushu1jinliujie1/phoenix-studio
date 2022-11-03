@@ -2,8 +2,11 @@ package com.oushu.service.impl;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.oushu.model.MetaInfo;
 import com.oushu.service.ExcelService;
 import com.oushu.service.MetaService;
+import com.oushu.service.QueryService;
+import com.oushu.service.SqlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +18,9 @@ public class ExcelServiceImpl implements ExcelService {
 
     @Autowired
     private MetaService metaService;
+
+    @Autowired
+    private QueryService queryService;
 
     /**
      * @param schemaName
@@ -59,6 +65,46 @@ public class ExcelServiceImpl implements ExcelService {
             columnContent.add(is_key);
 
             excelData.add(columnContent);
+        }
+        return excelData;
+    }
+
+    /**
+     * @param queryName
+     * @return
+     */
+    @Override
+    public List<List<Object>> getQueryTableExcelData(String queryName) {
+        MetaInfo metaInfo = this.queryService.queryTableInfo(queryName);
+        List<List<Object>> excelData = new ArrayList<>();
+        List<Object> title = new ArrayList<>();
+        String[] titleName = {"查询表名", "查询表中文名", "查询表描述"};
+        for (String item : titleName) {
+            title.add(item);
+        }
+        // 第1行
+        excelData.add(title);
+        List<Object> titleContent = new ArrayList<>();
+        titleContent.add(metaInfo.getQueryName());
+        titleContent.add(metaInfo.getChineseName());
+        titleContent.add(metaInfo.getDescription());
+        // 第2行
+        excelData.add(titleContent);
+        String[] tableNames = metaInfo.getTableNames().split(",");
+        title = new ArrayList<>();
+        for (String tableName : tableNames) {
+            title.add(tableName);
+        }
+        // 第3行
+        excelData.add(title);
+
+        List<MetaInfo.ColumnConnection[]> connections = metaInfo.getConnections();
+        for (MetaInfo.ColumnConnection[] connection : connections) {
+            titleContent = new ArrayList<>();
+            for (MetaInfo.ColumnConnection columnConnection : connection) {
+                titleContent.add(columnConnection.getColumnName());
+            }
+            excelData.add(titleContent);
         }
         return excelData;
     }

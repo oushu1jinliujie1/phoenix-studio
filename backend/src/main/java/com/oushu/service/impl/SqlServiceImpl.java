@@ -26,8 +26,8 @@ public class SqlServiceImpl implements SqlService {
      * @return
      */
     @Override
-    public boolean execSQL(String sql) {
-        return pq.execute(sql, new HashMap<>()) == 0;
+    public int execSQL(String sql) {
+        return pq.execute(sql, new HashMap<>());
     }
 
     /**
@@ -35,18 +35,42 @@ public class SqlServiceImpl implements SqlService {
      * @return
      */
     @Override
-    public boolean saveTableComment(CreateTableRequest param) {
+    public void saveTableComment(CreateTableRequest param) {
         Map<Integer,Object> sqlParam = new HashMap<>();
         sqlParam.put(1, param.getSchemaName());
         sqlParam.put(2, param.getTableName());
         sqlParam.put(3, param.getComment());
         pq.execute("upsert into ct.os_table values (?, ?, ?)", sqlParam);
         for (Column column : param.getColumns()) {
-            sqlParam.put(3, column.getColumnName());
-            sqlParam.put(4, column.getComment());
-            pq.execute("upsert into ct.os_column values (?, ?, ?, ?)", sqlParam);
+            saveColumnComment(column.getSchemaName(), column.getTableName(),
+                    column.getColumnName(), column.getComment());
         }
-        return true;
+    }
+
+    /**
+     * @param schemaName
+     * @param comment
+     * @return
+     */
+    @Override
+    public boolean saveSchemaComment(String schemaName, String comment) {
+        return false;
+    }
+
+    /**
+     * @param schemaName
+     * @param tableName
+     * @param columnName
+     * @param comment
+     */
+    @Override
+    public void saveColumnComment(String schemaName, String tableName, String columnName, String comment) {
+        Map<Integer,Object> sqlParam = new HashMap<>();
+        sqlParam.put(1, schemaName);
+        sqlParam.put(2, tableName);
+        sqlParam.put(3, columnName);
+        sqlParam.put(4, comment);
+        pq.execute("upsert into ct.os_column values (?, ?, ?, ?)", sqlParam);
     }
 
     /**
