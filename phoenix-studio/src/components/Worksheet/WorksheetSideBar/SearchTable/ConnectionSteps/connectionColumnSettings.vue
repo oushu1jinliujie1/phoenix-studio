@@ -1,11 +1,11 @@
 <template>
   <div class="connection-column-settings">
     <div class="connection-column-settings-buttons">
-      <x-tooltip :visible="columnSettings.length >= columnsJoined.length?undefined:false">
+      <x-tooltip :visible="columnSettings.length >= columnsLimit?undefined:false">
         <template #title>
           <div style="color: #282B2E;white-space: nowrap;">关联数已达上限</div>
         </template>
-        <x-button :disabled="columnSettings.length >= columnsJoined.length" @click="handleAddConnectionWithDebounce">
+        <x-button :disabled="columnSettings.length >= columnsLimit" @click="handleAddConnectionWithDebounce">
           <icon name="add_circle"/>
           新建关联
         </x-button>
@@ -20,21 +20,21 @@
       :data-source="columnsTableData"
       :pagination="false"
       :scroll="{ x: 920, y: null }"
-      :rowKey="tables[0]?.name || ''"
+      :rowKey="`schema.${tables[0]?.schema}.table.${tables[0]?.name}`"
       auto-calc-empty-height
       emptyImage="empty"
     >
-
-      <a-table-column :key="tables[0]?.name || ''" :title="tables[0]?.name || ''" width="120px">
+      <a-table-column v-for="table of tables" :key="`schema.${table.schema}.table.${table.name}`" :title="`${table.schema}: ${table.name}`" width="120px">
         <template #default="{ record, index }">
           <x-select
-            :value="record[tables[0]?.name]"
+            :value="record[`schema.${table.schema}.table.${table.name}`]"
             show-search
+            allowClear
             data-test-id="connection-columns-select"
             placeholder="请选择关联列"
             :fieldNames="{ label: 'name', value: 'name' }"
-            :options="getColumnsOption(record[tables[0]?.name])"
-            @change="(value: any) => { changeColumn(index, value) }"
+            :options="getColumnsOption(record, table)"
+            @change="(value: any) => { changeColumn(index, table, value) }"
             style="width: 100%;">
             <template #option="{ name }">
               <icon name="worksheet/column" style="margin-right: 5px;"/>{{ name }}
@@ -47,11 +47,6 @@
             </template>
 
           </x-select>
-        </template>
-      </a-table-column>
-      <a-table-column v-for="table of tables.slice(1)" :key="table.name" :title="table.name" width="120px">
-        <template #default="{ record }">
-          <div>{{ record[table.name] }}</div>
         </template>
       </a-table-column>
       <a-table-column key="action" title="操作" align="center" width="40px">
@@ -75,7 +70,7 @@ import Icon from '@/components/Icon.vue'
 // @ts-ignore
 import smartUI from '@/smart-ui-vue/index.js'
 import { message } from 'ant-design-vue-3'
-import { throttle, intersectionWith } from 'lodash'
+import { throttle, intersectionWith, cloneDeep, isEqual, unzip } from 'lodash'
 import { getColumnList } from '@/api'
 
 export default defineComponent({
@@ -113,10 +108,10 @@ export default defineComponent({
 
     const columnsTableData = computed(() => {
       const res: any[] = []
-      for (const each of props.columnSettings) {
+      for (const settingItem of props.columnSettings) {
         const obj: any = {}
-        for (const table of props.tables) {
-          obj[table.name] = each.name
+        for (const column of settingItem) {
+          obj[`schema.${column.schemaName}.table.${column.tableName}`] = column.columnName
         }
         res.push(obj)
       }
@@ -132,11 +127,10 @@ export default defineComponent({
     })
 
     watch(tablesComputed, async(tables) => {
-      for (const index in tables) {
-        const table = tables[index]
+      for (const table of tables) {
         if (table.columns) continue
-        if (`schema_${table.schema}_table_${table.name}` in state.columnsRecord) {
-          table.columns = state.columnsRecord[`schema_${table.schema}_table_${table.name}`]
+        if (`schema.${table.schema}.table.${table.name}` in state.columnsRecord) {
+          table.columns = state.columnsRecord[`schema.${table.schema}.table.${table.name}`]
           continue
         }
         const result = await getColumnList({
@@ -158,44 +152,56 @@ export default defineComponent({
               primary: Boolean(column.KEY_SEQ)
             }
           }) : []
-          state.columnsRecord[`schema_${table.schema}_table_${table.name}`] = table.columns
+          state.columnsRecord[`schema.${table.schema}.table.${table.name}`] = table.columns
         } else {
           message.error(`获取表${table.name}的列信息失败：${result.meta.message}`)
         }
       }
     })
 
-    const columnsJoined = computed(() => {
-      let res: any[] = []
-      const values: any[] = props.tables.map((table: any) => table.columns) || []
-      if (values.length > 1) {
-        res = intersectionWith(...values, (a: any, b: any) => {
-          if (a.name === b.name && a.type === b.type) {
-            return true
-          }
-          return false
-        })
-      } else {
-        res = values[0] || []
+    const columnsLimit = computed(() => {
+      let res = 0
+      for (const each of props.tables) {
+        if (res === 0) res = each.columns?.length || 0
+        else res = res > each.columns?.length ? each.columns.length : res
       }
       return res
     })
-    const getColumnsOption = (record: any) => {
-      const res = columnsJoined.value.filter((column: any) => {
-        if (props.columnSettings.find((setting: any) => setting.name === column.name && record !== column.name)) return false
-        return true
-      })
-      return res
-    }
+    const getColumnsOption = computed(() => {
+      return (row: any, table: any) => {
+        let res = table.columns
+        if (!res) return res
+        for (const rowKey in row) {
+          if (!row[rowKey]) continue
+          if (`schema.${table.schema}.table.${table.name}` === rowKey) continue
+          const keyTable = props.tables.find((tb: any) => `schema.${tb.schema}.table.${tb.name}` === rowKey)
+          if (!keyTable) break
+          const columnType = keyTable.columns?.find((col: any) => col.name === row[rowKey])?.type
+          if (!columnType) break
+          res = table.columns?.filter((column: any) => column.type === columnType)
+          break
+        }
+        const settings = unzip(props.columnSettings).find(
+          (items: any) => items[0]?.schemaName === table.schema && items[0]?.tableName === table.name
+        )?.filter(
+          (item: any) => item.columnName !== row[`schema.${table.schema}.table.${table.name}`]
+        )
+        if (!settings) return res
+        res = res.filter((column: any) => settings.findIndex((item: any) => item.columnName === column.name) === -1)
+        return res
+      }
+    })
 
-    const changeColumn = (index: number, value: any) => {
-      const settings = JSON.parse(JSON.stringify(props.columnSettings))
-      settings[index] = columnsJoined.value.find((column: any) => column.name === value)
+    const changeColumn = (index: number, table: any, value: any) => {
+      const settings = cloneDeep(props.columnSettings)
+      const columnSelect = settings[index].find((column: any) => column.tableName === table.name && column.schemaName === table.schema)
+      Object.assign(columnSelect, { columnName: value })
       context.emit('update:columnSettings', settings)
     }
 
     const handleAddConnectionWithDebounce = throttle(() => {
-      context.emit('update:columnSettings', [...props.columnSettings, { name: '', type: '' }])
+      const newConnection = props.tables.map((table: any) => ({ tableName: table.name, schemaName: table.schema, columnName: null }))
+      context.emit('update:columnSettings', [...props.columnSettings, newConnection])
     }, 500)
 
     const handelShowConnectionTableSettings = () => {
@@ -203,7 +209,16 @@ export default defineComponent({
     }
 
     const deleteConnection = (row: any) => {
-      const settings = props.columnSettings.filter((item: any) => item.name !== row[props.tables[0]?.name])
+      const connectionItem: any = []
+      for (const rowKey in row) {
+        const [schemaName, tableName] = rowKey.replace('schema.', '').split('.table.')
+        connectionItem.push({
+          schemaName,
+          tableName,
+          columnName: row[rowKey],
+        })
+      }
+      const settings = props.columnSettings.filter((item: any) => !isEqual(item, connectionItem))
       context.emit('update:columnSettings', settings)
     }
 
@@ -212,7 +227,7 @@ export default defineComponent({
       isFinishRef,
 
       columnsTableData,
-      columnsJoined,
+      columnsLimit,
       changeColumn,
       getColumnsOption,
 

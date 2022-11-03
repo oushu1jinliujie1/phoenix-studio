@@ -319,7 +319,7 @@ import { useStore } from 'vuex'
 import { Table } from '@/components/Worksheet/type'
 import { useI18n } from 'vue-i18n'
 import { translateErrorMessage } from 'lava-fe-lib/lib-common/i18n'
-import { duplicateTable, executeSql, getColumnList, getSqlForCreateTable, getTableDetails } from '@/api'
+import { createTable, duplicateTable, getColumnList, getSqlForCreateTable, getTableDetails } from '@/api'
 import { checkIsInstanceName } from '@/lib/regexp'
 import { format } from 'sql-formatter'
 
@@ -663,7 +663,28 @@ export default defineComponent({
 
       if (state.table.salt_buckets === null) state.table.salt_buckets = 0
 
-      const executeResult = await executeSql(originSQL.value)
+      const data: any = {
+        schemaName: props.schema,
+        tableName: state.table.name,
+        comment: state.table.comment,
+        splitOn: state.table.split_on,
+        saltBuckets: state.table.salt_buckets,
+        columns: state.table.columnList.map(column => {
+          return {
+            familyName: column.columnFamily,
+            columnName: column.name,
+            comment: column.comment,
+            dataType: column.type,
+            scale: TYPE_WITH_SCALE.indexOf(column.type) !== -1 ? column.scale : 0,
+            precision: TYPE_WITH_PRECISION.indexOf(column.type) !== -1 ? column.precision : 0,
+            pk: column.isPrimary,
+          }
+        }),
+      }
+
+      const executeResult = await createTable(data)
+
+      // const executeResult = await executeSql(originSQL.value)
 
       if (executeResult.meta.success) {
         // 创建表成功
@@ -821,6 +842,7 @@ export default defineComponent({
       if (getDetailResult.meta.success) {
         const details = {
           name: getDetailResult.data.TABLE_NAME,
+          comment: getDetailResult.data.COMMENT,
           salt_buckets: getDetailResult.data.SALT_BUCKETS,
           split_on: getDetailResult.data.SPLIT_ON
         }
@@ -843,6 +865,7 @@ export default defineComponent({
           return {
             name: column.COLUMN_NAME,
             type: column.DATA_TYPE_NAME,
+            comment: column.COMMENT,
             schema: column.TABLE_SCHEM,
             table: column.TABLE_NAME,
             column_family: column.COLUMN_FAMILY,

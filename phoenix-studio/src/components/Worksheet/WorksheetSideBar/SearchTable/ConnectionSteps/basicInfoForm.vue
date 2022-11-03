@@ -39,7 +39,7 @@ import { checkIsInstanceName } from '@/lib/regexp'
 import { duplicateSearchTable } from '@/api'
 
 export default defineComponent({
-  name: 'addSearchTable',
+  name: 'BasicInfoForm',
   props: {
     basicForm: {
       type: Object,

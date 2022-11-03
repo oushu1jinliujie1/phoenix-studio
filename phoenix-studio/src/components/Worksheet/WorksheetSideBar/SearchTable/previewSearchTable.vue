@@ -3,6 +3,7 @@
     <DataFilter
       v-if="!resultVisible"
       :table-index-list="tableIndexList"
+      :primary-columns="primaryColumns"
       :table-columns="tableColumns"
       @confirm="handleConfirm"
       @close="handleCancel"
@@ -26,6 +27,7 @@
       <div class="search-data-preview-drawer-content">
         <DataFilter
           :table-index-list="tableIndexList"
+          :primary-columns="primaryColumns"
           :table-columns="tableColumns"
           :filter-options="filterOptions"
           @confirm="handleConfirm"
@@ -43,13 +45,19 @@ import smartUI from '@/smart-ui-vue/index.js'
 
 import DataFilter from '@/components/Worksheet/WorksheetSideBar/SearchTable/SearchData/DataFilter.vue'
 import ResultList from '@/components/Worksheet/WorksheetSideBar/SearchTable/SearchData/ResultList.vue'
-import { filterData, getColumnList, getSecondaryIndexList } from '@/api'
+import { filterData, filterDataFromBasic, getColumnList, getSecondaryIndexList } from '@/api'
 import { message } from 'ant-design-vue-3'
-import { isEmpty, unionWith } from 'lodash'
+import { isEmpty, unionWith, unzip } from 'lodash'
 
 export default defineComponent({
   name: 'previewSearchTable',
   props: {
+    basicTable: {
+      type: Object as PropType<any>,
+      default: () => {
+        return {}
+      }
+    },
     searchTable: {
       type: Object as PropType<any>,
       default: () => {
@@ -63,15 +71,20 @@ export default defineComponent({
     const state = reactive({
       resultVisible: false,
       tableIndexList: [] as any[],
+      primaryColumns: [] as any[],
       tableColumns: [] as any[],
       filterOptions: {
-        secondaryIndex: undefined,
-        returnColumns: [],
-        limit: 100,
-        searchValue: new Map() as Map<string, string>
+        searchMode: 'secondaryIndex',
+        secondaryIndex: undefined as string | undefined,
+        returnColumns: [] as any[],
+        limit: 100 as number | undefined,
+        searchValue: new Map() as Map<string, string>,
+        searchTableName: undefined as string | undefined,
+        schemaName: undefined as string | undefined,
+        tableName: undefined as string | undefined,
       },
       filterDrawerVisible: false,
-      searchResults: [] as any[]
+      searchResults: [] as any[],
     })
 
     /** 
@@ -79,7 +92,7 @@ export default defineComponent({
      */
     const handleConfirm = async(filters: any) => {
       state.filterOptions = filters
-      if (!state.filterOptions.secondaryIndex) {
+      if (state.filterOptions.searchMode === 'secondaryIndex' && !state.filterOptions.secondaryIndex) {
         message.error('请选择二级索引')
         return
       }
@@ -92,23 +105,39 @@ export default defineComponent({
         return
       }
       if (!Array.from(state.filterOptions.searchValue.values())[0]) {
-        message.error('请输入第一索引列的搜索内容')
+        message.error('请输入第一筛选列的搜索内容')
         return
       }
       console.log(filters)
-      const resp = await filterData({
-        secondaryIndex: state.filterOptions.secondaryIndex || '',
+      const filterFunc = isEmpty(props.basicTable) ? filterData : filterDataFromBasic
+      const tableInfo: { schemaName: any, tableName: any } = { schemaName: undefined, tableName: undefined }
+      if (isEmpty(props.basicTable)) {
+        const searchTablePrimaryInfo = props.searchTable.connections[0] ? props.searchTable.connections[0][0] : null
+        if (!searchTablePrimaryInfo) message.error('查询表关联信息错误')
+        tableInfo.schemaName = searchTablePrimaryInfo.schemaName
+        tableInfo.tableName = searchTablePrimaryInfo.tableName
+      } else {
+        tableInfo.schemaName = props.basicTable.schema
+        tableInfo.tableName = props.basicTable.name
+      }
+      const resp = await filterFunc({
+        secondaryIndex: state.filterOptions.secondaryIndex,
         returnColumns: state.filterOptions.returnColumns.map((item: any) => {
           return {
             columnName: item.option.name,
-            dataType: item.option.type
+            dataType: item.option.type,
+            schemaName: item.option.schema,
+            tableName: item.option.table
           }
         }),
         limit: state.filterOptions.limit,
         searchValue: [...state.filterOptions.searchValue.entries()].reduce((obj: any, [key, value]) => {
           obj[key] = value
           return obj
-        }, {})
+        }, {}),
+        searchTableName: props.searchTable.name,
+        schemaName: state.filterOptions.schemaName || tableInfo.schemaName,
+        tableName: state.filterOptions.tableName || tableInfo.tableName,
       })
       if (resp.meta.success) {
         state.searchResults = resp.data
@@ -140,73 +169,90 @@ export default defineComponent({
       handleConfirm(state.filterOptions)
     }
 
+    const getSecondaryIndexOfTable = async(schema: string, name: string) => {
+      const resp = await getSecondaryIndexList({
+        schemaName: schema,
+        tableName: name,
+        offset: 0,
+        limit: -1
+      })
+      if (resp.meta.success) {
+        state.tableIndexList = [
+          ...state.tableIndexList,
+          ...resp.data.data.map((item: any) => {
+            return {
+              name: item.indexName,
+              columns: item.idxAttrs,
+              extra: item.includesAttrs,
+              status: item.indexState,
+              schemaName: schema,
+              tableName: name,
+            }
+          })
+        ]
+      } else {
+        message.error(`获取${schema}.${name}的二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
+      }
+    }
+
+    const getColumnsOfTable = async(schema: string, name: string) => {
+      const resp = await getColumnList({
+        schemaName: schema,
+        tableName: name,
+        offset: 0,
+        limit: -1
+      })
+      if (resp.meta.success) {
+        state.tableColumns = unionWith(
+          state.tableColumns,
+          resp.data?.data ? resp.data.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
+            return {
+              key: `${column.COLUMN_NAME}(${column.DATA_TYPE_NAME})`,
+              name: column.COLUMN_NAME,
+              type: column.DATA_TYPE_NAME,
+              schema: column.TABLE_SCHEM,
+              table: column.TABLE_NAME,
+              column_family: column.COLUMN_FAMILY,
+              order: column.ORDINAL_POSITION,
+              primary: Boolean(column.KEY_SEQ)
+            }
+          }) : [],
+          (a: any, b: any) => {
+            if (a.key === b.key) {
+              return true
+            }
+            return false
+          }
+        )
+      } else {
+        message.error(`获取${schema}.${name}的列失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
+      }
+    }
+
     const getSecondaryIndexOfSearchTable = async() => {
       const tableStrList = props.searchTable.tables.split(',')
       for (const str of tableStrList) {
-        const resp = await getSecondaryIndexList({
-          schemaName: str.split('.')[0],
-          tableName: str.split('.')[1],
-          offset: 0,
-          limit: -1
-        })
-        if (resp.meta.success) {
-          state.tableIndexList = [
-            ...state.tableIndexList,
-            ...resp.data.data.map((item: any) => {
-              return {
-                name: item.indexName,
-                columns: item.idxAttrs,
-                extra: item.includesAttrs,
-                status: item.indexState
-              }
-            })
-          ]
-        } else {
-          message.error(`获取${str}的二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
-        }
+        await getSecondaryIndexOfTable(str.split('.')[0], str.split('.')[1])
       }
     }
 
     const getColumnsOfSearchTable = async() => {
       const tableStrList = props.searchTable.tables.split(',')
       for (const str of tableStrList) {
-        const resp = await getColumnList({
-          schemaName: str.split('.')[0],
-          tableName: str.split('.')[1],
-          offset: 0,
-          limit: -1
-        })
-        if (resp.meta.success) {
-          state.tableColumns = unionWith(
-            state.tableColumns,
-            resp.data?.data ? resp.data.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
-              return {
-                key: `${column.COLUMN_NAME}(${column.DATA_TYPE_NAME})`,
-                name: column.COLUMN_NAME,
-                type: column.DATA_TYPE_NAME,
-                schema: column.TABLE_SCHEM,
-                table: column.TABLE_NAME,
-                column_family: column.COLUMN_FAMILY,
-                order: column.ORDINAL_POSITION,
-                primary: Boolean(column.KEY_SEQ)
-              }
-            }) : [],
-            (a: any, b: any) => {
-              if (a.key === b.key) {
-                return true
-              }
-              return false
-            }
-          )
-        } else {
-          message.error(`获取${str}的列失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
-        }
+        await getColumnsOfTable(str.split('.')[0], str.split('.')[1])
       }
     }
 
     onMounted(async() => {
-      await getSecondaryIndexOfSearchTable()
-      await getColumnsOfSearchTable()
+      if (!isEmpty(props.basicTable)) {
+        await getSecondaryIndexOfTable(props.basicTable.schema, props.basicTable.name)
+        await getColumnsOfTable(props.basicTable.schema, props.basicTable.name)
+        state.primaryColumns = props.basicTable.primary_columns?.map((item: any) => item.name) || []
+      } else if (!isEmpty(props.searchTable)) {
+        await getSecondaryIndexOfSearchTable()
+        await getColumnsOfSearchTable()
+        state.primaryColumns = unzip(props.searchTable.connections)[0]?.map((item: any) => item.columnName) || []
+      }
     })
 
     return {

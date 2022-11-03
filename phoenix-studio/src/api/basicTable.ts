@@ -34,7 +34,7 @@ export const getTableList = (
  *   tableName: string,
  *   splitOn: string,
  *   saltBuckets: number,
- *   columns: Array<{ familyName: string, columnName: string, dataType: string, scale: number, pk: boolean }>
+ *   columns: Array<{ familyName: string, columnName: string, dataType: string, scale: number, precision: number, pk: boolean }>
  * }
  */
 export const getSqlForCreateTable = (
@@ -49,10 +49,68 @@ export const getSqlForCreateTable = (
     tableName: string,
     splitOn: string,
     saltBuckets: number,
-    columns: Array<{ familyName: string, columnName: string, dataType: string, scale: number, pk: boolean }>
+    columns: Array<{ familyName: string, columnName: string, dataType: string, scale: number, precision: number, pk: boolean }>
   }
 ): Promise<Response<any>> => {
   return http.post('basic_table/sql/create', { schemaName, tableName, splitOn, saltBuckets, columns })
+}
+
+/**
+ * 新建基础表(获取SQL)
+ * @params
+ * {
+ *   schemaName:string,
+ *   tableName: string,
+ *   comment: string,
+ *   splitOn: string,
+ *   saltBuckets: number,
+ *   columns: Array<{ familyName: string, columnName: string, dataType: string, scale: number, precision: number, pk: boolean, comment: string }>
+ * }
+ */
+ export const createTable = (
+  {
+    schemaName,
+    tableName,
+    comment,
+    splitOn,
+    saltBuckets,
+    columns
+  } : {
+    schemaName:string,
+    tableName: string,
+    comment: string,
+    splitOn: string,
+    saltBuckets: number,
+    columns: Array<{ familyName: string, columnName: string, dataType: string, scale: number, precision: number, pk: boolean, comment: string }>
+  }
+): Promise<Response<any>> => {
+  return http.post('basic_table/create', { schemaName, tableName, comment, splitOn, saltBuckets, columns })
+}
+
+
+/**
+ * 导入基础表
+ * @params
+ * basicTables: Array<{
+ *   schemaName:string,
+ *   tableName: string,
+ *   comment: string,
+ *   splitOn: string,
+ *   saltBuckets: number,
+ *   columns: Array<{ familyName: string, columnName: string, dataType: string, scale: number, precision: number, pk: boolean, comment: string }>
+ * }>
+ */
+ export const uploadBasicTable = (
+  basicTables: Array<{
+    schemaName:string,
+    tableName: string,
+    comment: string,
+    splitOn: string,
+    saltBuckets: number,
+    columns: Array<{ familyName: string, columnName: string, dataType: string, scale: number, precision: number, pk: boolean, comment: string }>
+  }>
+): Promise<Response<any>> => {
+  return http.post('basic_table/import', basicTables)
 }
 
 /**
@@ -248,3 +306,37 @@ export const getConnectionList = ({ schemaName, tableName } : { schemaName: stri
   return http.post('basic_table/connect_search_table/list', { schemaName, tableName })
 }
 
+/**
+ * 基础表 数据查询
+ * @params
+ * {
+ *   secondaryIndex: string | undefined,
+ *   returnColumns: Array<{ columnName: string, dataType: string, schemaName: string | undefined, tableName: string | undefined }>
+ *   limit: number | undefined,
+ *   searchValue: { [key: string]: string },
+ *   searchTableName: string | undefined,
+ *   schemaName: string | undefined,
+ *   tableName: string | undefined
+ * }
+ */
+ export const filterDataFromBasic = (
+  {
+    secondaryIndex,
+    returnColumns,
+    limit,
+    searchValue,
+    searchTableName,
+    schemaName,
+    tableName
+  } : {
+    secondaryIndex: string | undefined,
+    returnColumns: Array<{ columnName: string, dataType: string, schemaName: string | undefined, tableName: string | undefined }>
+    limit: number | undefined,
+    searchValue: { [key: string]: string },
+    searchTableName: string | undefined,
+    schemaName: string | undefined,
+    tableName: string | undefined
+  }
+): Promise<Response<any>> => {
+  return http.post('basic_table/search/data', { secondaryIndex, returnColumns, limit, searchValue, searchTableName, schemaName, tableName })
+}

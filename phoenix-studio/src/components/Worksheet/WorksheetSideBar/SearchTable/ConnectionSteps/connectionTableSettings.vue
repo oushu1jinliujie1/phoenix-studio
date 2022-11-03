@@ -5,9 +5,12 @@
       <div class="connection-table-settings-tags-icon">
         <icon image name="worksheet/search_table_two_color"/>
       </div>
-      <x-tag v-for="table of selectTableList" :key="table.name" closable class="selected-table-tag" @close="removeTableTag(table)">
-        {{ table.schema + ': ' + table.name }}
-      </x-tag>
+      <span class="connection-table-settings-tags-item" v-for="(table, index) in selectTableList" :key="table.schema + table.name">
+        <icon v-if="index !== 0" color="#336CFF" name="worksheet/arrow_double" class="connection-table-settings-tags-item-prefix"/>
+        <x-tag closable class="selected-table-tag" @close="removeTableTag(table)">
+          {{ table.schema + ': ' + table.name }}
+        </x-tag>
+      </span>
       <div v-show="selectTableList.length === 0" class="selected-table-tag-placeholder">
         请选择需要关联查询的表（表之间需第一主键列匹配）
       </div>
@@ -217,7 +220,7 @@ export default defineComponent({
     }
 
     const removeTableTag = (table: any) => {
-      const _table = state.table.list.find((item: any) => item.name === table.name)
+      const _table = state.table.list.find((item: any) => item.name === table.name && item.schema === table.schema)
       if (_table) _table.selected = false
       const selectTableList = props.selectTableList.filter((item: any) => item.name !== table.name || item.schema !== table.schema)
       context.emit('update:selectTableList', selectTableList)
@@ -302,7 +305,7 @@ export default defineComponent({
     position: relative;
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    row-gap: 6px;
     height: 86px;
     flex-shrink: 0;
     padding: 15px 58px;
@@ -318,6 +321,7 @@ export default defineComponent({
 
     .selected-table-tag,
     .selected-table-tag:active {
+      margin-right: 0;
       height: 24px;
       padding: 2px 8px;
       background: rgba(213, 216, 219, 0.5);

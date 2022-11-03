@@ -118,6 +118,7 @@ export const COLUMNS = [
   {
     title: '列名',
     dataIndex: 'name',
+    fixed: 'left',
     key: 'name',
     width: '100px',
     slots: { customRender: 'name' },

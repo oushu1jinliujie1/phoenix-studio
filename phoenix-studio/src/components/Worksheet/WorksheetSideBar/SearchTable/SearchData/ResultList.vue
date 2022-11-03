@@ -51,16 +51,20 @@ import Icon from '@/components/Icon.vue'
 import smartUI from '@/smart-ui-vue/index.js'
 
 export default defineComponent({
-  name: 'previewSearchTable',
+  name: 'ResultList',
   props: {
     filterOptions: {
       type: Object as PropType<any>,
       default: () => {
         return {
+          searchMode: 'secondaryIndex',
           secondaryIndex: undefined,
           returnColumns: [],
           limit: undefined,
           searchValue: new Map() as Map<string, string>,
+          searchTableName: undefined as string | undefined,
+          schemaName: undefined as string | undefined,
+          tableName: undefined as string | undefined
         }
       }
     },
@@ -82,7 +86,8 @@ export default defineComponent({
       for (const column of props.filterOptions.returnColumns) {
         tags.push({ type: 'column', value: column.option.key, key: '返回列', color: '#CE7FFF', icon: 'worksheet/column' })
       }
-      if (props.filterOptions.secondaryIndex) tags.push({ type: 'index', value: props.filterOptions.secondaryIndex, key: '二级索引', color: '#A0D744', icon: 'worksheet/column' })
+      if (props.filterOptions.secondaryIndex) tags.push({ type: 'index', value: props.filterOptions.secondaryIndex, key: '二级索引', color: '#A0D744', icon: 'worksheet/secondary_index1' })
+      if (props.filterOptions.searchMode === 'primaryKey') tags.push({ type: 'mode', value: '', key: '主键检索', color: '#A0D744', icon: 'worksheet/column' })
       props.filterOptions.searchValue.forEach((value: any, key: string) => {
         if (value) {
           tags.push({ type: 'searchValue', value: value, key: key, color: '#336CFF', icon: 'worksheet/search' })
@@ -93,6 +98,8 @@ export default defineComponent({
 
     const isClosable = (tag: any) => {
       switch (tag.type) {
+        case 'mode':
+          return false
         case 'index':
           return false
         case 'column':
@@ -104,7 +111,7 @@ export default defineComponent({
           if (Array.from(props.filterOptions.searchValue.keys())[0] === tag.key) return false
           return true
         default:
-          return true
+          return false
       }
     }
 
@@ -155,7 +162,7 @@ export default defineComponent({
       flex-shrink: 0;
       display: flex;
       flex-wrap: wrap;
-      flex-direction: row-reverse;
+      justify-content: stretch;
       gap: 10px;
 
       .search-result-list-tag {

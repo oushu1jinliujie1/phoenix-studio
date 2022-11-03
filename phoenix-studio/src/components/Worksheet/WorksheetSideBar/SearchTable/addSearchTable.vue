@@ -118,11 +118,7 @@ export default defineComponent({
             tableName: table.name
           }
         }),
-        columns: state.columnSettings.map(column => {
-          return {
-            columnName: column.name
-          }
-        })
+        connections: state.columnSettings,
       })
 
       if (resp.meta.success) {

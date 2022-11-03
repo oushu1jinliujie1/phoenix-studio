@@ -2,12 +2,12 @@
   <x-drawer
     v-model:visible="visibleLocal"
     fixed
-    width="800"
+    width="1000"
   >
     <template #title>
       <div style="display: flex;align-items: center;">
         <span style="padding-right: 20px;">二级索引</span>
-        <x-button icon-name="worksheet/secondary_index" color="#336CFF" type="default" @click="createIndex()">新建索引</x-button>
+        <x-button icon-name="worksheet/secondary_index1" color="#336CFF" type="default" @click="createIndex()">新建索引</x-button>
       </div>
     </template>
     <div class="v-oushudb-worksheet-table-detail-table-struct">
@@ -37,8 +37,11 @@
           </x-tooltip>
         </template>
         <template #action="{ record }">
+          <x-tooltip placement="topLeft" title="导入数据">
+            <icon style="cursor: pointer;margin-right: 10px;" color="#336CFF" name="worksheet/execute" @click="pullIndex(record)"/>
+          </x-tooltip>
           <x-tooltip placement="topLeft" title="删除">
-            <icon style="cursor: pointer;" color="primary" name="minus_circle" @click="deleteIndex(record)"/>
+            <icon style="cursor: pointer;" name="minus_circle" @click="deleteIndex(record)"/>
           </x-tooltip>
         </template>
         <template #emptyDescription>
@@ -180,13 +183,27 @@ export default defineComponent({
       {
         title: '操作',
         key: 'action',
-        width: '40px',
+        width: '80px',
         align: 'center',
         slots: {
           customRender: 'action'
         }
       },
     ]
+
+    const pullIndex = async(record: any) => {
+      const resp = await deleteSecondaryIndex({
+        schemaName: props.schema,
+        tableName: props.table.name,
+        indexName: record.name
+      })
+      if (resp.meta.success) {
+        message.success('删除二级索引成功')
+        initSecondaryIndexList()
+      } else {
+        message.error(`删除二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
+      }
+    }
 
     const deleteIndex = async(record: any) => {
       const resp = await deleteSecondaryIndex({
@@ -296,6 +313,7 @@ export default defineComponent({
       columns,
       loading,
 
+      pullIndex,
       deleteIndex,
       loadMoreWithDebounce,
       handleConfirmCreateIndex,

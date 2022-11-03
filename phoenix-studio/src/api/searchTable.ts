@@ -32,7 +32,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  *   chineseName: string,
  *   description: string,
  *   tableNames: Array<{ schemaName: string, tableName: string }>,
- *   columns: Array<{ columnName: string }>
+ *   connections: Array<Array<{ columnName: string, tableName: string }>>
  * }
  */
  export const createSearchTable = (
@@ -41,16 +41,16 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
     chineseName,
     description,
     tableNames,
-    columns
+    connections
   } : {
     queryName:string,
     chineseName: string,
     description: string,
     tableNames: Array<{ schemaName: string, tableName: string }>,
-    columns: Array<{ columnName: string }>
+    connections: Array<Array<{ columnName: string, tableName: string }>>
   }
 ): Promise<Response<any>> => {
-  return http.post('search_table/create', { queryName, chineseName, description, tableNames, columns })
+  return http.post('search_table/create', { queryName, chineseName, description, tableNames, connections })
 }
 
 /**
@@ -61,7 +61,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  *   chineseName: string,
  *   description: string,
  *   tableNames: Array<{ schemaName: string, tableName: string }>,
- *   columns: Array<{ columnName: string }>
+ *   connections: Array<Array<{ columnName: string, tableName: string }>>
  * }
  */
  export const editSearchTable = (
@@ -70,17 +70,41 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
     chineseName,
     description,
     tableNames,
-    columns
+    connections
   } : {
     queryName: string,
     chineseName: string,
     description: string,
     tableNames: Array<{ schemaName: string, tableName: string }>,
-    columns: Array<{ columnName: string }>
+    connections: Array<Array<{ columnName: string, tableName: string }>>
   }
 ): Promise<Response<any>> => {
-  return http.post('search_table/create', { queryName, chineseName, description, tableNames, columns })
+  return http.post('search_table/create', { queryName, chineseName, description, tableNames, connections })
 }
+
+/**
+ * 导入查询表
+ * @params
+ * searchTables: Array<{
+ *   queryName:string,
+ *   chineseName: string,
+ *   description: string,
+ *   tableNames: Array<{ schemaName: string, tableName: string }>,
+ *   connections: Array<Array<{ columnName: string, tableName: string }>>
+ * }>
+ */
+ export const uploadSearchTable = (
+  searchTables : Array<{
+    queryName: string,
+    chineseName: string,
+    description: string,
+    tableNames: Array<{ schemaName: string, tableName: string }>,
+    connections: Array<Array<{ columnName: string, tableName: string }>>
+  }>
+): Promise<Response<any>> => {
+  return http.post('search_table/import', searchTables)
+}
+
 
 /**
  * 名称查重 查询表
@@ -110,10 +134,13 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  * 查询表 数据查询
  * @params
  * {
- *   secondaryIndex: string,
- *   returnColumns: Array<{ columnName: string, dataType: string }>
- *   limit: number,
- *   searchValue: { [key: string]: string }
+ *   secondaryIndex: string | undefined,
+ *   returnColumns: Array<{ columnName: string, dataType: string, schemaName: string | undefined, tableName: string | undefined }>
+ *   limit: number | undefined,
+ *   searchValue: { [key: string]: string },
+ *   searchTableName: string | undefined,
+ *   schemaName: string | undefined,
+ *   tableName: string | undefined
  * }
  */
  export const filterData = (
@@ -121,14 +148,20 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
     secondaryIndex,
     returnColumns,
     limit,
-    searchValue
+    searchValue,
+    searchTableName,
+    schemaName,
+    tableName
   } : {
-    secondaryIndex: string,
-    returnColumns: Array<{ columnName: string, dataType: string }>
-    limit: number,
-    searchValue: { [key: string]: string }
+    secondaryIndex: string | undefined,
+    returnColumns: Array<{ columnName: string, dataType: string, schemaName: string | undefined, tableName: string | undefined }>
+    limit: number | undefined,
+    searchValue: { [key: string]: string },
+    searchTableName: string | undefined,
+    schemaName: string | undefined,
+    tableName: string | undefined
   }
 ): Promise<Response<any>> => {
-  return http.post('search_table/search/data', { secondaryIndex, returnColumns, limit, searchValue })
+  return http.post('search_table/search/data', { secondaryIndex, returnColumns, limit, searchValue, searchTableName, schemaName, tableName })
 }
 

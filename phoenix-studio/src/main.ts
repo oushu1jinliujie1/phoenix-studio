@@ -27,7 +27,7 @@ import {
   Tag,
   Tooltip,
   Tree,
-  Upload, Divider,
+  Upload, UploadDragger, Divider,
   Typography,
   DatePicker,
   TimePicker,

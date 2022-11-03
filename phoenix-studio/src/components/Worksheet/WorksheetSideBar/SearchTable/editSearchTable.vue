@@ -165,11 +165,7 @@ export default defineComponent({
             tableName: table.name
           }
         }),
-        columns: state.columnSettings.map(column => {
-          return {
-            columnName: column.name
-          }
-        })
+        connections: state.columnSettings,
       })
 
       if (resp.meta.success) {
@@ -217,14 +213,10 @@ export default defineComponent({
         } else {
           message.error(`获取表信息失败：${resp.meta.message}`)
         }
-        state.selectTableList = [...state.selectTableList, result]
+        if (result) state.selectTableList = [...state.selectTableList, result]
       }
       state.initialSelectTableList = state.selectTableList
-      state.columnSettings = props.searchTable.columns.split(',').map((columnName: any) => {
-        return {
-          name: columnName
-        }
-      })
+      state.columnSettings = props.searchTable.connections
       state.getTableDetailLoading = false
     })
 

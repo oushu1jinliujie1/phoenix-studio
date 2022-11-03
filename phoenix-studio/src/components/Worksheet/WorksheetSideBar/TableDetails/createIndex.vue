@@ -75,7 +75,7 @@ import { checkIsInstanceName } from '@/lib/regexp'
 import { duplicateTable } from '@/api'
 
 export default defineComponent({
-  name: 'createIndex',
+  name: 'CreateIndex',
   props: {
     schema: {
       type: String,

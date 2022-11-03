@@ -38,6 +38,7 @@ import { useModel } from '@/smart-ui-vue/utils'
 import { message } from 'ant-design-vue-3'
 import { getConnectionList } from '@/api'
 import { Table } from '@/components/Worksheet/type'
+import { unzip } from 'lodash'
 
 export default defineComponent({
   name: 'tableConnectionInfo',
@@ -116,8 +117,8 @@ export default defineComponent({
           return {
             name: item.QUERYNAME,
             tables: item.TABLENAMES,
-            columns: item.CONNECTION,
-            count: item.CONNECTION?.split(',').length || 0,
+            columns: unzip(item.CONNECTION)?.find((item: any) => item[0].tableName === props.table.name)?.map((item: any) => item.name),
+            count: item.CONNECTION?.length || 0,
           }
         })
       } else {

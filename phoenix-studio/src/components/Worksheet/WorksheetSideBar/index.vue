@@ -185,7 +185,7 @@
                                     :disabled="schemaSelectedName === undefined"
                                     @click="() => handleShowTableSecondaryIndexClick(_table)"
                                   >
-                                    <icon color="black" image name="worksheet/secondary_index"/>
+                                    <icon color="black" image name="worksheet/secondary_index1"/>
                                     二级索引
                                   </x-menu-item>
                                   <x-menu-item
@@ -194,6 +194,11 @@
                                   >
                                     <icon color="black" image name="worksheet/connect"/>
                                     关联信息
+                                  </x-menu-item>
+                                  <x-menu-divider/>
+                                  <x-menu-item @click="() => handlePreviewTableDataClick(_table)">
+                                    <icon color="black" name="worksheet/secondary_index"/>
+                                    数据查询
                                   </x-menu-item>
                                 </x-menu>
                               </template>
@@ -360,6 +365,22 @@
                         <icon color="inherit" name="worksheet/table_add"/>
                         新建基础表
                       </x-menu-item>
+                      <x-menu-item
+                        :disabled="schemaSelectedName === undefined"
+                        data-test-id="oushudb-worksheet-resource-table-add-menu-item"
+                        @click="handleImportTableIconClick"
+                      >
+                        <icon color="inherit" name="import"/>
+                        导入基础表
+                      </x-menu-item>
+                      <x-menu-item
+                        :disabled="schemaSelectedName === undefined"
+                        data-test-id="oushudb-worksheet-resource-table-add-menu-item"
+                        @click="handleExportTableIconClick"
+                      >
+                        <icon color="inherit" name="export"/>
+                        导出基础表
+                      </x-menu-item>
                     </template>
                     <template v-if="activeTabKey === 'searchTable'">
                       <x-menu-item
@@ -377,6 +398,21 @@
                       >
                         <icon color="inherit" name="worksheet/search_table_add"/>
                         新建查询表
+                      </x-menu-item><x-menu-item
+                        :disabled="schemaSelectedName === undefined"
+                        data-test-id="oushudb-worksheet-resource-table-add-menu-item"
+                        @click="handleImportSearchTableIconClick"
+                      >
+                        <icon color="inherit" name="import"/>
+                        导入查询表
+                      </x-menu-item>
+                      <x-menu-item
+                        :disabled="schemaSelectedName === undefined"
+                        data-test-id="oushudb-worksheet-resource-table-add-menu-item"
+                        @click="handleExportSearchTableIconClick"
+                      >
+                        <icon color="inherit" name="export"/>
+                        导出查询表
                       </x-menu-item>
                     </template>
                   </x-menu>
@@ -545,12 +581,50 @@
     class="v-oushudb-add-search-table-drawer"
     destroyOnClose
     title="数据查询"
-    width="800"
+    width="1000"
     @close="() => { previewSearchTableDrawerVisible = false }"
   >
     <PreviewSearchTable
       :search-table="searchTableToPreview"
+      :basic-table="tableToPreview"
       @close="() => { previewSearchTableDrawerVisible = false }"
+    />
+  </x-drawer>
+
+  <!-- 导入窗口 -->
+  <x-drawer
+    :visible="importTableDrawerVisible"
+    class="v-oushudb-add-search-table-drawer"
+    destroyOnClose
+    :title="'导入' + (importFromBasic ? '基础表' : '查询表')"
+    width="1200"
+    @close="() => { importTableDrawerVisible = false }"
+  >
+    <ImportData
+      :import-from-basic="importFromBasic"
+      :schema-name="schemaSelectedName"
+      @close="(success: any) => {
+        importTableDrawerVisible = false
+        if (!success) return
+        if (importFromBasic) handleRefreshTable(false)
+        else handleRefreshSearchTable(false)
+      }"
+    />
+  </x-drawer>
+
+  <!-- 导出窗口 -->
+  <x-drawer
+    :visible="exportTableDrawerVisible"
+    class="v-oushudb-add-search-table-drawer"
+    destroyOnClose
+    :title="'导出' + (exportFromBasic ? '基础表' : '查询表')"
+    width="1200"
+    @close="() => { exportTableDrawerVisible = false }"
+  >
+    <ExportData
+      :import-from-basic="exportFromBasic"
+      :schema-name="schemaSelectedName"
+      @close="() => { exportTableDrawerVisible = false }"
     />
   </x-drawer>
 </template>
@@ -587,6 +661,8 @@ import TableConnectionInfo from '@/components/Worksheet/WorksheetSideBar/TableDe
 import AddSearchTable from '@/components/Worksheet/WorksheetSideBar/SearchTable/addSearchTable.vue'
 import EditSearchTable from '@/components/Worksheet/WorksheetSideBar/SearchTable/editSearchTable.vue'
 import PreviewSearchTable from '@/components/Worksheet/WorksheetSideBar/SearchTable/previewSearchTable.vue'
+import ImportData from '@/components/Worksheet/WorksheetSideBar/BatchData/importData.vue'
+import ExportData from '@/components/Worksheet/WorksheetSideBar/BatchData/exportData.vue'
 
 // @ts-ignore
 function renderVNode(_, { attrs: { vnode } }) {
@@ -604,6 +680,8 @@ export default defineComponent({
     AddSearchTable,
     EditSearchTable,
     PreviewSearchTable,
+    ImportData,
+    ExportData,
     ...smartUI,
     Icon,
     renderVNode,
@@ -632,7 +710,12 @@ export default defineComponent({
       // 基础表新建 or 查看 drawer visible
       addOrEditTableDrawerVisible: false,
       isAddTable: false,
+      importTableDrawerVisible: false,
+      importFromBasic: false,
+      exportTableDrawerVisible: false,
+      exportFromBasic: false,
       tableToEdit: {} as OwnTable,
+      tableToPreview: undefined as undefined | OwnTable,
       tableToDelete: undefined as undefined | OwnTable,
       tableDeleteModalVisible: false,
       tableDeleteLoading: false,
@@ -817,6 +900,7 @@ export default defineComponent({
         // todo: 为空时返回的是 null，应返回 []，记得和后端对接
         state.table.list = (result.data.data ?? []).map((table: any) => ({
           name: table.TABLE_NAME,
+          schema: state.schemaSelectedName,
           primary_columns: table.PK_COLUMNS.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
             return {
               name: column.COLUMN_NAME,
@@ -859,6 +943,23 @@ export default defineComponent({
       state.addOrEditTableDrawerVisible = true
       state.isAddTable = true
     }
+
+    /**
+     * 导入 table
+     */
+    const handleImportTableIconClick = () => {
+      state.importTableDrawerVisible = true
+      state.importFromBasic = true
+    }
+
+    /**
+     * 导出 table
+     */
+     const handleExportTableIconClick = () => {
+      state.exportTableDrawerVisible = true
+      state.exportFromBasic = true
+    }
+    
 
     /**
      * 编辑table
@@ -1050,6 +1151,12 @@ export default defineComponent({
       state.columnToDeleteModalVisible = false
     }
 
+    const handlePreviewTableDataClick = (table: any) => {
+      state.tableToPreview = table
+      state.searchTableToPreview = undefined
+      state.previewSearchTableDrawerVisible = true
+    }
+
     watch(() => state.tableCollapseKeys, async(now, pre) => {
       if (state.schemaSelectedName === undefined) return
       if (now.length > pre.length) {
@@ -1106,13 +1213,13 @@ export default defineComponent({
 
       if (result.meta.success) {
         // 全部数据
-        state.searchTable.list = result.data ? result.data.map((item: any) => {
+        state.searchTable.list = result.data ? result.data.data.map((item: any) => {
           return {
             name: item.QUERYNAME,
             comment: item.CHINESENAME,
             description: item.DESCRIPTION,
             tables: item.TABLENAMES,
-            columns: item.CONNECTION
+            connections: item.CONNECTIONS
           }
         }) : []
         state.searchTable.total = result.data.count
@@ -1145,6 +1252,22 @@ export default defineComponent({
      */
     const handleAddSearchTableIconClick = () => {
       state.addSearchTableDrawerVisible = true
+    }
+
+    /**
+     * 导入查询表
+     */
+    const handleImportSearchTableIconClick = () => {
+      state.importTableDrawerVisible = true
+      state.importFromBasic = false
+    }
+
+    /**
+     * 导出查询表
+     */
+     const handleExportSearchTableIconClick = () => {
+      state.exportTableDrawerVisible = true
+      state.exportFromBasic = false
     }
 
     /**
@@ -1182,6 +1305,7 @@ export default defineComponent({
      */
     const handleEditSearchTableIconClick = (searchTable: any) => {
       state.searchTableToPreview = searchTable
+      state.tableToPreview = undefined
       state.editSearchTableDrawerVisible = true
     }
 
@@ -1190,6 +1314,7 @@ export default defineComponent({
      */
     const handlePreviewSearchTableDataClick = (searchTable: any) => {
       state.searchTableToPreview = searchTable
+      state.tableToPreview = undefined
       state.previewSearchTableDrawerVisible = true
     }
 
@@ -1238,8 +1363,11 @@ export default defineComponent({
       handleRefreshTable,
       handleCopyTableName,
       handleAddTableIconClick,
+      handleImportTableIconClick,
+      handleExportTableIconClick,
       handleEditTableIconClick,
       handleDeleteTableIconClick,
+      handlePreviewTableDataClick,
       handleShowTableSecondaryIndexClick,
       handleConnectionInfoClick,
       handleTablePaginationChange,
@@ -1260,6 +1388,8 @@ export default defineComponent({
       handleRefreshSearchTable,
       handleCopySearchTableName,
       handleAddSearchTableIconClick,
+      handleImportSearchTableIconClick,
+      handleExportSearchTableIconClick,
       handleDeleteSearchTableIconClick,
       handleDeleteSearchTable,
       handleEditSearchTableIconClick,
