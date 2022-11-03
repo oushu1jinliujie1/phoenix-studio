@@ -79,7 +79,7 @@ import smartUI from '@/smart-ui-vue/index.js'
 import { message } from 'ant-design-vue-3'
 import { useModel } from '@/smart-ui-vue/utils'
 import { Table } from '@/components/Worksheet/type'
-import { getSecondaryIndexList, createSecondaryIndex, deleteSecondaryIndex, duplicateTable, executeSql } from '@/api'
+import { getSecondaryIndexList, createSecondaryIndex, deleteSecondaryIndex, duplicateTable, executeSql, runSecondaryIndex } from '@/api'
 import CreateIndex from '@/components/Worksheet/WorksheetSideBar/TableDetails/createIndex.vue'
 
 export default defineComponent({
@@ -192,16 +192,18 @@ export default defineComponent({
     ]
 
     const pullIndex = async(record: any) => {
-      const resp = await deleteSecondaryIndex({
+      const resp = await runSecondaryIndex({
         schemaName: props.schema,
         tableName: props.table.name,
-        indexName: record.name
+        indexName: record.name,
+        attrs: record.columns,
+        includesAttrs: record.extra
       })
       if (resp.meta.success) {
-        message.success('删除二级索引成功')
+        message.success('运行二级索引成功')
         initSecondaryIndexList()
       } else {
-        message.error(`删除二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
+        message.error(`运行二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
       }
     }
 

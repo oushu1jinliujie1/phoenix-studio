@@ -288,6 +288,35 @@ export const createSecondaryIndex = (
 }
 
 /**
+ * 运行二级索引
+ * @params
+ * {
+ *   schemaName: string,
+ *   tableName: string,
+ *   indexName: string,
+ *   attrs: string[],
+ *   includesAttrs: string[]
+ * }
+ */
+ export const runSecondaryIndex = (
+  {
+    schemaName,
+    tableName,
+    indexName,
+    attrs,
+    includesAttrs 
+  } : {
+    schemaName: string,
+    tableName: string,
+    indexName: string,
+    attrs: string[],
+    includesAttrs: string[]
+  }
+): Promise<Response<any>> => {
+  return http.post('index/run', { schemaName, tableName, indexName, attrs, includesAttrs })
+}
+
+/**
  * 删除二级索引
  * @param schemaName Schema名称
  * @param tableName 基础表名称

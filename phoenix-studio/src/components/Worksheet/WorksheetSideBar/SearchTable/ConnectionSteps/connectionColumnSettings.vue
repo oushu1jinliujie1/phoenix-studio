@@ -96,9 +96,11 @@ export default defineComponent({
         return false
       } else {
         for (const each of props.columnSettings) {
-          if (!each.name) {
-            notFinishMsgRef.value = '请确认每条关联都已选择关联列'
-            return false
+          for (const col of each) {
+            if (!col.columnName) {
+              notFinishMsgRef.value = '请确认每条关联都已选好关联列'
+              return false
+            }
           }
         }
         notFinishMsgRef.value = ''
