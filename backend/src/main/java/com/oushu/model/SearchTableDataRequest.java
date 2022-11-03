@@ -20,7 +20,7 @@ public class SearchTableDataRequest extends TableName {
         List<String> temp = this.returnColumns.stream()
                 .map(item -> {
                     return item.getQuoteName() + "." + item.getColumnNameWithQuote() + " AS "
-                            + "\"" + item.getColumnName() + "\"";
+                            + "\"" + item.getColumnName() + "(" + item.getDataType() + ")" + "\"";
                 })
                 .collect(Collectors.toList());
         return String.join(" , ", temp);
