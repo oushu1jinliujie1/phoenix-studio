@@ -86,7 +86,7 @@ export default defineComponent({
       for (const column of props.filterOptions.returnColumns) {
         tags.push({ type: 'column', value: column.option.key, key: '返回列', color: '#CE7FFF', icon: 'worksheet/column' })
       }
-      if (props.filterOptions.secondaryIndex) tags.push({ type: 'index', value: props.filterOptions.secondaryIndex, key: '二级索引', color: '#A0D744', icon: 'worksheet/secondary_index1' })
+      if (props.filterOptions.secondaryIndex) tags.push({ type: 'index', value: props.filterOptions.secondaryIndex, key: '二级索引', color: '#A0D744', icon: 'worksheet/secondary_index_new' })
       if (props.filterOptions.searchMode === 'primaryKey') tags.push({ type: 'mode', value: '', key: '主键检索', color: '#A0D744', icon: 'worksheet/column' })
       props.filterOptions.searchValue.forEach((value: any, key: string) => {
         if (value) {

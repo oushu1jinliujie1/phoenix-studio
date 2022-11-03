@@ -7,7 +7,10 @@
     <template #title>
       <div style="display: flex;align-items: center;">
         <span style="padding-right: 20px;">二级索引</span>
-        <x-button icon-name="worksheet/secondary_index1" color="#336CFF" type="default" @click="createIndex()">新建索引</x-button>
+        <x-button @click="createIndex()">
+          <icon color="inherit" name="worksheet/secondary_index_new"/>
+          新建索引
+        </x-button>
       </div>
     </template>
     <div class="v-oushudb-worksheet-table-detail-table-struct">
@@ -15,6 +18,7 @@
         :dataSource="tableData"
         :columns="columns"
         :pagination="false"
+        rowKey="name"
         auto-calc-empty-height
         emptyImage="empty"
       >

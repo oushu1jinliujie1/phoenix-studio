@@ -185,7 +185,7 @@
                                     :disabled="schemaSelectedName === undefined"
                                     @click="() => handleShowTableSecondaryIndexClick(_table)"
                                   >
-                                    <icon color="black" image name="worksheet/secondary_index1"/>
+                                    <icon color="black" name="worksheet/secondary_index_new"/>
                                     二级索引
                                   </x-menu-item>
                                   <x-menu-item
