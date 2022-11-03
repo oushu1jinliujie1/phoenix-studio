@@ -1,5 +1,6 @@
 package com.oushu.model;
 
+import com.oushu.util.CommonError;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,10 +25,20 @@ public class Column extends TableName{
         this.columnName = columnName;
     }
 
+    public CommonError checkValide(){
+        if (this.isPk() && this.familyName.length() > 0 && !this.familyName.equals("0")){
+            return new CommonError(true, "familyName:" + familyName + "非法！");
+        }
+        return CommonError.NonError;
+    }
+
     public String getColumnSql(){
         String columnSql = "";
         // 0是主键的列族
-        if (this.familyName != null && this.familyName.length() > 0 && !this.familyName.equals("0")){
+        if (this.familyName != null
+                && this.familyName.length() > 0
+                && !this.familyName.equals("0")
+                && !this.isPk()){
             columnSql = "\"" + this.familyName + "\".";
         }
         columnSql += "\"" + this.columnName + "\" ";

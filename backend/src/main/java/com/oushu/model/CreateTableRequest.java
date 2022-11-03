@@ -1,5 +1,6 @@
 package com.oushu.model;
 
+import com.oushu.util.CommonError;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,6 +19,15 @@ public class CreateTableRequest {
     private int saltBuckets;
     private Column[] columns;
 
+    public CommonError checkValide(){
+        for (int i = 0; i < this.columns.length; i++) {
+            CommonError commonError = this.columns[i].checkValide();
+            if (commonError != CommonError.NonError){
+                return commonError;
+            }
+        }
+        return CommonError.NonError;
+    }
 
     public String getCreateSql() {
         String sql = "CREATE TABLE \"" + this.schemaName + "\".\"" + this.tableName + "\"";

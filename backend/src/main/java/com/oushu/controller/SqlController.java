@@ -8,6 +8,7 @@ import com.oushu.model.*;
 import com.oushu.service.ExcelService;
 import com.oushu.service.MetaService;
 import com.oushu.service.SqlService;
+import com.oushu.util.CommonError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -62,6 +63,10 @@ public class SqlController {
     @PostMapping("/basic_table/create")
     public ResponseModel createBasicTable(@RequestBody CreateTableRequest param){
         ResponseModel responseModel = new ResponseModel();
+        CommonError commonError = param.checkValide();
+        if (commonError != CommonError.NonError){
+            return responseModel.failure(commonError.getErrorString());
+        }
         String sql = param.getCreateSql();
         boolean success = this.sqlService.execSQL(sql);
         if (!success){
