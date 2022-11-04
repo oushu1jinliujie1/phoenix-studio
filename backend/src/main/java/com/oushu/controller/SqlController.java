@@ -11,10 +11,7 @@ import com.oushu.service.QueryService;
 import com.oushu.service.SqlService;
 import com.oushu.util.CommonError;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -115,15 +112,14 @@ public class SqlController {
     }
 
     @GetMapping("/basic_table/export")
-    public void exportBasicTable(HttpServletResponse response) throws UnsupportedEncodingException {
+    public void exportBasicTable(@RequestParam("schemaName") String schemaName, HttpServletResponse response) throws UnsupportedEncodingException {
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("utf-8");
-        String fileName = URLEncoder.encode("基础表的定义", "UTF-8").replaceAll("\\+", "%20");
+        String fileName = URLEncoder.encode(schemaName + "模式下基础表的定义", "UTF-8").replaceAll("\\+", "%20");
         response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
-        List<Map<String, Object>> allTableList = this.metaService.getALLTableList();
+        List<Map<String, Object>> allTableList = this.metaService.getALLTableList(schemaName);
         try (ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream()).build()) {
             for (int i = 0; i < allTableList.size(); i++) {
-                String schemaName = allTableList.get(i).get("TABLE_SCHEM").toString();
                 String tableName = allTableList.get(i).get("TABLE_NAME").toString();
                 //表信息
                 List<List<Object>> excelData = this.excelService.getBasicTableExcelData(schemaName, tableName);

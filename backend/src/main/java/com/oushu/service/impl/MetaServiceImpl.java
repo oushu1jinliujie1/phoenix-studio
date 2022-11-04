@@ -89,11 +89,13 @@ public class MetaServiceImpl implements MetaService {
      * @return
      */
     @Override
-    public List<Map<String, Object>> getALLTableList() {
+    public List<Map<String, Object>> getALLTableList(String schemaName) {
         String tableListSql = "select TABLE_NAME, TABLE_SCHEM from system.catalog " +
-                " where TABLE_SCHEM <> 'CT' and TABLE_TYPE = 'u' " +
+                " where TABLE_SCHEM <> 'CT' and TABLE_TYPE = 'u' and TABLE_SCHEM = ? " +
                 " group by TABLE_NAME, TABLE_SCHEM ";
-        return pq.getListMap(tableListSql, new HashMap<>());
+        Map<Integer,Object> param = new HashMap<>();
+        param.put(1, schemaName);
+        return pq.getListMap(tableListSql, param);
     }
 
     /**

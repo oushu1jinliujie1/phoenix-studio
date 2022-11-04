@@ -16,7 +16,7 @@ public interface MetaService {
     boolean schemaExist(String schemaName);
     List<Map<String, Object>> getTableList(BasicTableParam param);
 
-    List<Map<String, Object>> getALLTableList();
+    List<Map<String, Object>> getALLTableList(String schemaName);
     long getTableNumWithSearch(String schemaName, String tableName);
     boolean tableExist(String schemaName, String tableName);
     boolean delTable(String schemaName, String tableName);
