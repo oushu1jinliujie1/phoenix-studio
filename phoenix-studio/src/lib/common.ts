@@ -1,5 +1,5 @@
 import xlsx from 'xlsx'
-import { isEqual } from 'lodash'
+import { isEqual, toLower } from 'lodash'
 
 export class FinishCheckItem {
   ref: { value: any } = { value: null }
@@ -57,16 +57,22 @@ export function parseBasicTableFromExcel(schemaName: string, fileBuffer: any) {
     }
     const tableHeaders = xlsx.utils.sheet_to_json(sheet, { range: 'A1:D1', header: 1 })[0]
     if (!isEqual(tableHeaders, basicHeaders)) continue
-    const tableInfo = xlsx.utils.sheet_to_json(sheet, {
+    const tableInfo: any = xlsx.utils.sheet_to_json(sheet, {
       range: 'A2:D2',
       header: ['tableName', 'comment', 'splitOn', 'saltBuckets']
     })[0]
+    tableInfo.saltBuckets = Number(tableInfo.saltBuckets) || 0
     Object.assign(basicTable, tableInfo)
     if (!basicTable.tableName) continue
-    const columnInfo = xlsx.utils.sheet_to_json(sheet, {
+    const columnInfo: any[] = xlsx.utils.sheet_to_json(sheet, {
       range: 3,
       header: ['columnName', 'comment', 'familyName', 'dataType', 'scale', 'precision', 'pk'],
     })
+    for (const col of columnInfo) {
+      col.pk = col.pk === true || toLower(col.pk) === 'true' || false
+      col.scale = (col.scale !== 0 && !col.scale) ? undefined : (Number(col.scale) || 0)
+      col.precision = (col.precision !== 0 && !col.precision) ? undefined : (Number(col.precision) || 0)
+    }
     Object.assign(basicTable, { columns: columnInfo })
     basicTableList.push(basicTable)
   }
