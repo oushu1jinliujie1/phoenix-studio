@@ -114,6 +114,14 @@ export const getSqlForCreateTable = (
 }
 
 /**
+ * 导出基础表
+ * @param schemaName Schema名称
+ */
+ export const exportTable = (schemaName: string): Promise<any> => {
+  return http.get(`basic_table/export?schemaName=${schemaName}`, { responseType: 'blob' })
+}
+
+/**
  * 删除基础表
  * @param schemaName Schema名称
  * @param tableName 基础表名称
@@ -208,6 +216,57 @@ export const getSqlForCreateColumn = (
     scale,
     precision,
     familyName
+  })
+}
+
+/**
+ * 新建列(获取SQL)
+ * @params
+ * {
+ *   schemaName:string,
+ *   tableName: string,
+ *   columnName: string,
+ *   dataType: string,
+ *   pk: boolean,
+ *   scale: number,
+ *   precision: number,
+ *   familyName: string,
+ *   comment: string,
+ * }
+ */
+ export const createColumn = (
+  {
+    schemaName,
+    tableName,
+    columnName,
+    dataType,
+    pk,
+    scale,
+    precision,
+    familyName,
+    comment,
+  } : {
+    schemaName:string,
+    tableName: string,
+    columnName: string,
+    dataType: string,
+    pk: boolean,
+    scale: number,
+    precision: number,
+    familyName: string,
+    comment: string,
+  }
+): Promise<Response<any>> => {
+  return http.post('basic_table/column_create', {
+    schemaName,
+    tableName,
+    columnName,
+    dataType,
+    pk,
+    scale,
+    precision,
+    familyName,
+    comment
   })
 }
 

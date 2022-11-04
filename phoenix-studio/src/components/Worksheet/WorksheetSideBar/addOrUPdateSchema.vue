@@ -29,7 +29,7 @@
         </x-input>
       </div>
     </div>
-    <div class="v-oushudb-add-db-form-container-item">
+    <!-- <div class="v-oushudb-add-db-form-container-item">
       <div class="v-oushudb-add-db-form-container-item-label">模式备注（选填）</div>
       <div class="v-oushudb-add-db-form-container-item-control">
         <a-textarea
@@ -38,14 +38,13 @@
           data-test-id="oushudb-worksheet-database-schema-comment-add-edit-textarea"
           placeholder="请填写备注"
         />
-        <!-- custom prefix icon -->
         <icon
           class="v-oushudb-add-db-form-container-item-control-prefix-icon"
           image
           name="worksheet/database_comment_two_color"
         />
       </div>
-    </div>
+    </div> -->
   </div>
   <div class="v-oushudb-add-db-form-sql-detail">
     <div class="v-oushudb-add-db-form-sql-detail-header">
@@ -151,7 +150,7 @@ export default defineComponent({
     const state = reactive({
       // 初始名字得再优化一下
       schemaName: '' as string,
-      comment: '',
+      // comment: '',
 
       isSubmitDisabled: false,
       nameValidate: ''

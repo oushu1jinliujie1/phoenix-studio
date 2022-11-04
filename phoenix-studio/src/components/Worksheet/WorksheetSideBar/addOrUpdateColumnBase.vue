@@ -101,7 +101,7 @@
         type="primary"
         @click="handleConfirm"
       >
-        <icon name="worksheet/submit"/>
+        <icon v-show="!execLoading" name="worksheet/submit"/>
         确认
       </x-button>
     </x-tooltip>

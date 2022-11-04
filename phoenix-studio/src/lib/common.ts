@@ -1,6 +1,4 @@
-import { Ref } from 'vue'
 import xlsx from 'xlsx'
-import moment from 'moment'
 import { isEqual } from 'lodash'
 
 export class FinishCheckItem {
@@ -24,143 +22,21 @@ export function getIsFinish(refs: FinishCheckItem[]) {
   }
   return { result: true, msg: '' }
 }
-
-// export function parseSchema(file: any, config: any, complete: (fields: any) => void) {
-//   const analyzeRow = (fieldsHash: any, row: any) => {
-//     for (const key in row) {
-//       const value = row[key]
-//       const field = fieldsHash[key] || (fieldsHash[key] = { typesFound: {}, sample: null, maxLength: 0, enabled: true })
-
-//       // Tally the presence of this field type
-//       const type = detectType(value)
-//       if (!field.typesFound[type]) field.typesFound[type] = 0
-//       field.typesFound[type]++
-
-//       // Save a sample record if there isn't one already (earlier rows might have an empty value)
-//       if (!field.sample && value) {
-//         field.sample = value
-//       }
-
-//       // Save the largest length
-//       field.maxLength = Math.max(field.maxLength, value.length)
-//     }
-//   }
-
-//   const detectType = (sample: any) => {
-//     if (sample === '') {
-//       return 'null'
-//     } else if (sample.includes('-') && moment(sample, 'YYYY-MM-DD', true).isValid()) {
-//       return 'date'
-//     } else if (sample.includes('-') && moment(sample, moment.ISO_8601, true).isValid()) {
-//       return 'datetime'
-//       // } else if (moment(sample, 'X', true).isValid() && +sample >= 31536000) {
-//       //     return 'timestamp'
-//     } else if (!isNaN(sample) && sample.includes('.')) {
-//       return 'float'
-//     } else if (['true', 'false'].includes(sample.toLowerCase())) { // sample === '1' || sample === '0' ||
-//       return 'boolean'
-//     } else if (!isNaN(sample)) {
-//       return Math.abs(sample) < 2147483647 ? 'integer' : 'long'
-//     } else if (sample.length > 255) {
-//       return 'text'
-//     } else {
-//       return 'text'
-//     }
-//   }
-
-//   const analyzeRowResults = (fieldsHash: any) => {
-//     const fieldsArray = []
-//     let keys = null
-//     if (fieldsHash.meta) {
-//       keys = fieldsHash.meta.fields
-//     } else {
-//       keys = Object.keys(fieldsHash)
-//     }
-//     for (const key of keys) {
-//       const field = fieldsHash[key]
-//       // Determine which field type wins
-//       field.type = determineWinner(field.typesFound)
-//       // field.machineName = slug(key, {
-//       //     replacement: '_',
-//       //     lower: true
-//       // })
-//       field.machineName = key
-//       field.sourceName = key
-//       // If any null values encountered, set field nullable
-//       if (field.typesFound.null) {
-//         field.nullable = true
-//       }
-//       fieldsArray.push(field)
-//     }
-//     return fieldsArray
-//   }
-
-//   /**
-//    *  Determine which type wins
-//    *  - timestamp could be int
-//    *  - integer could be float
-//    *  - everything could be string
-//    *  - if detect an int, don't check for timestamp anymore, only check for float or string
-//    *  - maybe this optimization can come later...
-//    */
-//   const determineWinner = (fieldTypes: any) => {
-//     const keys = Object.keys(fieldTypes)
-
-//     if (keys.length === 1) {
-//       return keys[0]
-//     } else if (fieldTypes.text) {
-//       return 'text'
-//     } else if (fieldTypes.string) {
-//       return 'string'
-//     } else if (fieldTypes.float) {
-//       return 'float'
-//     } else if (fieldTypes.long) {
-//       return 'long'
-//     } else if (fieldTypes.integer) {
-//       return 'integer'
-//     } else { // TODO: if keys.length > 1 then... what? always string? what about date + datetime?
-//       return fieldTypes[0]
-//     }
-//   }
-
-//   const fieldsHash: any = {}
-//   let rowCount = 0
-//   let _config = {
-//     header: true,
-//     skipEmptyLines: true,
-//     worker: true,
-//     preview: 1000,
-//     step: (row: any) => {
-//       rowCount++
-//       if (row.meta.fields && !('meta' in fieldsHash)) {
-//         fieldsHash.meta = row.meta
-//       }
-//       analyzeRow(fieldsHash, row.data)
-//     },
-//     complete: () => {
-//       const fieldsArray = analyzeRowResults(fieldsHash)
-//       complete(fieldsArray)
-//     }
-//   }
-//   _config = { ..._config, ...config }
-//   Papa.parse(file, _config)
-// }
-
 interface CloumnData {
   columnName: string,
   comment: string,
   familyName: string,
   dataType: string,
-  scale: number,
-  precision: number,
+  scale: number | undefined,
+  precision: number | undefined,
   pk: boolean,
 }
 interface BasicTableData {
   schemaName?: string,
   tableName: string,
   comment: string,
-  splitOn: string,
-  saltBuckets: number,
+  splitOn: string | undefined,
+  saltBuckets: number | undefined,
   columns: CloumnData[],
 }
 
@@ -169,6 +45,7 @@ export function parseBasicTableFromExcel(schemaName: string, fileBuffer: any) {
   const fileData = xlsx.read(fileBuffer)
   const basicTableList: BasicTableData[] = []
   const basicHeaders = ['表名', '表备注', 'split_on', 'SALT_BUCKETS']
+  console.log('fileData: ', fileData)
   for (const key in fileData.Sheets) {
     const sheet = fileData.Sheets[key]
     const basicTable: BasicTableData = {
@@ -189,8 +66,9 @@ export function parseBasicTableFromExcel(schemaName: string, fileBuffer: any) {
     if (!basicTable.tableName) continue
     const columnInfo = xlsx.utils.sheet_to_json(sheet, {
       range: 3,
-      header: ['columnName', 'comment', 'familyName', 'dataType', 'scale', 'precision', 'pk']
+      header: ['columnName', 'comment', 'familyName', 'dataType', 'scale', 'precision', 'pk'],
     })
+    console.log('columnInfo: ', columnInfo)
     Object.assign(basicTable, { columns: columnInfo })
     basicTableList.push(basicTable)
   }
@@ -277,4 +155,17 @@ export function parseSearchTableFromExcel(fileBuffer: any) {
     searchTableList.push(searchTable)
   }
   return { searchTableList, connectionTableList }
+}
+
+export function resolveExportExcel(title: string, fileBuffer: any) {
+  const excelData = new Blob([fileBuffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  })
+  const _a = document.createElement('a')
+  _a.href = URL.createObjectURL(excelData)
+  _a.target = '_blank'
+  _a.download = title
+  document.body.appendChild(_a)
+  _a.click()
+  document.body.removeChild(_a)
 }

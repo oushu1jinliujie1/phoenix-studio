@@ -77,7 +77,7 @@
           :scroll="{ x: 920, y: null }"
           class="v-oushudb-add-table-form-column-table"
           edit-table
-          row-key="id"
+          row-key="name"
         >
           <!-- 列名 -->
           <template #name="{ record }">

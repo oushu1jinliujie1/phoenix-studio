@@ -26,7 +26,7 @@ import AddOrUpdateColumnBase from '@/components/Worksheet/WorksheetSideBar/addOr
 import { message } from 'ant-design-vue-3'
 import { getDefaultColumn } from '@/components/Worksheet/WorksheetSideBar/addOrUpdateTable.vue'
 import { ColumnResData, Table } from '@/components/Worksheet/type'
-import { executeSql, getSqlForCreateColumn } from '@/api'
+import { createColumn, executeSql, getSqlForCreateColumn } from '@/api'
 import { TYPE_WITH_PRECISION, TYPE_WITH_SCALE } from './constant'
 
 export default defineComponent({
@@ -84,7 +84,8 @@ export default defineComponent({
       }
       
       try {
-        const sqlRes = await getSqlForCreateColumn({
+        
+        const sqlRes = await createColumn({
           schemaName: props.schemaName,
           tableName: props.table.name,
           columnName: column.name,
@@ -93,18 +94,13 @@ export default defineComponent({
           scale: TYPE_WITH_SCALE.indexOf(column.type) !== -1 ? column.scale : 0,
           precision: TYPE_WITH_PRECISION.indexOf(column.type) !== -1 ? column.precision : 0,
           familyName: column.columnFamily,
+          comment: column.comment
         })
 
         if (sqlRes.meta.success) {
-          const executeResult = await executeSql(sqlRes.data)
-
-          if (executeResult.meta.success) {
-            message.success(`${props.isAdd ? '创建' : '修改'}字段成功`)
-            localVisibleRef.value = false
-            context.emit('success')
-          } else {
-            message.error(`${props.isAdd ? '创建' : '修改'}字段失败: ${(executeResult.meta?.message) || '无失败提示'}`, 5)
-          }
+          message.success(`${props.isAdd ? '创建' : '修改'}字段成功`)
+          localVisibleRef.value = false
+          context.emit('success')
         } else {
           message.error(`${props.isAdd ? '创建' : '修改'}字段失败: ${(sqlRes.meta?.message) || '无失败提示'}`, 5)
         }

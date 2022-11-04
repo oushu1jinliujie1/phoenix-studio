@@ -105,6 +105,12 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
   return http.post('search_table/import', searchTables)
 }
 
+/**
+ * 导出查询表
+ */
+ export const exportSearchTable = (): Promise<any> => {
+  return http.get('basic_table/export', { responseType: 'blob' })
+}
 
 /**
  * 名称查重 查询表
