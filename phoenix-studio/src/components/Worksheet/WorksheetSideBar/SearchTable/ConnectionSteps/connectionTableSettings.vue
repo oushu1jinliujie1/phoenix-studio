@@ -261,7 +261,7 @@ export default defineComponent({
       if (!props.selectTableList.length) return false
       const primary = props.selectTableList[0].primary_columns[0]
       const pk = table.primary_columns[0]
-      if (pk.name === primary.name && pk.type === primary.type) return false
+      if (pk.type === primary.type) return false
       return true
     }
 
