@@ -81,7 +81,7 @@
               确认
             </x-button>
           </x-tooltip>
-          <x-button @click="() => { connectionTableDrawerVisible = false }">
+          <x-button @click="handleCancelTable">
             <icon name="worksheet/cancel"/>
             取消
           </x-button>
@@ -92,7 +92,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, reactive, toRefs, onMounted, computed, PropType } from 'vue'
+import { defineComponent, ref, reactive, toRefs, onMounted, computed, PropType, watch } from 'vue'
 import Icon from '@/components/Icon.vue'
 // @ts-ignore
 import smartUI from '@/smart-ui-vue/index.js'
@@ -103,6 +103,7 @@ import ConnectionTableSettings from '@/components/Worksheet/WorksheetSideBar/Sea
 import ConnectionColumnSettings from '@/components/Worksheet/WorksheetSideBar/SearchTable/ConnectionSteps/connectionColumnSettings.vue'
 import { FinishCheckItem, getIsFinish } from '@/lib/common'
 import { editSearchTable, getTableList } from '@/api'
+import { cloneDeep, differenceWith, isEqual, isEqualWith, remove, unzip } from 'lodash'
 
 export default defineComponent({
   name: 'editSearchTable',
@@ -144,10 +145,37 @@ export default defineComponent({
     const isDisableRef = computed(() => getIsDisableRef(state, basicRef, tableSettingsRef, columnSettingsRef, ['basicRef', 'columnSettingsRef']))
     const isDisableTableRef = computed(() => getIsDisableRef(state, basicRef, tableSettingsRef, columnSettingsRef, ['tableSettingsRef']))
 
+    const tablesComputed = computed(() => state.initialSelectTableList)
+
+    watch(tablesComputed, (tables, _tables) => {
+      if (!tables.length && !_tables?.length) return
+      if (!state.columnSettings.length) {
+        state.columnSettings = props.searchTable.connections
+        return
+      }
+      if (isEqual(tables, _tables)) return
+      const diffInOld = differenceWith(_tables, tables, isEqual)
+      const diffInNew = differenceWith(tables, _tables, isEqual)
+      if (!diffInOld.length && !diffInNew.length) return
+      const settings = cloneDeep(state.columnSettings)
+      for (const row of settings) {
+        if (diffInOld.length) remove(row, (col: any) => diffInOld.findIndex((tb: any) => col.tableName === tb.name && col.schemaName === tb.schema) !== -1)
+        for (const tb of diffInNew) {
+          row.push({ schemaName: tb.schema, tableName: tb.name, columnName: '' })
+        }
+      }
+      state.columnSettings = settings
+    })
+
     const handleConfirmTable = () => {
 
       state.initialSelectTableList = state.selectTableList
 
+      state.connectionTableDrawerVisible = false
+    }
+
+    const handleCancelTable = () => {
+      state.selectTableList = state.initialSelectTableList
       state.connectionTableDrawerVisible = false
     }
 
@@ -216,7 +244,6 @@ export default defineComponent({
         if (result) state.selectTableList = [...state.selectTableList, result]
       }
       state.initialSelectTableList = state.selectTableList
-      state.columnSettings = props.searchTable.connections
       state.getTableDetailLoading = false
     })
 
@@ -230,6 +257,7 @@ export default defineComponent({
       isDisableTableRef,
 
       handleConfirmTable,
+      handleCancelTable,
       handleConfirm,
       handleCancel
     }

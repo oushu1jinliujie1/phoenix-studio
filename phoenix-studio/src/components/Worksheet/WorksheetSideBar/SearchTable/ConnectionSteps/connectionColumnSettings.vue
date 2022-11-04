@@ -227,7 +227,7 @@ export default defineComponent({
     return {
       notFinishMsgRef,
       isFinishRef,
-
+      tablesComputed,
       columnsTableData,
       columnsLimit,
       changeColumn,
