@@ -16,10 +16,11 @@ public interface QueryService {
 
     long getQueryTableCount(QueryTableName param);
     boolean queryNameDup(String queryTableName);
+
     boolean delQueryName(String queryTableName);
     MetaInfo queryTableInfo(String queryTableName);
     boolean editQuery(OsMeta meta);
-    List<Map<String, Object>> getConnectedQueryTableList(TableName tableName);
+    List<MetaInfo> getConnectedQueryTableList(TableName tableName);
 
     List<Map<String, Object>> querySearchTableData(SearchTableDataRequest tableName);
 

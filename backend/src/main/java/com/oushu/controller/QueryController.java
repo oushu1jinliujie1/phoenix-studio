@@ -97,7 +97,7 @@ public class QueryController {
 
     @PostMapping("/basic_table/connect_search_table/list")
     public ResponseModel tableDup(@RequestBody TableName tableName){
-        List<Map<String, Object>> connectedQueryTableList = this.queryService.getConnectedQueryTableList(tableName);
+        List<MetaInfo> connectedQueryTableList = this.queryService.getConnectedQueryTableList(tableName);
         ResponseModel responseModel = new ResponseModel();
         return responseModel.success(connectedQueryTableList);
     }

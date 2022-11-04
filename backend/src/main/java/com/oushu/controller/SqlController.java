@@ -118,7 +118,11 @@ public class SqlController {
         String fileName = URLEncoder.encode(schemaName + "模式下基础表的定义", "UTF-8").replaceAll("\\+", "%20");
         response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
         List<Map<String, Object>> allTableList = this.metaService.getALLTableList(schemaName);
-        try (ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream()).build()) {
+        try (ExcelWriter excelWriter = EasyExcel
+                .write(response.getOutputStream())
+                .head(this.excelService.getBasicTableExcelHeader())
+                .useDefaultStyle(false)
+                .build()) {
             for (int i = 0; i < allTableList.size(); i++) {
                 String tableName = allTableList.get(i).get("TABLE_NAME").toString();
                 //表信息
@@ -138,7 +142,10 @@ public class SqlController {
         String fileName = URLEncoder.encode("查询表的定义", "UTF-8").replaceAll("\\+", "%20");
         response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
         List<Map<String, Object>> allQueryTable = this.queryService.getALLQueryTable();
-        try (ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream()).build()) {
+        try (ExcelWriter excelWriter = EasyExcel
+                .write(response.getOutputStream())
+                .head(this.excelService.getQueryTableExcelHeader(10))
+                .build()) {
             for (int i = 0; i < allQueryTable.size(); i++) {
                 String queryName = allQueryTable.get(i).get("QUERYNAME").toString();
                 //表信息

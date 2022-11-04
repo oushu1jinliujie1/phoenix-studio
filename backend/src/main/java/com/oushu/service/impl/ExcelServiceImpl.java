@@ -1,5 +1,6 @@
 package com.oushu.service.impl;
 
+import com.alibaba.excel.util.ListUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.oushu.model.MetaInfo;
@@ -22,6 +23,18 @@ public class ExcelServiceImpl implements ExcelService {
     @Autowired
     private QueryService queryService;
 
+    @Override
+    public List<List<String>> getBasicTableExcelHeader() {
+        List<List<String>> list = ListUtils.newArrayList();
+        String[] title = {"表名", "表备注", "split_on", "SALT_BUCKETS", "", "", ""};
+        for (int i = 0; i < title.length; i++) {
+            List<String> head = ListUtils.newArrayList();
+            head.add(title[i]);
+            list.add(head);
+        }
+        return list;
+    }
+
     /**
      * @param schemaName
      * @param tableName
@@ -30,12 +43,6 @@ public class ExcelServiceImpl implements ExcelService {
     @Override
     public List<List<Object>> getBasicTableExcelData(String schemaName, String tableName) {
         List<List<Object>> excelData = new ArrayList<>();
-        List<Object> title = new ArrayList<>();
-        title.add("表名");
-        title.add("表备注");
-        title.add("split_on");
-        title.add("SALT_BUCKETS");
-        excelData.add(title);
         JsonObject tableInfo = this.metaService.getTableInfo(schemaName, tableName);
         List<Object> titleContent = new ArrayList<>();
         titleContent.add(tableInfo.get("TABLE_NAME").getAsString());
@@ -61,12 +68,31 @@ public class ExcelServiceImpl implements ExcelService {
                         tableColumn.get(columnName).getAsString());
             }
             JsonElement key_seq = tableColumn.get("KEY_SEQ");
-            String is_key = key_seq.isJsonNull() ? "FALSE" : key_seq.getAsLong() > 0 ? "TRUE" : "FALSE";
+            boolean is_key = key_seq.isJsonNull() ? false : key_seq.getAsLong() > 0 ? true : false;
             columnContent.add(is_key);
 
             excelData.add(columnContent);
         }
         return excelData;
+    }
+
+
+    @Override
+    public List<List<String>> getQueryTableExcelHeader(int length) {
+        List<List<String>> list = ListUtils.newArrayList();
+        List<String> title = new ArrayList<>();
+        title.add("查询表名");
+        title.add("查询表中文名");
+        title.add("查询表描述");
+        for (int i = 0; i < length - title.size(); i++) {
+            title.add("");
+        }
+        for (int i = 0; i < title.size(); i++) {
+            List<String> head = ListUtils.newArrayList();
+            head.add(title.get(i));
+            list.add(head);
+        }
+        return list;
     }
 
     /**
@@ -77,13 +103,6 @@ public class ExcelServiceImpl implements ExcelService {
     public List<List<Object>> getQueryTableExcelData(String queryName) {
         MetaInfo metaInfo = this.queryService.queryTableInfo(queryName);
         List<List<Object>> excelData = new ArrayList<>();
-        List<Object> title = new ArrayList<>();
-        String[] titleName = {"查询表名", "查询表中文名", "查询表描述"};
-        for (String item : titleName) {
-            title.add(item);
-        }
-        // 第1行
-        excelData.add(title);
         List<Object> titleContent = new ArrayList<>();
         titleContent.add(metaInfo.getQueryName());
         titleContent.add(metaInfo.getChineseName());
@@ -91,7 +110,7 @@ public class ExcelServiceImpl implements ExcelService {
         // 第2行
         excelData.add(titleContent);
         String[] tableNames = metaInfo.getTableNames().split(",");
-        title = new ArrayList<>();
+        List<Object> title = new ArrayList<>();
         for (String tableName : tableNames) {
             title.add(tableName);
         }

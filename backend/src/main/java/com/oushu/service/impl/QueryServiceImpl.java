@@ -214,12 +214,18 @@ public class QueryServiceImpl implements QueryService {
      * @return
      */
     @Override
-    public List<Map<String, Object>> getConnectedQueryTableList(TableName tableName) {
+    public List<MetaInfo> getConnectedQueryTableList(TableName tableName) {
         String sql = "select * from " + this.metaTableName
                 + " where TABLENAMES like ?";
         Map<Integer,Object> sqlParam = new HashMap<>();
         sqlParam.put(1, "%" + tableName.getNameWithoutQuote() + "%");
-        return pq.getListMap(sql, sqlParam);
+        List<Map<String, Object>> listMap = pq.getListMap(sql, sqlParam);
+        List<MetaInfo> result = new ArrayList<>();
+        for (int i = 0; i < listMap.size(); i++) {
+            MetaInfo queryname = this.queryTableInfo(listMap.get(i).get("QUERYNAME").toString());
+            result.add(queryname);
+        }
+        return result;
     }
 
     /**
