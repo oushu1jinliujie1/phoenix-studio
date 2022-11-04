@@ -27,6 +27,6 @@ export const deleteSchema = (schemaName: string): Promise<Response<any>> => {
  * 名称查重schema
  * @param schemaName Schema名称
  */
- export const duplicateSchema = (schemaName: string): Promise<Response<any>> => {
+export const duplicateSchema = (schemaName: string): Promise<Response<any>> => {
   return http.post('schema/duplicate', { schemaName })
 }

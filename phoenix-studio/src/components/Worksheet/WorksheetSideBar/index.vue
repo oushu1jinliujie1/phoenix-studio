@@ -652,8 +652,8 @@ import {
   deleteTable,
   getSearchTableList,
   deleteSearchTable,
-exportTable,
-exportSearchTable,
+  exportTable,
+  exportSearchTable,
 } from '@/api'
 import { ColumnResData, Table } from '@/components/Worksheet/type'
 import AddOrUpdateSchema from '@/components/Worksheet/WorksheetSideBar/addOrUPdateSchema.vue'

@@ -10,7 +10,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  *   limit: number
  * }
  */
- export const getSearchTableList = (
+export const getSearchTableList = (
   {
     queryName,
     offset,
@@ -35,7 +35,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  *   connections: Array<Array<{ columnName: string, tableName: string }>>
  * }
  */
- export const createSearchTable = (
+export const createSearchTable = (
   {
     queryName,
     chineseName,
@@ -64,7 +64,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  *   connections: Array<Array<{ columnName: string, tableName: string }>>
  * }
  */
- export const editSearchTable = (
+export const editSearchTable = (
   {
     queryName,
     chineseName,
@@ -93,7 +93,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  *   connections: Array<Array<{ columnName: string, tableName: string }>>
  * }>
  */
- export const uploadSearchTable = (
+export const uploadSearchTable = (
   searchTables : Array<{
     queryName: string,
     chineseName: string,
@@ -108,7 +108,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
 /**
  * 导出查询表
  */
- export const exportSearchTable = (): Promise<any> => {
+export const exportSearchTable = (): Promise<any> => {
   return http.get('query_table/export', { responseType: 'blob' })
 }
 
@@ -116,7 +116,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  * 名称查重 查询表
  * @params queryName 查询表名称
  */
- export const duplicateSearchTable = (queryName: string): Promise<Response<any>> => {
+export const duplicateSearchTable = (queryName: string): Promise<Response<any>> => {
   return http.post('search_table/duplicate', { queryName })
 }
 
@@ -124,7 +124,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  * 删除查询表
  * @params queryTableName 查询表名称
  */
- export const deleteSearchTable = (queryTableName: string): Promise<Response<any>> => {
+export const deleteSearchTable = (queryTableName: string): Promise<Response<any>> => {
   return http.delete(`search_table/delete/${queryTableName}`)
 }
 
@@ -132,7 +132,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  * 查询表详情
  * @params queryTableName 查询表名称
  */
- export const getSearchTableDetails = (queryTableName: string): Promise<Response<any>> => {
+export const getSearchTableDetails = (queryTableName: string): Promise<Response<any>> => {
   return http.get(`search_table/info/${queryTableName}`)
 }
 
@@ -149,7 +149,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  *   tableName: string | undefined
  * }
  */
- export const filterData = (
+export const filterData = (
   {
     secondaryIndex,
     returnColumns,

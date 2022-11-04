@@ -117,7 +117,7 @@ export const getSqlForCreateTable = (
  * 导出基础表
  * @param schemaName Schema名称
  */
- export const exportTable = (schemaName: string): Promise<any> => {
+export const exportTable = (schemaName: string): Promise<any> => {
   return http.get(`basic_table/export?schemaName=${schemaName}`, { responseType: 'blob' })
 }
 
@@ -234,7 +234,7 @@ export const getSqlForCreateColumn = (
  *   comment: string,
  * }
  */
- export const createColumn = (
+export const createColumn = (
   {
     schemaName,
     tableName,
@@ -357,7 +357,7 @@ export const createSecondaryIndex = (
  *   includesAttrs: string[]
  * }
  */
- export const runSecondaryIndex = (
+export const runSecondaryIndex = (
   {
     schemaName,
     tableName,
@@ -407,7 +407,7 @@ export const getConnectionList = ({ schemaName, tableName } : { schemaName: stri
  *   tableName: string | undefined
  * }
  */
- export const filterDataFromBasic = (
+export const filterDataFromBasic = (
   {
     secondaryIndex,
     returnColumns,

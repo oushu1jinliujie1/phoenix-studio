@@ -561,7 +561,7 @@ p {
 }
 .right-side-visible-button {
   position: absolute;
-  top: 45%;
+  top: 38%;
   width: 20px;
   padding: 6px 3px;
   background: rgba(51, 108, 255, 0.6);

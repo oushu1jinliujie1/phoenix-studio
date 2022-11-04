@@ -45,7 +45,6 @@ export function parseBasicTableFromExcel(schemaName: string, fileBuffer: any) {
   const fileData = xlsx.read(fileBuffer)
   const basicTableList: BasicTableData[] = []
   const basicHeaders = ['表名', '表备注', 'split_on', 'SALT_BUCKETS']
-  console.log('fileData: ', fileData)
   for (const key in fileData.Sheets) {
     const sheet = fileData.Sheets[key]
     const basicTable: BasicTableData = {
@@ -68,7 +67,6 @@ export function parseBasicTableFromExcel(schemaName: string, fileBuffer: any) {
       range: 3,
       header: ['columnName', 'comment', 'familyName', 'dataType', 'scale', 'precision', 'pk'],
     })
-    console.log('columnInfo: ', columnInfo)
     Object.assign(basicTable, { columns: columnInfo })
     basicTableList.push(basicTable)
   }
