@@ -109,7 +109,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  * 导出查询表
  */
  export const exportSearchTable = (): Promise<any> => {
-  return http.get('basic_table/export', { responseType: 'blob' })
+  return http.get('query_table/export', { responseType: 'blob' })
 }
 
 /**
