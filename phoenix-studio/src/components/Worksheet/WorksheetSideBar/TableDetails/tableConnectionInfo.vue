@@ -117,7 +117,7 @@ export default defineComponent({
           return {
             name: item.QUERYNAME,
             tables: item.TABLENAMES,
-            columns: unzip(item.CONNECTION)?.find((item: any) => item[0].tableName === props.table.name)?.map((item: any) => item.name),
+            columns: unzip(item.CONNECTIONS)?.find((obj: any) => obj[0].tableName === props.table.name)?.map((col: any) => col.name),
             count: item.CONNECTION?.length || 0,
           }
         })
