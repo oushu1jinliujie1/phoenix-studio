@@ -4,6 +4,7 @@ import com.alibaba.druid.pool.DruidDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
 
 import java.sql.Connection;
@@ -12,43 +13,49 @@ import java.util.concurrent.*;
 @Slf4j
 public class PhoenixDataSource {
 
+    public static String krbEnableKey = "hbase.krb.enabled";
+    public static String HadoopUserName = "hbase.hadoop.user.name";
+    public static String krbConfKey = "hbase.krb.conf";
+    public static String krbUserKey = "hbase.krb.login.principal";
+    public static String krbKeyTabPathKey = "hbase.krb.login.keytab";
+
     private static DruidDataSource pds = null;
 
     public static DruidDataSource createPhoenixDataSource() {
-        if ( pds != null ) {
+        if ( pds != null || true ) {
             return pds;
         }
         log.info("初始化phoenix连接池...");
         long startTime = System.currentTimeMillis();
-
-        // 连接hadoop环境，进行 Kerberos认证
-//        Configuration conf = new Configuration();
-        // conf.set("hadoop.security.authentication", "Kerberos");
-
-        // linux 环境会默认读取/etc/nokrb.cnf文件，win不指定会默认读取C:/Windows/krb5.ini
-        /*if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
-            System.setProperty("java.security.krb5.conf", "/conf/krb5.conf");
-        }*/
-        //System.setProperty("java.security.krb5.conf", "conf/krb5.conf");
-        //        UserGroupInformation.setConfiguration(conf);
 
         //读取自定义配置
         Configuration conf = new Configuration();
         conf.setClassLoader(PhoenixDataSource.class.getClassLoader());
         conf.addResource("phoenix-custom-site-default.xml");
         conf.addResource("phoenix-custom-site.xml");
-        String s = conf.get("hbase.phoenix.max.num");
-//        CTApi.MaxFirstCount = Integer.parseInt(s);
-        try {
-            //UserGroupInformation.loginUserFromKeytab("hbase/_HOST@HADOOP.COM", "conf/hbasehost.keytab");
-//            Class.forName("");
-            // kerberos环境下Phoenix的jdbc字符串为 jdbc:phoenix:zk:2181:/znode:principal:keytab
-            Configuration entries = HBaseConfiguration.create();
-            String zookeeperQuorum = entries.get("hbase.zookeeper.quorum");
-            String zookeeperPort = entries.get("hbase.zookeeper.property.clientPort");
-            String znode = entries.get("zookeeper.znode.parent");
 
+        Configuration kerConf = new Configuration();
+        kerConf.setClassLoader(PhoenixDataSource.class.getClassLoader());
+        kerConf.addResource("hbase-site.xml");
+        System.setProperty("HADOOP_USER_NAME", conf.get(HadoopUserName));
+        String user = conf.get(krbUserKey);
+        boolean krbEnabled = conf.getBoolean(krbEnableKey, false);
+        if (krbEnabled){
+            System.setProperty("sun.security.krb5.debug", "true");  //开启详细debug参数
+            kerConf.set("hadoop.security.authentication", "Kerberos");
+            System.setProperty("java.security.krb5.conf", conf.get(krbConfKey));
+            UserGroupInformation.setConfiguration(kerConf);
+        }
+
+        try {
+            String zookeeperQuorum = kerConf.get("hbase.zookeeper.quorum");
+            String zookeeperPort = kerConf.get("hbase.zookeeper.property.clientPort");
+            String znode = kerConf.get("zookeeper.znode.parent");
             String url = "jdbc:phoenix:" + zookeeperQuorum + ":" + zookeeperPort + ":" + znode;
+            if (krbEnabled){
+                UserGroupInformation.loginUserFromKeytab(user, conf.get(krbKeyTabPathKey));
+                url += ":" + user + ":" + conf.get(krbKeyTabPathKey);
+            }
             log.warn("phoenix连接URL: " + url);
             // conn = DriverManager.getConnection(url).unwrap(PhoenixConnection.class);
             int maxWait = Integer.parseInt(conf.get("druid.datasource.max.wait"));

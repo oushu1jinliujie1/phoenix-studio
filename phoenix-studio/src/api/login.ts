@@ -8,7 +8,7 @@ import http, { Response } from 'lava-fe-lib/lib-common/http'
  * }
  */
 export const login = ({ userName, password }: { userName: string, password: string }): Promise<Response<any>> => {
-  return http.post('login', { userName, password })
+  return http.post('phoenix/login', { userName, password })
 }
 
 /**

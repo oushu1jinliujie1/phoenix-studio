@@ -29,7 +29,7 @@ public class LoginController {
         return responseModel.success("content");
     }
 
-    @PostMapping("/login")
+    @PostMapping("/phoenix/login")
     public ResponseModel login(@RequestBody LoginParam param, HttpServletRequest request, HttpServletResponse response) throws ServletException {
         ResponseModel responseModel = new ResponseModel();
         //TODO 后续对接ranger

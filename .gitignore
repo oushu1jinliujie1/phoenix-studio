@@ -1,3 +1,4 @@
 /backend/target
 /backend/lib
 /backend/.idea
+/backend/src/main/resources/static

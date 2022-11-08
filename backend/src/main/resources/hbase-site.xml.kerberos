@@ -1,0 +1,62 @@
+<configuration>
+    <property>
+        <name>hbase.zookeeper.quorum</name>
+        <value>82.157.171.118,43.138.8.220,43.140.220.147</value>
+        <description>集群zookeeper节点信息</description>
+    </property>
+    <property>
+        <name>hbase.regionserver.wal.codec</name>
+        <value>org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec</value>
+        <description>开启二级索引</description>
+    </property>
+    <property>
+        <name>phoenix.schema.isNamespaceMappingEnabled</name>
+        <value>true</value>
+        <description>开启schema</description>
+    </property>
+    <property>
+        <name>hbase.zookeeper.property.clientPort</name>
+        <value>2181</value>
+        <description>zookeeper端口</description>
+    </property>
+    <property>
+        <name>zookeeper.znode.parent</name>
+        <value>/hbase</value>
+        <description>hbase在zookeeper上的节点根路径</description>
+    </property>
+
+    <!-- hbase配置kerberos安全认证 -->
+    <property>
+        <name>hbase.security.authentication</name>
+        <value>kerberos</value>
+    </property>
+    <!-- 配置hbase rpc安全通信 -->
+    <property>
+        <name>hbase.rpc.engine</name>
+        <value>org.apache.hadoop.hbase.ipc.SecureRpcEngine</value>
+    </property>
+    <property>
+        <name>hbase.coprocessor.region.classes</name>
+        <value>org.apache.hadoop.hbase.security.token.TokenProvider</value>
+    </property>
+    <!-- hmaster配置kerberos安全凭据认证 -->
+    <property>
+        <name>hbase.master.kerberos.principal</name>
+        <value>hbase/_HOST@OUSHU810725.COM</value>
+    </property>
+    <!-- hmaster配置kerberos安全证书keytab文件位置 -->
+    <property>
+        <name>hbase.master.keytab.file</name>
+        <value>/usr/local/oushu/hbase/conf/hbase.keytab</value>
+    </property>
+    <!-- regionserver配置kerberos安全凭据认证 -->
+    <property>
+        <name>hbase.regionserver.kerberos.principal</name>
+        <value>hbase/_HOST@OUSHU810725.COM</value>
+    </property>
+    <!-- regionserver配置kerberos安全证书keytab文件位置 -->
+    <property>
+        <name>hbase.regionserver.keytab.file</name>
+        <value>/usr/local/oushu/hbase/conf/hbase.keytab</value>
+    </property>
+</configuration>

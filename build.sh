@@ -26,6 +26,14 @@ build-phoenix-studio() {
     cd -
 }
 
+build-phoenix-studio-backend() {
+    print_info "start build phoenix-studio backend"
+    cd $basepath/backend
+    npm install
+    npm run build
+    cd -
+}
+
 usage() {
     echo "build [options]"
     echo "Options:"

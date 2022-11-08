@@ -1,4 +1,31 @@
 <configuration>
+    <!--    kerberos的配置-->
+    <property>
+        <name>hbase.krb.enabled</name>
+        <value>false</value>
+        <description>hbase集群是否开启了kerberos</description>
+    </property>
+    <property>
+        <name>hbase.hadoop.user.name</name>
+        <value>hbase</value>
+        <description>hadoop用户名</description>
+    </property>
+    <property>
+        <name>hbase.krb.conf</name>
+        <value>/Users/jinliujie/go/src/github.com/oushu-io/phoenix-studio/backend/src/main/resources/krb5.conf</value>
+        <description>krb5.conf文件的地址</description>
+    </property>
+    <property>
+        <name>hbase.krb.login.principal</name>
+        <value>hbase/hbase-krb20221107poc750268m1-3886-3972-1@OUSHU810725.COM</value>
+        <description>kerberos登录用户</description>
+    </property>
+    <property>
+        <name>hbase.krb.login.keytab</name>
+        <value>/Users/jinliujie/go/src/github.com/oushu-io/phoenix-studio/backend/src/main/resources/hbase.keytab</value>
+        <description>keytab文件的地址</description>
+    </property>
+    <!--    连接池的配置-->
     <property>
         <name>hbase.phoenix.max.num</name>
         <value>100</value>
@@ -21,7 +48,7 @@
     </property>
     <property>
         <name>druid.datasource.max.wait</name>
-        <value>40000</value>
+        <value>60000</value>
         <description>获取连接最大超时时间（毫秒）</description>
     </property>
     <property>

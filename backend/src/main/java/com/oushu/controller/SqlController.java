@@ -145,6 +145,7 @@ public class SqlController {
         try (ExcelWriter excelWriter = EasyExcel
                 .write(response.getOutputStream())
                 .head(this.excelService.getQueryTableExcelHeader(10))
+                .useDefaultStyle(false)
                 .build()) {
             for (int i = 0; i < allQueryTable.size(); i++) {
                 String queryName = allQueryTable.get(i).get("QUERYNAME").toString();

@@ -11,14 +11,14 @@ import java.io.IOException;
 public class HBaseConnect {
     public static Connection connection = null;
 
-    static {
-        try {
-            connection = ConnectionFactory.createConnection();
-        } catch (IOException e){
-            System.out.println("连接获取失败");
-            e.printStackTrace();
-        }
-    }
+//    static {
+//        try {
+//            connection = ConnectionFactory.createConnection();
+//        } catch (IOException e){
+//            System.out.println("连接获取失败");
+//            e.printStackTrace();
+//        }
+//    }
 
     public static void closeConnection() throws IOException {
         if (connection != null) {

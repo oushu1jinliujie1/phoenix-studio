@@ -20,16 +20,29 @@ public class LoginCheckFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        HttpServletRequest request = (HttpServletRequest) servletRequest;//向上转型
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         log.info("拦截请求: {}",request.getRequestURI());//这个是日志信息，直接输出拦截的请求
         //1、获取前端的本次请求的URI
         String requestURI = request.getRequestURI();
+
+        if (requestURI.equals("/login")){
+            response.sendRedirect("/");
+            return;
+        }
+        //登录请求直接转发
+        if (requestURI.equals("/api/phoenix/login")){
+            request.getRequestDispatcher("/phoenix/login").forward(request, response);
+            return;
+        }
         String[] urls = new String[]{//列举放行资源
-                "/login",//放行登录请求
-                "/logout",//放行退出请求
-                "/hello",
-                "/front/**"//放行静态资源和静态页面
+                "/",
+                "/**/*.html",
+                "/**/*.js",
+                "/**/*.css",
+                "/**/*.svg",
+                "/**/*.gz",
+                "/**/*.map"//放行静态资源和静态页面
         };
         //2、判断本次请求是否需要处理
         boolean check = check(requestURI, urls);
@@ -40,6 +53,12 @@ public class LoginCheckFilter implements Filter {
         }
         //4、判断登录状态,如果已登录,则直接放行
         if(request.getSession().getAttribute("oushu") != null){
+            if (requestURI.indexOf("/api") == 0){
+                response.setContentType("text/json;charset=utf-8");
+                request.getRequestDispatcher(requestURI.replaceFirst("/api", ""))
+                        .forward(request, response);
+                return;
+            }
             filterChain.doFilter(request,response);//放行
             return;
         }
