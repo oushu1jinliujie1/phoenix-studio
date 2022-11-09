@@ -3,9 +3,7 @@ package com.oushu.phoenix.jdbc;
 import com.alibaba.druid.pool.DruidDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.log4j.Logger;
 
 import java.sql.Connection;
 import java.util.concurrent.*;
@@ -22,7 +20,7 @@ public class PhoenixDataSource {
     private static DruidDataSource pds = null;
 
     public static DruidDataSource createPhoenixDataSource() {
-        if ( pds != null || true ) {
+        if ( pds != null ) {
             return pds;
         }
         log.info("初始化phoenix连接池...");

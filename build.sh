@@ -28,10 +28,23 @@ build-phoenix-studio() {
 
 build-phoenix-studio-backend() {
     print_info "start build phoenix-studio backend"
+    cp -r $basepath/phoenix-studio/* $basepath/backend/src/main/resources/static/
     cd $basepath/backend
-    npm install
-    npm run build
+    mvn clean package
     cd -
+}
+
+build-tar() {
+    mkdir -p $basepath/dist
+    rm -rf $basepath/dist/*
+    mkdir $basepath/dist/config
+    mkdir $basepath/dist/bin
+    mkdir $basepath/dist/sbin
+
+    cp $basepath/backend/target/phoenix-studio-backend-*.jar $basepath/dist/bin/
+    cp -r $basepath/backend/target/lib $basepath/dist/bin/
+    cp $basepath/start.sh $basepath/dist/sbin/
+    cp $basepath/backend/src/main/resources/
 }
 
 usage() {
@@ -56,6 +69,7 @@ while [[ $# -gt 0 ]]; do
         ;;
     -b)
         COMMANDS+=("build-phoenix-studio")
+        COMMANDS+=("build-phoenix-studio-backend")
         ;;
     help | *)
         usage

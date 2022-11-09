@@ -42,6 +42,7 @@ public class LoginCheckFilter implements Filter {
                 "/**/*.css",
                 "/**/*.svg",
                 "/**/*.gz",
+                "/**/*.ico",
                 "/**/*.map"//放行静态资源和静态页面
         };
         //2、判断本次请求是否需要处理

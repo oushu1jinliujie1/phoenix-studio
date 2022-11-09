@@ -24,7 +24,6 @@ public class MyInitialization implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         log.info("应用启动了，我准备初始化数据了");
-//        PhoenixDataSource.createPhoenixDataSource();
     }
 }
 
