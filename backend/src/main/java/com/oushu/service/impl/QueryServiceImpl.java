@@ -2,6 +2,7 @@ package com.oushu.service.impl;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.oushu.config.Studio;
 import com.oushu.model.*;
 import com.oushu.phoenix.jdbc.PhoenixQuery;
 import com.oushu.service.MetaService;
@@ -21,7 +22,8 @@ public class QueryServiceImpl implements QueryService {
 
     private String metaConnectionsTableName = "ct.os_meta_connection";
 
-    private PhoenixQuery pq = new PhoenixQuery();
+    @Autowired
+    private PhoenixQuery pq;
 
     @Autowired
     private MetaService metaService;

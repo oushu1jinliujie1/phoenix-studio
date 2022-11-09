@@ -1,9 +1,13 @@
 package com.oushu.phoenix.jdbc;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.oushu.config.SpringContextUtils;
+import com.oushu.config.Studio;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.Connection;
 import java.util.concurrent.*;
@@ -19,11 +23,13 @@ public class PhoenixDataSource {
 
     private static DruidDataSource pds = null;
 
+
     public static DruidDataSource createPhoenixDataSource() {
+        log.info("初始化phoenix连接池...");
+        Studio studio = SpringContextUtils.getBean(Studio.class);
         if ( pds != null ) {
             return pds;
         }
-        log.info("初始化phoenix连接池...");
         long startTime = System.currentTimeMillis();
 
         //读取自定义配置
@@ -31,10 +37,13 @@ public class PhoenixDataSource {
         conf.setClassLoader(PhoenixDataSource.class.getClassLoader());
         conf.addResource("phoenix-custom-site-default.xml");
         conf.addResource("phoenix-custom-site.xml");
-
+        // application.yml中的配置会覆盖上面的配置
+        conf.addResource(new Path(studio.getPhoenix()));
+        //读取hbase-site.xml
         Configuration kerConf = new Configuration();
         kerConf.setClassLoader(PhoenixDataSource.class.getClassLoader());
         kerConf.addResource("hbase-site.xml");
+        kerConf.addResource(new Path(studio.getHbase()));
         System.setProperty("HADOOP_USER_NAME", conf.get(HadoopUserName));
         String user = conf.get(krbUserKey);
         boolean krbEnabled = conf.getBoolean(krbEnableKey, false);

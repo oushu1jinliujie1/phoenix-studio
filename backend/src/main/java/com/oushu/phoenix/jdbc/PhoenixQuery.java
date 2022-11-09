@@ -2,9 +2,12 @@ package com.oushu.phoenix.jdbc;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.google.gson.JsonObject;
+import com.oushu.config.Studio;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -13,9 +16,17 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
+@Component
 public class PhoenixQuery {
 
-    DruidDataSource pds = PhoenixDataSource.createPhoenixDataSource();
+    @Autowired
+    private Studio studio;
+
+    public PhoenixQuery() {
+        pds = PhoenixDataSource.createPhoenixDataSource();
+    }
+
+    private DruidDataSource pds;
 
     public void queryTestJdbc(Integer qID){
         long start = System.currentTimeMillis();

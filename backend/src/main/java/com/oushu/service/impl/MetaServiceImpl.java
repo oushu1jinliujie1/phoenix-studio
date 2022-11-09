@@ -1,6 +1,7 @@
 package com.oushu.service.impl;
 
 import com.google.gson.JsonObject;
+import com.oushu.config.Studio;
 import com.oushu.model.BasicTableParam;
 import com.oushu.model.Column;
 import com.oushu.model.IdxParam;
@@ -18,7 +19,9 @@ import java.util.Optional;
 
 @Service
 public class MetaServiceImpl implements MetaService {
-    private PhoenixQuery pq = new PhoenixQuery();
+
+    @Autowired
+    private PhoenixQuery pq;
 
     @Autowired
     private SqlService sqlService;

@@ -4,3 +4,7 @@ spring:
   http:
     converters:
       preferred-json-mapper: gson
+phoenix:
+  studio:
+    hbase: /Users/jinliujie/go/src/github.com/oushu-io/phoenix-studio/backend/src/main/resources/hbase-site.xml
+    phoenix: /Users/jinliujie/go/src/github.com/oushu-io/phoenix-studio/backend/src/main/resources/phoenix-custom-site-default.xml

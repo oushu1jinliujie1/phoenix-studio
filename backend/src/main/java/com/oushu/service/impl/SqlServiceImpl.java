@@ -1,6 +1,7 @@
 package com.oushu.service.impl;
 
 import com.google.gson.JsonObject;
+import com.oushu.config.Studio;
 import com.oushu.model.Column;
 import com.oushu.model.CreateTableRequest;
 import com.oushu.phoenix.jdbc.PhoenixQuery;
@@ -16,7 +17,8 @@ import java.util.Map;
 @Service
 public class SqlServiceImpl implements SqlService {
 
-    private PhoenixQuery pq = new PhoenixQuery();
+    @Autowired
+    private PhoenixQuery pq;
 
     @Autowired
     private MetaService metaService;
