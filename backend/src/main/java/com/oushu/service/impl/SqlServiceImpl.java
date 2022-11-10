@@ -100,7 +100,7 @@ public class SqlServiceImpl implements SqlService {
         param.put(1, schemaName);
         param.put(2, tableName);
         JsonObject jsonObject = pq.executeQuery(sql, param);
-        return jsonObject != null ? jsonObject.get("COMMENT").getAsString() : "";
+        return jsonObject != null ? (jsonObject.get("COMMENT").isJsonNull() ? "" : jsonObject.get("COMMENT").getAsString()) : "";
     }
 
     /**

@@ -251,6 +251,9 @@ public class QueryServiceImpl implements QueryService {
                 + " from " + tableName.getQuoteName()
                 + " where " + conditionForPK;
         List<JsonObject> keyList = pq.getList(keyListSql, new HashMap<>());
+        if (keyList.size() == 0){
+            return new ArrayList<>();
+        }
         // 第2次查询，查询最终结果
         String finallySelectSql = tableName.getFinallySelectSql();
         List<String> temp = tableNames.stream().map(item -> item.getQuoteName()).collect(Collectors.toList());
