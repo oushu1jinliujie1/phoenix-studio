@@ -22,11 +22,7 @@ public class PhoenixQuery {
     @Autowired
     private Studio studio;
 
-    public PhoenixQuery() {
-        pds = PhoenixDataSource.createPhoenixDataSource();
-    }
-
-    private DruidDataSource pds;
+    public DruidDataSource pds;
 
     public void queryTestJdbc(Integer qID){
         long start = System.currentTimeMillis();

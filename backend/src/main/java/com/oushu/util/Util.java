@@ -9,12 +9,12 @@ public class Util {
      * @param script 脚本文件内容
      * @throws Exception
      */
-    public static void callScript(String script) throws Exception{
+    public static void callScript(String script, String fileName) throws Exception{
         try {
             String cmd = script;
 
             //启动独立线程等待process执行完成
-            CommandWaitForThread commandThread = new CommandWaitForThread(cmd);
+            CommandWaitForThread commandThread = new CommandWaitForThread(cmd, fileName);
             commandThread.start();
 
 //            while (!commandThread.isFinish()) {

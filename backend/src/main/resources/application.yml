@@ -8,3 +8,5 @@ phoenix:
   studio:
     hbase: /Users/jinliujie/go/src/github.com/oushu-io/phoenix-studio/backend/src/main/resources/hbase-site.xml
     phoenix: /Users/jinliujie/go/src/github.com/oushu-io/phoenix-studio/backend/src/main/resources/phoenix-custom-site-default.xml
+    create_index_shell: /Users/jinliujie/go/src/github.com/oushu-io/phoenix-studio/backend/src/main/resources/exec.sh
+    log_path: /var/log/oushu/phoenix-studio

@@ -2,6 +2,8 @@ package com.oushu.init;
 
 import com.oushu.config.SpringContextUtils;
 import com.oushu.config.Studio;
+import com.oushu.phoenix.jdbc.PhoenixDataSource;
+import com.oushu.phoenix.jdbc.PhoenixQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -20,9 +22,13 @@ public class MyInitialization implements ApplicationRunner {
     @Autowired
     private Studio studio;
 
+    @Autowired
+    private PhoenixQuery phoenixQuery;
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
         log.info("应用启动了，我准备初始化数据了");
+        this.phoenixQuery.pds = PhoenixDataSource.createPhoenixDataSource();
     }
 }
 

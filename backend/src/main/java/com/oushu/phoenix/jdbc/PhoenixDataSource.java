@@ -38,6 +38,7 @@ public class PhoenixDataSource {
         conf.addResource("phoenix-custom-site-default.xml");
         conf.addResource("phoenix-custom-site.xml");
         // application.yml中的配置会覆盖上面的配置
+        log.info("studio.phoenix:  " + studio.getPhoenix());
         conf.addResource(new Path(studio.getPhoenix()));
         //读取hbase-site.xml
         Configuration kerConf = new Configuration();

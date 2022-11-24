@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -112,19 +113,26 @@ public class SqlController {
     }
 
     @GetMapping("/basic_table/export")
-    public void exportBasicTable(@RequestParam("schemaName") String schemaName, HttpServletResponse response) throws UnsupportedEncodingException {
+    public void exportBasicTable(@RequestParam("schemaName") String schemaName, @RequestParam(name = "tableNames", required = false) String tableNames, HttpServletResponse response) throws UnsupportedEncodingException {
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("utf-8");
         String fileName = URLEncoder.encode(schemaName + "模式下基础表的定义", "UTF-8").replaceAll("\\+", "%20");
         response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
-        List<Map<String, Object>> allTableList = this.metaService.getALLTableList(schemaName);
+        List<String> tableNameList = null;
+        if (tableNames != null & tableNames.length() > 0){
+            tableNameList = Arrays.stream(tableNames.split(",")).collect(Collectors.toList());
+        } else {
+            List<Map<String, Object>> allTableList = this.metaService.getALLTableList(schemaName);
+            tableNameList = allTableList.stream().map(item -> item.get("TABLE_NAME").toString()).collect(Collectors.toList());
+        }
+
         try (ExcelWriter excelWriter = EasyExcel
                 .write(response.getOutputStream())
                 .head(this.excelService.getBasicTableExcelHeader())
                 .useDefaultStyle(false)
                 .build()) {
-            for (int i = 0; i < allTableList.size(); i++) {
-                String tableName = allTableList.get(i).get("TABLE_NAME").toString();
+            for (int i = 0; i < tableNameList.size(); i++) {
+                String tableName = tableNameList.get(i);
                 //表信息
                 List<List<Object>> excelData = this.excelService.getBasicTableExcelData(schemaName, tableName);
                 WriteSheet writeSheet = EasyExcel.writerSheet(i, tableName).build();

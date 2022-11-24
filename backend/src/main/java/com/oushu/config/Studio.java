@@ -15,4 +15,6 @@ import org.springframework.stereotype.Component;
 public class Studio {
     private String hbase;
     private String phoenix;
+    private String create_index_shell;
+    private String log_path;
 }
