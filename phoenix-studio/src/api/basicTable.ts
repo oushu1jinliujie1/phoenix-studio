@@ -117,8 +117,11 @@ export const getSqlForCreateTable = (
  * 导出基础表
  * @param schemaName Schema名称
  */
-export const exportTable = (schemaName: string): Promise<any> => {
-  return http.get(`basic_table/export?schemaName=${schemaName}`, { responseType: 'blob' })
+// export const exportTable = (schemaName: string, tableListStr: string): Promise<any> => {
+//   return http.get(`basic_table/export?schemaName=${schemaName}${tableListStr ? `&tableNames=${tableListStr}` : ''}`, { responseType: 'blob' })
+// }
+export const exportTable = (schemaName: string, tableNames: string[]): Promise<any> => {
+  return http.post('basic_table/export', { schemaName, tableNames }, { responseType: 'blob' })
 }
 
 /**
@@ -373,6 +376,29 @@ export const runSecondaryIndex = (
   }
 ): Promise<Response<any>> => {
   return http.post('index/run', { schemaName, tableName, indexName, attrs, includesAttrs })
+}
+
+/**
+ * 获取二级索引日志
+ * @params
+ * {
+ *   schemaName: string,
+ *   tableName: string,
+ *   indexName: string,
+ * }
+ */
+ export const getSecondaryIndexLog = (
+  {
+    schemaName,
+    tableName,
+    indexName,
+  } : {
+    schemaName: string,
+    tableName: string,
+    indexName: string,
+  }
+): Promise<Response<any>> => {
+  return http.get(`index/log/${schemaName}/${tableName}/${indexName}`)
 }
 
 /**

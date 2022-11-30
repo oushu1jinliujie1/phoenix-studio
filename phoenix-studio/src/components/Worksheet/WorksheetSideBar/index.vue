@@ -613,21 +613,20 @@
   </x-drawer>
 
   <!-- 导出窗口 -->
-  <x-modal v-model:visible="exportTableModalVisible">
-    <template #title>
-      <icon class="title-icon" color="danger" name="worksheet/warning"></icon>
-      <span>{{ '导出' + (exportFromBasic ? '基础表' : '查询表') }}</span>
-    </template>
-    <p style="margin-bottom: 30px">您确认要导出 {{ (exportFromBasic ? '基础表' : '查询表') }} 吗？</p>
-    <template #footer>
-      <x-button
-        :loading="exportFromBasic ? tableExportLoading : searchTableExportLoading"
-        style="width: 100%;"
-        type="primary"
-        @click="exportFromBasic ? handleExportTable() : handleExportSearchTable()"
-      >确认导出</x-button>
-    </template>
-  </x-modal>
+  <x-drawer
+    :visible="exportTableDrawerVisible"
+    class="v-oushudb-add-search-table-drawer"
+    destroyOnClose
+    :title="'导出' + (exportFromBasic ? '基础表' : '查询表')"
+    width="800"
+    @close="() => { exportTableDrawerVisible = false }"
+  >
+    <ExportData
+      :export-from-basic="exportFromBasic"
+      :schema-name="schemaSelectedName"
+      @close="() => { exportTableDrawerVisible = false }"
+    />
+  </x-drawer>
 </template>
 <script lang="ts">
 
@@ -665,6 +664,7 @@ import AddSearchTable from '@/components/Worksheet/WorksheetSideBar/SearchTable/
 import EditSearchTable from '@/components/Worksheet/WorksheetSideBar/SearchTable/editSearchTable.vue'
 import PreviewSearchTable from '@/components/Worksheet/WorksheetSideBar/SearchTable/previewSearchTable.vue'
 import ImportData from '@/components/Worksheet/WorksheetSideBar/BatchData/importData.vue'
+import ExportData from '@/components/Worksheet/WorksheetSideBar/BatchData/exportData.vue'
 import { resolveExportExcel } from '@/lib/common'
 
 // @ts-ignore
@@ -684,6 +684,7 @@ export default defineComponent({
     EditSearchTable,
     PreviewSearchTable,
     ImportData,
+    ExportData,
     ...smartUI,
     Icon,
     renderVNode,
@@ -714,7 +715,7 @@ export default defineComponent({
       isAddTable: false,
       importTableDrawerVisible: false,
       importFromBasic: false,
-      exportTableModalVisible: false,
+      exportTableDrawerVisible: false,
       exportFromBasic: false,
       tableToEdit: {} as OwnTable,
       tableToPreview: undefined as undefined | OwnTable,
@@ -722,7 +723,6 @@ export default defineComponent({
       tableDeleteModalVisible: false,
       tableDeleteLoading: false,
       tableCollapseKeys: [] as string[],
-      tableExportLoading: false,
 
       // 字段
       isAddColumn: false,
@@ -742,7 +742,6 @@ export default defineComponent({
       searchTableToDelete: undefined as undefined | ColumnResData,
       searchTableDeleteModalVisible: false,
       searchTableDeleteLoading: false,
-      searchTableExportLoading: false,
 
       activeTabKey: 'table',
       table: getDefaultTable(),
@@ -908,6 +907,7 @@ export default defineComponent({
           primary_columns: table.PK_COLUMNS.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
             return {
               name: column.COLUMN_NAME,
+              comment: column.COMMENT,
               type: column.DATA_TYPE_NAME,
               schema: column.TABLE_SCHEM,
               table: column.TABLE_NAME,
@@ -960,7 +960,7 @@ export default defineComponent({
      * 导出 table
      */
      const handleExportTableIconClick = () => {
-      state.exportTableModalVisible = true
+      state.exportTableDrawerVisible = true
       state.exportFromBasic = true
     }
     
@@ -1003,29 +1003,6 @@ export default defineComponent({
 
       state.tableDeleteLoading = false
       state.tableDeleteModalVisible = false
-    }
-
-    /**
-     * 基础表导出
-     */
-    const handleExportTable = async() => {
-      if (!state.schemaSelectedName) return
-      state.tableExportLoading = true
-      try {
-        const resp = await exportTable(state.schemaSelectedName)
-        if (!resp.data) {
-          message.error('基础表导出失败')
-          return
-        }
-        const title = decodeURI(resp.headers['content-disposition'].replace('attachment;filename*=utf-8\'\'', ''))
-        resolveExportExcel(title, resp.data)
-        message.success('开始导出')
-      } catch(e: any) {
-        message.error('基础表导出失败')
-      }
-
-      state.tableExportLoading = false
-      state.exportTableModalVisible = false
     }
 
     /**
@@ -1108,6 +1085,7 @@ export default defineComponent({
           table.columns = result.data?.data ? result.data.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
             return {
               name: column.COLUMN_NAME,
+              comment: column.COMMENT,
               schema: column.TABLE_SCHEM,
               type: column.DATA_TYPE_NAME,
               table: column.TABLE_NAME,
@@ -1205,6 +1183,7 @@ export default defineComponent({
             table.columns = result.data?.data ? result.data.data.sort((a: any, b: any) => a.ORDINAL_POSITION - b.ORDINAL_POSITION).map((column: any) => {
               return {
                 name: column.COLUMN_NAME,
+                comment: column.COMMENT,
                 schema: column.TABLE_SCHEM,
                 type: column.DATA_TYPE_NAME,
                 table: column.TABLE_NAME,
@@ -1293,28 +1272,8 @@ export default defineComponent({
      * 导出查询表
      */
     const handleExportSearchTableIconClick = () => {
-      state.exportTableModalVisible = true
+      state.exportTableDrawerVisible = true
       state.exportFromBasic = false
-    }
-
-    const handleExportSearchTable = async() => {
-      state.searchTableExportLoading = true
-
-      try {
-        const resp = await exportSearchTable()
-        if (!resp.data) {
-          message.error('查询表导出失败')
-          return
-        }
-        const title = `查询表定义.xlsx`
-        resolveExportExcel(title, resp.data)
-        message.success('开始导出')
-      } catch(e: any) {
-        message.error('查询表导出失败')
-      }
-
-      state.searchTableExportLoading = false
-      state.exportTableModalVisible = false
     }
 
     /**
@@ -1422,7 +1381,6 @@ export default defineComponent({
       handleTableJumpToLastPage,
       handleTableOnSearch,
       handleDeleteTable,
-      handleExportTable,
 
       // 列操作
       handleRefreshColumnsClick,
@@ -1438,7 +1396,6 @@ export default defineComponent({
       handleAddSearchTableIconClick,
       handleImportSearchTableIconClick,
       handleExportSearchTableIconClick,
-      handleExportSearchTable,
       handleDeleteSearchTableIconClick,
       handleDeleteSearchTable,
       handleEditSearchTableIconClick,

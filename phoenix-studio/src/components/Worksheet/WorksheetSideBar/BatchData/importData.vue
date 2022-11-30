@@ -21,6 +21,10 @@
     <div v-show="tableList.length" class="upload-preview-title">导入表预览</div>
     <div v-show="tableList.length" class="upload-preview-container">
       <div class="upload-preview-tables">
+        <div class="upload-preview-tables-header">
+          <a-checkbox :checked="allTableChecked" @click="checkAllTable()"></a-checkbox>
+          <x-button type="link" @click="checkAllTable()">全选/取消</x-button>
+        </div>
         <div
           v-for="(_table, index) in (tableList as any[])" :key="index"
           :class="
@@ -32,9 +36,9 @@
           @click="selectCurrentTable(_table)"
         >
           <div class="table-content" :title="importFromBasic ? _table.tableName : _table.queryName">
-            
-            <icon v-show="importFromBasic ? _table.tableName !== currentTable?.tableName : _table.queryName !== currentTable?.queryName" name="worksheet/table_line"/>
-            <icon v-show="importFromBasic ? _table.tableName === currentTable?.tableName : _table.queryName === currentTable?.queryName" image name="worksheet/table_selected"/>
+            <a-checkbox v-model:checked="_table.selected"></a-checkbox>
+            <icon v-show="importFromBasic ? _table.tableName !== currentTable?.tableName : _table.queryName !== currentTable?.queryName" color="" name="worksheet/table_line"/>
+            <icon v-show="importFromBasic ? _table.tableName === currentTable?.tableName : _table.queryName === currentTable?.queryName" color="" image name="worksheet/table_selected"/>
             {{ importFromBasic ? _table.tableName : _table.queryName }}
           </div>
           <div class="table-content">
@@ -225,6 +229,26 @@ export default defineComponent({
       connectionTableList: [] as any[],
     })
 
+    const selectedTables = computed(() => {
+      return state.tableList.filter((table: any) => table.selected)
+    })
+
+    const allTableChecked = computed(() => {
+      return selectedTables.value.length === state.tableList.length
+    })
+
+    const checkAllTable = () => {
+      if (allTableChecked.value) {
+        state.tableList.forEach((item: any) => {
+          item.selected = false
+        })
+        return
+      }
+      state.tableList.forEach((item: any) => {
+        item.selected = true
+      })
+    }
+
     const beforeUpload = (file: Blob) => {
       if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.type === 'application/vnd.ms-excel') {
         const reader = new FileReader()
@@ -238,6 +262,9 @@ export default defineComponent({
               state.tableList = res.searchTableList
               state.connectionTableList = res.connectionTableList
             }
+            state.tableList.forEach((item: any) => {
+              item.selected = true
+            })
             state.currentTable = state.tableList[0] || null
             state.spinLoading = false
           } else {
@@ -277,9 +304,14 @@ export default defineComponent({
     const handleSubmit = async() => {
       if (!state.file) return
 
+      if (!selectedTables.value.length) {
+        message.success('请勾选需要导入的表')
+        return
+      }
+
       const importFunc = props.importFromBasic ? uploadBasicTable : uploadSearchTable
 
-      const importRes = await importFunc(state.tableList)
+      const importRes = await importFunc(selectedTables.value)
 
       if (importRes.meta.success) {
         // 创建表成功
@@ -316,6 +348,8 @@ export default defineComponent({
 
     return {
       ...toRefs(state),
+      allTableChecked,
+      checkAllTable,
       beforeUpload,
       removeFile,
       selectCurrentTable,
@@ -355,12 +389,27 @@ export default defineComponent({
         border: 1px solid #D5D8D8;
         border-radius: 4px;
         .upload-preview-tables {
+          position: relative;
           flex-shrink: 0;
           width: 178px;
           height: 100%;
-          padding: 10px 0;
+          padding: 30px 0 10px;
           overflow: auto;
           border-right: 1px solid #D5D8D8;
+          .upload-preview-tables-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            height: 30px;
+            width: 100%;
+            padding-left: 10px;
+            border-bottom: 1px solid #D5D8D8;
+            .x-btn:not(.raw).antv-btn {
+              padding-left: 5px;
+            }
+          }
           .upload-preview-table {
             display: flex;
             align-items: center;
@@ -378,7 +427,8 @@ export default defineComponent({
               overflow: hidden;
               text-overflow: ellipsis;
               .icon {
-                margin-right: 5px;
+                margin-left: 5px;
+                margin-right: 2px;
               }
             }
             > .table-content:nth-of-type(2) {

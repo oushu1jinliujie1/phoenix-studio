@@ -108,8 +108,8 @@ export const uploadSearchTable = (
 /**
  * 导出查询表
  */
-export const exportSearchTable = (): Promise<any> => {
-  return http.get('query_table/export', { responseType: 'blob' })
+export const exportSearchTable = (queryNames: string[]): Promise<any> => {
+  return http.post('query_table/export', { queryNames }, { responseType: 'blob' })
 }
 
 /**

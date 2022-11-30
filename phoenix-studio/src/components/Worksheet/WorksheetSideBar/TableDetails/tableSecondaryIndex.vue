@@ -44,6 +44,10 @@
           <x-tooltip placement="topLeft" title="导入数据">
             <icon style="cursor: pointer;margin-right: 10px;" color="#336CFF" name="worksheet/execute" @click="pullIndex(record)"/>
           </x-tooltip>
+          <x-tooltip placement="topLeft" title="查看日志">
+            <icon v-show="record.status !== 'x'" style="cursor: pointer;margin-right: 10px;" color="#336CFF" name="log" @click="previewLog(record)"/>
+            <icon v-show="record.status === 'x'" style="cursor: not-allowed;margin-right: 10px;" color="#85888C" name="log"/>
+          </x-tooltip>
           <x-tooltip placement="topLeft" title="删除">
             <icon style="cursor: pointer;" name="minus_circle" @click="deleteIndex(record)"/>
           </x-tooltip>
@@ -70,6 +74,19 @@
           @confirm="handleConfirmCreateIndex"
         />
       </x-drawer>
+      <x-drawer
+        :visible="logVisible"
+        class="v-oushudb-edit-column-drawer"
+        destroyOnClose
+        fixed
+        title="索引日志"
+        width="800"
+        @close="() => {
+          secondaryIndexLog = ''
+          logVisible = false
+        }">
+        <div class="secondary-index-log">{{ secondaryIndexLog || '暂无日志' }}</div>
+      </x-drawer>
     </div>
   </x-drawer>
 </template>
@@ -83,7 +100,7 @@ import smartUI from '@/smart-ui-vue/index.js'
 import { message } from 'ant-design-vue-3'
 import { useModel } from '@/smart-ui-vue/utils'
 import { Table } from '@/components/Worksheet/type'
-import { getSecondaryIndexList, createSecondaryIndex, deleteSecondaryIndex, duplicateTable, executeSql, runSecondaryIndex } from '@/api'
+import { getSecondaryIndexList, createSecondaryIndex, deleteSecondaryIndex, duplicateTable, executeSql, runSecondaryIndex, getSecondaryIndexLog } from '@/api'
 import CreateIndex from '@/components/Worksheet/WorksheetSideBar/TableDetails/createIndex.vue'
 
 export default defineComponent({
@@ -145,6 +162,8 @@ export default defineComponent({
     const state = reactive({
       createIndexVisible: false,
       moreVisible: false,
+      logVisible: false,
+      secondaryIndexLog: '',
       offset: 0,
       limit: 10
     })
@@ -208,6 +227,21 @@ export default defineComponent({
         initSecondaryIndexList()
       } else {
         message.error(`运行二级索引失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
+      }
+    }
+
+    const previewLog = async(record: any) => {
+      const resp = await getSecondaryIndexLog({
+        schemaName: props.schema,
+        tableName: props.table.name,
+        indexName: record.name,
+      })
+      if (resp.meta.success) {
+        message.success('获取二级索引日志成功')
+        state.secondaryIndexLog = resp.data
+        state.logVisible = true
+      } else {
+        message.error(`获取二级索引日志失败: ${(resp.meta?.message) || '无失败提示'}`, 5)
       }
     }
 
@@ -320,6 +354,7 @@ export default defineComponent({
       loading,
 
       pullIndex,
+      previewLog,
       deleteIndex,
       loadMoreWithDebounce,
       handleConfirmCreateIndex,
