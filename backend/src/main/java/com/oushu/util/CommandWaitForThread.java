@@ -8,6 +8,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * 脚本函数执行线程
@@ -32,6 +34,9 @@ public class CommandWaitForThread extends Thread {
             File file = new File(log_path + File.separator + this.fileName);
             if (!file.exists()){
                 file.createNewFile();
+            } else {
+                file.delete();
+                file.createNewFile();
             }
             FileWriter fileWriter = new FileWriter(file, true);
             //执行脚本并等待脚本执行完成
@@ -44,11 +49,11 @@ public class CommandWaitForThread extends Thread {
             String line = "";
             while ((line = infoInput.readLine()) != null) {
                 log.info(line);
-                fileWriter.write(line + "\n");
+                fileWriter.write(formatLog(line));
             }
             while ((line = errorInput.readLine()) != null) {
                 log.error(line);
-                fileWriter.write(line + "\n");
+                fileWriter.write(formatLog(line));
             }
             infoInput.close();
             errorInput.close();
@@ -62,6 +67,12 @@ public class CommandWaitForThread extends Thread {
         } finally {
             finish = true;
         }
+    }
+
+    private String formatLog(String line){
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return sdf.format(date) + ": " + line + "\n";
     }
 
     public boolean isFinish() {

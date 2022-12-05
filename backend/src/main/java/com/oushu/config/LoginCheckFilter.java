@@ -31,7 +31,7 @@ public class LoginCheckFilter implements Filter {
             return;
         }
         //登录请求直接转发
-        if (requestURI.equals("/api/phoenix/login")){
+        if (requestURI.endsWith("/phoenix/login")){
             request.getRequestDispatcher("/phoenix/login").forward(request, response);
             return;
         }

@@ -1,7 +1,7 @@
 <configuration>
     <property>
         <name>hbase.zookeeper.quorum</name>
-        <value>jlj20221128poc029145m1-4453-4539-1,jlj20221128poc029145m1-4453-4539-2,jlj20221128poc029145m1-4453-4539-3</value>
+        <value>jlj20221205poc491302m1-4631-4717-1,jlj20221205poc491302m1-4631-4717-2,jlj20221205poc491302m1-4631-4717-3</value>
         <description>集群zookeeper节点信息</description>
     </property>
     <property>
