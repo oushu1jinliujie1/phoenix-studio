@@ -391,4 +391,8 @@ export default defineComponent({
       background: rgba(0, 0, 0, .02);
     }
   }
+
+  .secondary-index-log{
+    white-space: pre-wrap;
+  }
 </style>
