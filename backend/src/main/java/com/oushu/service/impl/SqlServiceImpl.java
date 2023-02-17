@@ -44,7 +44,7 @@ public class SqlServiceImpl implements SqlService {
         sqlParam.put(3, param.getComment());
         pq.execute("upsert into ct.os_table values (?, ?, ?)", sqlParam);
         for (Column column : param.getColumns()) {
-            saveColumnComment(column.getSchemaName(), column.getTableName(),
+            saveColumnComment(param.getSchemaName(), param.getTableName(),
                     column.getColumnName(), column.getComment());
         }
     }
@@ -117,7 +117,7 @@ public class SqlServiceImpl implements SqlService {
         param.put(2, tableName);
         param.put(3, columnName);
         JsonObject jsonObject = pq.executeQuery(sql, param);
-        return jsonObject != null ? jsonObject.get("COMMENT").getAsString() : "";
+        return jsonObject != null ? (jsonObject.get("COMMENT").isJsonNull() ? "" : jsonObject.get("COMMENT").getAsString()) : "";
     }
 
     /**
