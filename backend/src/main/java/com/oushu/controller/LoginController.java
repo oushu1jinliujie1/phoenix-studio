@@ -38,7 +38,7 @@ public class LoginController {
             session.setAttribute("oushu", "oushu");
             return responseModel.success(new User(param.getUserName()));
         } else {
-            return responseModel.success("登录失败");
+            return responseModel.failure("登录失败");
         }
     }
 
