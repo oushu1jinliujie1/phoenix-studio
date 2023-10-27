@@ -1,0 +1,85 @@
+.smartui-drawer:not(.raw) {
+  .#{$ant-prefix}-drawer-content-wrapper .#{$ant-prefix}-drawer-content .#{$ant-prefix}-drawer-wrapper-body {
+    .#{$ant-prefix}-drawer-header {
+      // 去掉默认的线
+      border-bottom: none;
+      padding: 23px 40px 13px;
+      margin: 0;
+
+      // 标题文字
+      .#{$ant-prefix}-drawer-title {
+        font-size: 18px;
+        line-height: 38px;
+        color: $color-primary-black;
+        font-weight: 400;
+        padding-right: 30px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      // 关闭按钮
+      .#{$ant-prefix}-drawer-close {
+        width: 38px;
+        height: 38px;
+        top: 23px;
+        right: 30px;
+      }
+    }
+  }
+
+  // 固定 header，body溢出滚动
+  &.smartui-drawer-fix-title {
+    .#{$ant-prefix}-drawer-wrapper-body {
+      padding-top: 74px;
+      .#{$ant-prefix}-drawer-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+      }
+
+      .#{$ant-prefix}-drawer-body {
+        height: 100%;
+        overflow: auto;
+        padding-bottom: 20px;
+      }
+    }
+  }
+
+  // 关闭按钮样式替换遮罩
+  .close-btn-wrapper {
+    position: absolute;
+    top: 23px;
+    right: 30px;
+    background: white;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 11;
+
+    .close-icon {
+      stroke: $color-primary-black;
+      fill: $color-primary-black;
+      color: $color-primary-black;
+    }
+  }
+
+  .#{$ant-prefix}-drawer-body {
+    padding: 0 40px;
+  }
+
+  .#{$ant-prefix}-drawer-mask {
+    background-color: rgba(234, 234, 234, 0.8);
+  }
+
+
+  // 例外情况，遮盖 header
+  &[fullScreen="true"] {
+    .#{$ant-prefix}-drawer-content-wrapper {
+      top: 0;
+    }
+  }
+}

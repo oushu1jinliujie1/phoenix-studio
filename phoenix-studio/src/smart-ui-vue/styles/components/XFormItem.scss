@@ -1,0 +1,139 @@
+@import '../variables';
+@import '../mixins';
+
+.smartui-form-item:not(.raw) {
+  margin-bottom: 0;
+  &.#{$ant-prefix}-form-item-with-help {
+    margin-bottom: 0;
+  }
+  // label
+  .#{$ant-prefix}-form-item-label {
+    @include font-small;
+    > label {
+      @include font-small;
+      color: $color-text-comment
+    }
+    // 目前 label min-height: 50px，不再需要 padding-bottom
+    padding-bottom: 0;
+  }
+  // 成功提示不显示
+  .#{$ant-prefix}-form-item-explain-success {
+    display: none;
+  }
+  // validating提示不显示
+  .#{$ant-prefix}-form-item-explain-validating {
+    display: none;
+  }
+  // 错误提示
+  // 通用样式
+  .#{$ant-prefix}-form-item-explain-error {
+    & > [role="alert"] {
+      color: $color-danger;
+    }
+  }
+  &:not(:hover) {
+    .#{$ant-prefix}-form-item-explain-error {
+      display: none;
+    }
+  }
+  &:not(.#{$ant-prefix}-form-item-has-error) {
+    .#{$ant-prefix}-form-item-explain-error {
+      display: none;
+    }
+  }
+  &:not(.error-bottom):hover {
+    .#{$ant-prefix}-form-item-explain-error {
+      position: absolute;
+      top: -100%;
+      left: 0;
+      z-index: 10000;
+      background-color: white;
+      padding: 14px 12px;
+      border-radius: 4px 4px 4px 0;
+      box-shadow: 0 2px 8px #00000026;
+
+      &:before {
+        content: '';
+        width: 0;
+        height: 0;
+        position: absolute;
+        bottom: -6px;
+        left: 0;
+        border-left: 10px solid white;
+        border-bottom: 6px solid transparent;
+        filter: drop-shadow(3px 4px 4px #00000026)
+      }
+    }
+  }
+  // 当上方空间不够时错误tooltip显示在下方
+  &.error-bottom:hover {
+    .#{$ant-prefix}-form-item-explain-error {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 10000;
+      background-color: white;
+      padding: 14px 12px;
+      border-radius: 0px 4px 4px 4px;
+      box-shadow: 0 2px 8px #00000026;
+
+      &:before {
+        content: '';
+        width: 0;
+        height: 0;
+        position: absolute;
+        top: -6px;
+        left: 0;
+        border-left: 10px solid white;
+        border-top: 6px solid transparent;
+        filter: drop-shadow(3px -4px 4px #00000026)
+      }
+    }
+  }
+
+  // 验证失败时的表单（因为有嵌套表单的存在，这里必须一层层下探到指定元素）
+  &.#{$ant-prefix}-form-item-has-error {
+    & > .#{$ant-prefix}-form-item-control > .#{$ant-prefix}-form-item-control-input > .#{$ant-prefix}-form-item-control-input-content > .#{$ant-prefix}-input-affix-wrapper:not(.raw) {
+      &.#{$ant-prefix}-input-affix-wrapper.smartui-input-no-underline {
+        border-color: $color-danger;
+        &-focused, &:hover {
+          border-color: $color-danger;
+        }
+      }
+      &.#{$ant-prefix}-input-affix-wrapper:not(.smartui-input-no-underline) {
+        @include input-underline($color-danger);
+        &-focused, &:hover {
+          @include input-underline($color-danger);
+        }
+      }
+    }
+    & > .#{$ant-prefix}-form-item-control > .#{$ant-prefix}-form-item-control-input > .#{$ant-prefix}-form-item-control-input-content > .#{$ant-prefix}-input:not(.raw) {
+      &.#{$ant-prefix}-input.smartui-input-no-underline {
+        border-color: $color-danger;
+      }
+      &.#{$ant-prefix}-input:not(.smartui-input-no-underline) {
+        @include input-underline($color-danger);
+      }
+    }
+  }
+}
+
+.smartui-form-item.raw {
+  margin-bottom: 0;
+
+  .antv-form-item-control-input {
+    min-height: 30px;
+  }
+
+  .antv-form-item-explain, .antv-form-item-extra {
+    min-height: 0;
+    padding-top: 0;
+  }
+  .antv-form-item-explain.antv-form-item-explain-error {
+    padding-top: 2px;
+  }
+
+  .antv-form-item {
+    // 会影响原生，没办法了
+  }
+}

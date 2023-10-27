@@ -16,7 +16,7 @@ module.exports = {
     port: SERVER_PORT,
     proxy: {
       '/api': {
-        target: 'http://localhost:18081',
+        target: 'http://82.157.43.12:7091/',
         ws: true,
         changOrigin: true,
         pathRewrite: {

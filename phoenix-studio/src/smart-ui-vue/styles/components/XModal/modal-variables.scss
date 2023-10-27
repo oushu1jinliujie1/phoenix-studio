@@ -1,0 +1,38 @@
+@import "../../variables";
+
+$modal-width: 400px;
+
+// 内边距基准
+$modal-padding-vertical-base: 0;
+$modal-padding-horizontal-base: 40px;
+
+// header 内边距
+$modal-header-padding-top: 40px;
+$modal-header-padding-horizontal: $modal-padding-horizontal-base;
+$modal-header-padding-bottom: 30px;
+
+// body 内边距
+$modal-body-padding-vertical: $modal-padding-vertical-base;
+$modal-body-padding-horizontal: $modal-padding-horizontal-base;
+
+// footer 内边距
+$modal-footer-padding-top: 30px;
+$modal-footer-padding-horizontal: $modal-padding-horizontal-base;
+$modal-footer-padding-bottom: 40px;
+
+// content 圆角
+$modal-content-radius: 10px;
+
+// close 图标相关样式
+$modal-close-top: 10px;
+$modal-close-right: 10px;
+$modal-close-x-base: 30px;
+$modal-close-x-width: $modal-close-x-base;
+$modal-close-x-height: $modal-close-x-base;
+$modal-close-x-line-height: $modal-close-x-base;
+
+// body 行高
+$modal-body-line-height: 20px;
+
+// footer button 按钮左外边距
+$modal-footer-button-margin-left: 10px;

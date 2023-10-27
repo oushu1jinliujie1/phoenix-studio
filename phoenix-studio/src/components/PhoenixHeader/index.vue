@@ -16,12 +16,12 @@
 /* eslint-disable no-magic-numbers */
 /* eslint-disable max-len */
 import { computed, defineComponent, ref, watch } from 'vue'
-import HeaderLogo from '@/components/Header/HeaderLogo.vue'
-import HeaderUserCenter from '@/components/Header/HeaderUserCenter.vue'
+import HeaderLogo from '@/components/PhoenixHeader/HeaderLogo.vue'
+import HeaderUserCenter from '@/components/PhoenixHeader/HeaderUserCenter.vue'
 import { useStore } from 'vuex'
 
 export default defineComponent({
-  name: 'Header',
+  name: 'PhoenixHeader',
   components: {
     HeaderUserCenter,
     HeaderLogo,

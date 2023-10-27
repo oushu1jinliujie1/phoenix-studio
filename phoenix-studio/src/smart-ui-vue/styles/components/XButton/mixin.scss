@@ -1,0 +1,308 @@
+@import "button-variables";
+// mixins for button
+// ------------------------
+// button 大小：高度、内边距、字号、border 圆角
+@mixin button-size($height, $padding-horizontal, $font-size, $border-radius) {
+  // 计算垂直边距，移植自 antd less 写法，报错实际上有生效
+  //$padding-vertical: max(((round((($height - $font-size * $btn-line-height-base) / 2) * 10) / 10) - $btn-border-width-base), 0);
+  $padding-vertical: 0;
+  height: $height;
+  padding: $padding-vertical $padding-horizontal;
+  font-size: $font-size;
+  border-radius: $border-radius;
+}
+
+// button 配色：字体颜色、背景颜色、border 颜色
+@mixin button-color($color, $background-color, $border-color) {
+  color: $color;
+  background-color: $background-color;
+  border-color: $border-color;
+}
+
+// button 禁用配色：字体颜色、背景颜色、border 颜色
+@mixin button-disabled($color, $background-color, $border-color) {
+  &[disabled] {
+    &,
+    &:hover,
+    &:active {
+      @include button-color($color, $background-color, $border-color);
+      box-shadow: none;
+    }
+  }
+}
+
+// 面形按钮会用到
+// button 【主】配色方案：字体颜色、背景颜色（border颜色同背景颜色）
+@mixin button-variant-primary($color, $background-color) {
+  @include button-color($color, $background-color, $background-color);
+
+  &:hover {
+    @include button-color($color, $btn-primary-active-bg-color, $btn-primary-active-bg-color);
+  }
+
+  &:active {
+    @include button-color($color, $btn-primary-active-bg-color, $btn-primary-active-bg-color);
+    box-shadow: 0 0 0 2px rgba($btn-primary-active-bg-color, .2);
+  }
+
+  // 实心按钮配色不变，改全局透明度
+  @include button-disabled($color, $background-color, $background-color);
+  &[disabled] {
+    &,
+    &:hover,
+    &:active {
+      opacity: .3;
+    }
+  }
+}
+
+// 线性按钮会用到
+// button 配色方案：字体颜色、背景颜色、border颜色同背景颜色
+@mixin button-variant-other($color, $background-color, $border-color) {
+  @include button-color($color, $background-color, $border-color);
+}
+
+// Base styles of buttons
+// ---------------------------------------
+// button 基本样式：布局、排列方式、大小
+@mixin btn() {
+  // transition: 用 antd 自带的
+  // 受不了了，flex 一把梭
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  background-clip: padding-box;
+
+  @include button-size($btn-height-base, $btn-padding-horizontal-base, $font-size, $btn-border-radius-base);
+
+  &:not(.#{$ant-prefix}-btn[disabled]):hover {
+    //transform: translateY(-2px);
+  }
+}
+
+// 面形按钮
+// primary button 配色的配置接口
+@mixin btn-primary() {
+  @include button-variant-primary($btn-primary-color, $btn-primary-bg-color);
+}
+
+@mixin btn-text() {
+  @include button-variant-other($btn-text-default-color, $btn-text-bg-color, $btn-text-border-color);
+
+  &:hover {
+    @include button-variant-other($btn-text-hover-focus-color, $btn-text-hover-focus-bg-color, $btn-text-hover-focus-border-color)
+  }
+
+  &:active {
+    @include button-variant-other($btn-text-active-color, $btn-text-active-bg-color, $btn-text-active-border-color)
+  }
+
+  @include button-disabled($btn-text-disabled-color, $btn-text-disabled-bg-color, $btn-text-disabled-border-color)
+}
+
+// 线性按钮
+// default（默认） button 配色的配置接口
+@mixin btn-default() {
+  @include button-variant-other($btn-default-color, $btn-default-bg-color, $btn-default-border-color);
+
+  // 不放到 button-variant-other 中的原因：
+  // button-variant-other 考虑后续 button 样式拓展，可能有其他的按钮也会用到，
+  // 目前是按照 antd 的格式写的，会有些冗余，后续再进行简化
+  &:hover, {
+    @include button-variant-other($btn-default-hover-focus-color, $btn-default-hover-focus-bg-color, $btn-default-hover-focus-border-color);
+  }
+
+  &:active {
+    @include button-color($btn-default-active-color, $btn-default-active-bg-color, $btn-default-active-border-color);
+    box-shadow: 0 0 0 2px rgba($btn-default-active-bg-color, .2);
+  }
+
+  // 不放到 button-variant-other 中的原因：
+  // 同上
+  @include button-disabled($btn-default-disabled-color, $btn-default-disabled-bg-color, $btn-default-disabled-border-color);
+}
+
+// large button 配置接口
+@mixin btn-lg() {
+  @include button-size($btn-big-height, $btn-padding-horizontal-base, $font-size, $btn-border-radius-base);
+  width: $btn-big-width;
+
+  @include button-variant-other($btn-big-color, $btn-big-bg-color, $btn-big-border-color);
+
+  &:hover {
+    // 去除上浮效果
+    transform: none !important;
+    @include button-variant-other($btn-big-color, $btn-big-bg-color, $btn-big-hover-border-color)
+  }
+
+  &:active {
+    @include button-color($btn-big-active-color, $btn-big-active-bg-color, $btn-big-active-border-color);
+  }
+
+  @include button-disabled($btn-big-disabled-color, $btn-big-disabled-bg-color, $btn-big-disabled-border-color)
+}
+
+@mixin btn-link {
+  @include button-variant-other($btn-default-color, transparent, transparent);
+  border: none;
+  font-size: $font-size-normal;
+  height: unset;
+  justify-content: space-between;
+  &,
+  & span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &:hover {
+    // 去除上浮效果
+    transform: none !important;
+  }
+
+  &:hover,
+  &:active {
+    @include button-variant-other($btn-default-color, transparent, transparent);
+  }
+
+  @include button-disabled($btn-default-disabled-color, $btn-default-disabled-bg-color, $btn-default-disabled-border-color);
+}
+
+// circle样式
+@mixin btn-circle {
+  @include button-variant-other($btn-default-color, transparent, transparent);
+  border-radius: $btn-height-base;
+  height: $btn-height-base;
+  width: $btn-height-base;
+  padding: 0;
+  min-width: 0;
+}
+
+@mixin btn-icon-only {
+  height: 26px;
+  width: 26px;
+  box-shadow: none;
+
+  @include button-variant-other($btn-default-color, transparent, $color-line-bold);
+  &:hover {
+    box-shadow: none;
+    @include button-variant-other($btn-default-color, transparent, $text-annotation-color);
+  }
+
+  //&:focus {
+  //  box-shadow: none;
+  //  @include button-variant-other($btn-default-color, rgba($color-primary-blue, .2), $color-line-bold);
+  //}
+
+  &:active {
+    box-shadow: none;
+    @include button-variant-other($btn-default-color, $color-line-bold, $color-line-bold);
+  }
+
+  &[disabled] {
+    &,
+    &:hover,
+    &:active {
+      box-shadow: none;
+      @include button-color($btn-default-color, transparent, $color-line-bold);
+      .icon {
+        opacity: .3;
+      }
+    }
+  }
+}
+
+@mixin btn-primary-icon-only {
+  height: 26px;
+  width: 26px;
+  box-shadow: none;
+
+  @include button-variant-other($btn-default-active-color, $color-primary-blue, $color-primary-blue);
+  &:hover {
+    box-shadow: none;
+    @include button-variant-other($btn-default-active-color, $color-primary-blue-heavy,  $color-primary-blue-heavy);
+  }
+
+  //&:focus {
+  //  box-shadow: none;
+  //  @include button-variant-other($btn-default-active-color, rgba($color-primary-blue, .4), transparent);
+  //}
+
+  &:active,
+  &:focus {
+    box-shadow: 0 0 0 2px $color-primary-blue-light;
+    @include button-variant-other($btn-default-active-color, $color-primary-blue-heavy, $color-primary-blue-heavy);
+  }
+
+  &[disabled] {
+    &,
+    &:hover,
+    &:active {
+      box-shadow: none;
+      @include button-color($btn-default-active-color, $btn-primary-active-bg-color, $btn-primary-active-bg-color);
+      opacity: .3;
+      //.icon {
+      //  opacity: .3;
+      //}
+    }
+  }
+}
+
+@mixin btn-text-icon-only-theme($default-color: $btn-default-color) {
+  @include button-variant-other($default-color, transparent, transparent);
+  &:hover {
+    @include button-variant-other($default-color, rgba($color-line-bold, .5), rgba($color-line-bold, .5));
+  }
+
+  &:active {
+    @include button-variant-other($default-color, $color-line-bold, $color-line-bold);
+  }
+
+  &[disabled] {
+    &,
+    &:hover,
+    &:active {
+      @include button-color($color-line-bold, transparent, transparent);
+    }
+  }
+}
+
+@mixin btn-text-icon-only() {
+  @include btn-text-icon-only-theme($btn-default-color);
+  box-shadow: none;
+
+  &:hover {
+    box-shadow: none;
+  }
+
+  &:active {
+    box-shadow: none;
+  }
+
+  &[disabled] {
+    &,
+    &:hover,
+    &:active {
+      box-shadow: none;
+
+      .icon {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+@mixin btn-dangerous {
+  @include button-variant-other($color-danger, $btn-default-bg-color, $color-danger);
+  &:hover, {
+    @include button-variant-other($btn-default-hover-focus-color, $color-danger, $color-danger);
+  }
+
+  &:active {
+    @include button-color($btn-default-active-color, $color-danger, $color-danger);
+    box-shadow: 0 0 0 2px rgba($btn-default-active-bg-color, .2);
+  }
+
+  // 不放到 button-variant-other 中的原因：
+  // 同上
+  @include button-disabled($btn-default-disabled-color, $btn-default-disabled-bg-color, $btn-default-disabled-border-color);
+}

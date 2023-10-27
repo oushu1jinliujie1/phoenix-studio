@@ -1,0 +1,99 @@
+@import "../../variables";
+@import "../../mixins";
+
+// tabs 下面的一条灰线的配色
+.smartui-tabs:not(.raw) {
+  &.#{$ant-prefix}-tabs {
+    .#{$ant-prefix}-tabs-bar {
+      margin: 0 0 10px 0;
+      border-bottom-color: $color-line-bold;
+      position: relative;
+    }
+
+    .#{$ant-prefix}-tabs-nav {
+      // tab 标签
+      .#{$ant-prefix}-tabs-tab {
+        @include font-normal();
+        padding: 5px 0 10px 0;
+
+        .x-ant-tabs-icon-active {
+          display: none;
+        }
+
+        .x-ant-tabs-icon-inactive {
+          display: inline;
+        }
+
+
+        // 覆盖默认间距
+        .anticon {
+          margin-right: 0;
+        }
+
+        // 配置图标大小、间距
+        svg {
+          width: $svg-width-normal;
+          height: $svg-height-normal;
+          margin-right: 5px;
+        }
+      }
+
+      .#{$ant-prefix}-tabs-tab:hover {
+        color: $color-primary-blue;
+
+        .x-ant-tabs-icon-active {
+          display: inline;
+        }
+
+        .x-ant-tabs-icon-inactive {
+          display: none;
+        }
+      }
+
+      // tab 间距
+      .#{$ant-prefix}-tabs-tab:not(:last-child) {
+        margin-right: 48px;
+      }
+
+      // 【禁用】时，tab 样式
+      .#{$ant-prefix}-tabs-tab-disabled,
+      .#{$ant-prefix}-tabs-tab-disabled:hover {
+        color: $color-text-comment;
+        cursor: not-allowed;
+      }
+
+      // 【选中】时，tab 样式
+      .#{$ant-prefix}-tabs-tab-active {
+        font-weight: normal;
+        text-shadow: none;
+
+        .x-ant-tabs-icon-active {
+          display: inline;
+        }
+
+        .x-ant-tabs-icon-inactive {
+          display: none;
+        }
+      }
+    }
+
+    // tab 【选中】时，底线配色、圆角
+    .#{$ant-prefix}-tabs-ink-bar {
+      background-color: $color-primary-blue;
+      border-radius: 2px;
+    }
+
+    //
+    .#{$ant-prefix}-tabs-extra-content {
+      position: absolute;
+      right: 0;
+      bottom: 5px;
+      height: 100%;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      z-index: 999;
+    }
+  }
+}
+

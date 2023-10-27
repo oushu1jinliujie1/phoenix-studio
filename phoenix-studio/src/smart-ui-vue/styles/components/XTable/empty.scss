@@ -1,0 +1,31 @@
+@mixin empty {
+  &.x-ant-table-empty {
+    .#{$ant-prefix}-spin-nested-loading {
+      height: 100%;
+      .#{$ant-prefix}-spin-container {
+        height: 100%;
+        .#{$ant-prefix}-table-empty {
+          height: 100%;
+          .#{$ant-prefix}-table-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            .#{$ant-prefix}-table-body {
+              flex-shrink: 0;
+            }
+            .#{$ant-prefix}-table-placeholder {
+              display: none;
+            }
+            .#{$ant-prefix}-table-footer {
+              flex-grow: 1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-bottom: 1px solid transparent;
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+.smartui-spin:not(.raw) {
+  &.#{$ant-prefix}-spin {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+
+    .#{$ant-prefix}-spin-dot {
+      //transform: translate(-50%, -50%);
+      margin: 0 !important;
+    }
+
+    .#{$ant-prefix}-spin-text {
+      padding-top: 30px;
+    }
+  }
+}
+
+.#{$ant-prefix}-spin-nested-loading {
+  > div {
+    > .smartui-spin:not(.raw).#{$ant-prefix}-spin {
+      .#{$ant-prefix}-spin-dot {
+        position: unset;
+      }
+    }
+  }
+}

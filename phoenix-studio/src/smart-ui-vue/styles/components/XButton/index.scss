@@ -1,0 +1,101 @@
+@import "button-variables.scss";
+@import "mixin.scss";
+
+.x-btn:not(.raw) {
+  &.#{$ant-prefix}-btn.#{$ant-prefix}-btn-loading:not(.#{$ant-prefix}-btn-circle):not(.#{$ant-prefix}-btn-circle-outline):not(.#{$ant-prefix}-btn-icon-only) {
+    padding-left: 10px;
+  }
+
+  &.#{$ant-prefix}-btn {
+    line-height: $btn-line-height;
+
+    // 基本样式（字体等）
+    @include btn();
+
+    // 默认按钮配色
+    @include btn-default();
+
+    // 超大按钮配色
+    &-lg {
+      @include btn-lg();
+    }
+
+    // icon only
+    &-icon-only {
+      @include btn-icon-only();
+    }
+
+    // primary 配色
+    &-primary {
+      @include btn-primary();
+    }
+    // icon only primary配色
+    &-primary.#{$ant-prefix}-btn-icon-only {
+      @include btn-primary-icon-only();
+    }
+
+    // text 配色，icon 专用
+    &-text {
+      @include btn-text();
+    }
+
+    &-link {
+      @include btn-link();
+    }
+
+    &-circle {
+      @include btn-circle;
+    }
+
+    &-block {
+      width: 100%;
+    }
+
+    &-text.#{$ant-prefix}-btn-icon-only {
+      @include btn-text-icon-only();
+      padding: 0;
+    }
+
+    &-dangerous {
+      @include btn-dangerous;
+      &.#{$ant-prefix}-btn-icon-only {
+        @include btn-text-icon-only-theme($color-danger)
+      }
+    }
+
+    // To ensure that a space will be placed between character and 'Icon'
+    > .anticon + span,
+    span + .anticon, {
+      margin-left: $btn-margin-xs;
+    }
+
+    // 自己封装的icon
+    > .icon + span,
+    span + .icon, {
+      margin-left: $btn-margin-xs;
+    }
+
+    // icon 的颜色与字体保持一直
+    // work premise：icon 为单色 svg，且 color 为 currentColor
+    > .icon {
+      color: inherit;
+      transition: unset !important;
+      flex-shrink: 0;
+    }
+
+    svg {
+      width: $btn-anticon-svg-width;
+      height: $btn-anticon-svg-height;
+    }
+
+    // 能用，原理不是很清楚，日后得深入学习
+    > .anticon {
+      vertical-align: middle;
+
+      > svg {
+        width: $btn-anticon-svg-width;
+        height: $btn-anticon-svg-height;
+      }
+    }
+  }
+}

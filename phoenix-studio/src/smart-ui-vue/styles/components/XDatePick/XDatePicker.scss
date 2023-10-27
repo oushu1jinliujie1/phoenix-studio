@@ -1,0 +1,24 @@
+.smartui-date-picker:not(.raw) {
+  input.#{$ant-prefix}-calendar-picker-input.#{$ant-prefix}-input {
+    border: 1px solid transparent;
+    background: transparent;
+    outline: none;
+    box-shadow: none !important;
+    padding-left: 0;
+    padding-right: 22px;
+  }
+
+  .#{$ant-prefix}-calendar-picker-clear, .#{$ant-prefix}-calendar-picker-icon {
+    right: 5px;
+  }
+
+  span.#{$ant-prefix}-calendar-picker {
+    border-bottom: 1px solid #D5D8D8;
+    padding: 10px 0;
+    transition: border-bottom-color .35s;
+  }
+
+  span.#{$ant-prefix}-calendar-picker:hover {
+    border-bottom-color: #85888C;
+  }
+}

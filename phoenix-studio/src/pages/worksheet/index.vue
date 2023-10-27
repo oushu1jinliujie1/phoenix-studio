@@ -1,16 +1,16 @@
 <template>
-  <Header />
+  <PhoenixHeader />
   <Worksheet/>
 </template>
 
 <script>
-import Header from '@/components/Header'
+import PhoenixHeader from '@/components/PhoenixHeader'
 import Worksheet from '@/components/Worksheet'
 import { useRoute } from 'vue-router'
 import { onMounted } from 'vue'
 export default {
   name: 'WorksheetTest',
-  components: { Header, Worksheet },
+  components: { PhoenixHeader, Worksheet },
   setup() {
     return {}
   },

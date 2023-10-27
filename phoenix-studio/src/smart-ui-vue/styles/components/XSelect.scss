@@ -1,0 +1,335 @@
+.w-full {
+  width: 100%;
+}
+
+.smartui-select.#{$ant-prefix}-select {
+  @include font-normal();
+
+  &:not(.#{$ant-prefix}-select-customize-input) {
+    .#{$ant-prefix}-select-selector {
+      padding: 0 9px;
+      background-color: transparent;
+    }
+
+    &.#{$ant-prefix}-select-disabled {
+      .#{$ant-prefix}-select-selector {
+        color: $color-text-comment;
+        background-color: transparent;
+      }
+
+      &.#{$ant-prefix}-select-show-arrow .#{$ant-prefix}-select-arrow .x-select-custom-arrow {
+        color: $color-line-bold;
+      }
+    }
+  }
+
+  &:not(.#{$ant-prefix}-select-customize-input).#{$ant-prefix}-select-show-arrow {
+    .#{$ant-prefix}-select-selector {
+      padding-right: 27px;
+    }
+
+    .#{$ant-prefix}-select-arrow {
+      right: 9px;
+      width: 18px;
+      height: 18px;
+      margin-top: -9px;
+      top: 50%;
+      vertical-align: 0;
+
+      .icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transition: all .3s;
+        transform: translate(-50%, -50%);
+      }
+
+      // 定制箭头
+      .x-select-custom-arrow {
+        color: $color-text-comment
+      }
+    }
+  }
+
+  // 下拉框展开式定制箭头旋转
+  &:not(.#{$ant-prefix}-select-customize-input).#{$ant-prefix}-select-show-arrow.#{$ant-prefix}-select-open {
+    .#{$ant-prefix}-select-selection-item {
+      color: $color-text-comment;
+    }
+
+    .x-select-custom-arrow {
+      transform: translate(-50%, -50%) rotate(180deg);
+    }
+  }
+
+  // clear icon
+  .#{$ant-prefix}-select-clear {
+    right: 9px;
+    width: 18px;
+    height: 18px;
+    margin-top: -9px;
+
+    .icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  &.#{$ant-prefix}-select-single {
+    .#{$ant-prefix}-select-selector {
+      align-items: center;
+    }
+
+    .#{$ant-prefix}-select-selector .#{$ant-prefix}-select-selection-search {
+      right: 9px;
+      left: 9px;
+    }
+
+    &.#{$ant-prefix}-select-show-arrow .#{$ant-prefix}-select-selection-search {
+      right: 37px
+    }
+  }
+
+  &.#{$ant-prefix}-select-single {
+    .#{$ant-prefix}-select-selection-item {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .#{$ant-prefix}-select-selection-placeholder {
+    color: $color-text-comment;
+  }
+
+  &.#{$ant-prefix}-select-single.#{$ant-prefix}-select-show-arrow .#{$ant-prefix}-select-selection-item,
+  &.#{$ant-prefix}-select-single.#{$ant-prefix}-select-show-arrow .#{$ant-prefix}-select-selection-placeholder {
+    padding-right: 10px;
+    @include font-normal();
+  }
+
+  // 多选
+  &.#{$ant-prefix}-select-multiple {
+    .#{$ant-prefix}-select-selector {
+      padding-top: 4px;
+      padding-bottom: 4px;
+      .#{$ant-prefix}-select-selection-overflow {
+        row-gap: 4px;
+
+        .#{$ant-prefix}-select-selection-overflow-item {
+          @include font-normal();
+
+          .#{$ant-prefix}-select-selection-item {
+            align-items: center;
+            @include font-normal();
+            margin: 0 6px 0 0;
+            padding: 1px 5px;
+
+            .#{$ant-prefix}-select-selection-item-content {
+              margin-right: 2px;
+            }
+            .#{$ant-prefix}-select-selection-item-remove {
+              vertical-align: 0;
+              line-height: 18px;
+              // 暂时没弄明白为什么 height 自适应会多几个像素
+              // 暂时写死
+              height: 18px;
+              .icon {
+                vertical-align: 0;
+              }
+            }
+          }
+        }
+      }
+
+      &::after {
+        margin: 0;
+      }
+    }
+
+    .#{$ant-prefix}-select-selection-placeholder {
+      position: absolute;
+      top: 50%;
+      right: 32px;
+      left: 9px;
+      //line-height: 28px;
+      transform: translateY(-50%);
+      //padding-right: 10px;
+    }
+
+    .#{$ant-prefix}-select-selection-search {
+      //position: relative;
+      //max-width: 100%;
+      margin-top: 0;
+      margin-bottom: 0;
+      -webkit-margin-start: 0;
+      margin-inline-start: 0;
+    }
+
+    .#{$ant-prefix}-select-selection-item {
+      height: auto;
+      padding: 1px;
+      background-clip: padding-box;
+      border-color: rgba($color-line-bold, .5);
+      background-color: rgba($color-line-bold, .5);
+    }
+
+    &.#{$ant-prefix}-select-show-arrow .#{$ant-prefix}-select-selector,
+    &.#{$ant-prefix}-select-allow-clear .#{$ant-prefix}-select-selector {
+      padding-right: 32px;
+    }
+
+    // 清除 icon
+    .#{$ant-prefix}-tag-close-icon {
+      line-height: 0;
+    }
+
+    .#{$ant-prefix}-select-selector::after {
+      line-height: 24px;
+    }
+  }
+
+  // 无操作状态、禁用状态时，无边框
+  &:not(.#{$ant-prefix}-select-focused):not(:hover).smartui-select-no-bordered-normally,
+  &.#{$ant-prefix}-select-disabled.smartui-select-no-bordered-normally {
+    width: unset !important;
+
+    .#{$ant-prefix}-select-selector {
+      border-color: transparent;
+    }
+  }
+
+  // form-item 状态
+  &:not(.#{$ant-prefix}-select-customize-input).smartui-select-in-form {
+    width: 100%;
+    @include font-normal();
+
+    .#{$ant-prefix}-select-selector {
+      width: 100%;
+      padding-top: 12px;
+      padding-bottom: 12px;
+      border-top-color: transparent !important;
+      border-right-color: transparent !important;
+      border-left-color: transparent !important;
+      border-radius: 0;
+      box-shadow: none !important;
+
+      .#{$ant-prefix}-select-selection-search-input {
+        height: 100%;
+      }
+    }
+
+    &.#{$ant-prefix}-select-single {
+      .#{$ant-prefix}-select-selector {
+        // single 模式下子元素都是定位的，无法撑开高度
+        height: 50px;
+      }
+    }
+
+    &.#{$ant-prefix}-select-multiple {
+      .#{$ant-prefix}-select-selector {
+        .#{$ant-prefix}-select-selection-overflow {
+          row-gap: 10px;
+        }
+      }
+    }
+  }
+}
+
+.smartui-select-with-prefix-icon {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+  border: none;
+
+  &[borderedNormal="false"]:not(:focus):not(:active):not(:hover):not(:focus-within) {
+    width: unset;
+  }
+
+  .smartui-select-prefix-icon {
+    position: absolute;
+    top: 50%;
+    left: 9px;
+    z-index: -1;
+    transform: translateY(-50%);
+  }
+
+  .#{$ant-prefix}-select:not(.#{$ant-prefix}-select-customize-input) {
+    .#{$ant-prefix}-select-selector {
+      // 设计稿上的 33 = panding-left + border-left-width
+      padding-left: 32px;
+    }
+  }
+
+  .#{$ant-prefix}-select:not(.#{$ant-prefix}-select-customize-input).#{$ant-prefix}-select-single {
+    .#{$ant-prefix}-select-selector {
+      .#{$ant-prefix}-select-selection-search {
+        left: 32px;
+      }
+    }
+  }
+
+  // 有前缀的情况下，left 要算上前缀icon的宽度
+  .smartui-select.#{$ant-prefix}-select.#{$ant-prefix}-select-multiple .#{$ant-prefix}-select-selection-placeholder {
+    left: 32px;
+  }
+}
+
+.smartui-select-with-prefix-icon-disabled {
+  cursor: not-allowed;
+
+  .smartui-select-prefix-icon {
+    opacity: .3;
+  }
+}
+
+// 影响全局样式
+.#{$ant-prefix}-select-dropdown {
+  padding: 10px;
+
+  color: $color-primary-black;
+  @include font-normal();
+  border-radius: 0 0 4px 4px;
+  &:not(.dropdownNoMatchSelectWidth) {
+    // dropdown 宽度默认自适应：设计稿的 option padding 过大，与 select 等宽会导致 option 显示不全
+    width: unset !important;
+  }
+
+  &,
+  .#{$ant-prefix}-select-dropdown-content {
+    .#{$ant-prefix}-select-item-empty {
+      @include font-normal();
+      color: $color-text-comment;
+    }
+
+    .rc-virtual-list-scrollbar {
+      width: 4px !important;
+    }
+
+    // 滚动条
+    .rc-virtual-list-scrollbar-thumb {
+      background-color: $color-primary-blue !important;
+    }
+
+    .#{$ant-prefix}-select-item {
+      @include font-normal();
+      padding: 8px 20px;
+      border-radius: 4px;
+    }
+
+    .#{$ant-prefix}-select-item-option {
+    }
+
+    .#{$ant-prefix}-select-item-option-selected {
+      color: #336CFF;
+      background-color: unset;
+    }
+
+    .#{$ant-prefix}-select-item-option-active {
+      background-color: rgba(67, 134, 255, 0.2);
+    }
+  }
+}

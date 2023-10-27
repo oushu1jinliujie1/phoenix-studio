@@ -1,0 +1,137 @@
+@import '../../variables';
+@import '../../mixins';
+@import './fixed-table.scss';
+@import './table-with-divider.scss';
+@import '../XCheckbox.scss';
+@import './filter.scss';
+@import './sort.scss';
+@import './empty.scss';
+@import './pagination.scss';
+@import './expand';
+@import './editable';
+
+.smartui-table:not(.raw) {
+  &.#{$ant-prefix}-table-wrapper {
+    // 表格空状态
+    @include empty;
+
+    // 表格与外部容器的间距
+    .#{$ant-prefix}-table-content {
+      overflow-x: auto;
+    }
+
+    // 表头thead
+    .#{$ant-prefix}-table-thead > tr > th {
+      background-color: white;
+      position: relative;
+      color: $color-text-comment;
+      padding: 3px 0 11px 15px;
+      @include font-small;
+      white-space: nowrap;
+      border-bottom: 1px solid $color-line-bold;
+
+      // 表头筛选图标
+      @include filter-icon;
+
+      // 表头排序图标
+      @include sort;
+
+    }
+    // thead with divider
+    .#{$ant-prefix}-table-thead > tr.thead-tr-with-divider {
+      th:before {
+        @include th-with-divider
+      }
+      th:last-of-type:before, th.#{$ant-prefix}-table-selection-column:before {
+        display: none;
+      }
+    }
+
+    // 表格tr
+    .#{$ant-prefix}-table-tbody > tr {
+      position: relative;
+    }
+    // 表格td
+    .#{$ant-prefix}-table-tbody > tr > td {
+      padding: 6px 0 6px 15px;
+      height: 39px;
+      @include font-normal;
+      border-bottom: 1px solid $color-line-bold;
+
+      // td中的btn-link配置
+      .#{$ant-prefix}-btn-link {
+        padding: 0;
+      }
+      // td with divider配置
+      @include td-with-divider;
+    }
+    // 表格hover效果
+    .#{$ant-prefix}-table-tbody > tr:hover > td {
+      background-color: $color-line-light;
+    }
+    // 移除表格最后一行的底边border
+    .#{$ant-prefix}-table-tbody > tr:last-of-type > td {
+      border-bottom-color: transparent;
+    }
+    // fixed table divider
+    .#{$ant-prefix}-table.#{$ant-prefix}-table-layout-fixed {
+      @include fixed-table-divider
+    }
+    // 选择框与x-checkbox样式一致
+    .#{$ant-prefix}-table-selection, .#{$ant-prefix}-table-selection-column {
+      @include checkbox-style;
+    }
+    // footer
+    .#{$ant-prefix}-table-footer {
+      background-color: white;
+    }
+    // 分页
+    @include pagination;
+  }
+
+  // 当作为页面级元素时的border配置（border: true）
+  &.smartui-table-border.#{$ant-prefix}-table-wrapper {
+    .#{$ant-prefix}-table {
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid rgba($color-line-bold, .5);
+    }
+  }
+
+  // 比较粗糙：当内容是选择框或者输入框的时候，认为其是可编辑表格
+  // 可能会影响很多
+  .#{$ant-prefix}-table-body {
+    .td-with-divider {
+      > .#{$ant-prefix}-select,
+      > .#{$ant-prefix}-input,
+      > .#{$ant-prefix}-form .#{$ant-prefix}-input{
+        margin-left: -10px !important;
+      }
+    }
+  }
+  // 可编辑表格的配置移动到editable.scss中
+  @include table-editable
+
+}
+
+.#{$ant-prefix}-table-thead > tr > th.#{$ant-prefix}-table-column-has-actions.#{$ant-prefix}-table-column-has-filters {
+  padding-right: 0 !important;
+}
+
+/* At the top level of your code */
+@media screen and (max-width: 1440px) {
+  .smartui-table:not(.raw) {
+    &.#{$ant-prefix}-table-wrapper {
+      // 表格td
+      .#{$ant-prefix}-table-tbody > tr > td {
+        @include font-small;
+        .#{$ant-prefix}-btn-link {
+          @include font-small;
+        }
+      }
+    }
+  }
+}
+
+// 筛选下拉框
+@include filter-dropdown

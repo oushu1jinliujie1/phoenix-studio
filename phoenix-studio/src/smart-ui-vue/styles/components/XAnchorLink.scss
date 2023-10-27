@@ -1,0 +1,52 @@
+@import '../variables';
+@import '../mixins';
+
+.smartui-anchor-link:not(.raw) {
+  &.#{$ant-prefix}-anchor-link {
+    padding-top: 20px;
+    padding-bottom: 20px;
+
+    &:last-of-type {
+      padding-bottom: 0;
+    }
+    .#{$ant-prefix}-anchor-link-title {
+      position: relative;
+      overflow: visible;
+      color: $color-text-sub;
+      &:hover {
+        color: $color-primary-blue;
+      }
+      .x-ant-anchor-link-point {
+        content: '';
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        // left: -17px;
+        width: 4px;
+        height: 4px;
+        border-radius: 6px;
+        border: 1px solid #85888c;
+        z-index: 1;
+        opacity: 1;
+      }
+    }
+  }
+  &.#{$ant-prefix}-anchor-link-active {
+    & > .#{$ant-prefix}-anchor-link-title {
+      color: $color-primary-blue;
+      & > .x-ant-anchor-link-point {
+        transition: opacity 0.3s step-end;
+        opacity: 0;
+      }
+    }
+  }
+}
+
+// 第一个元素padding-top为0
+.smartui-anchor:not(.raw) {
+  .#{$ant-prefix}-anchor {
+    .#{$ant-prefix}-anchor-ink + .#{$ant-prefix}-anchor-link {
+      padding-top: 0
+    }
+  }
+}
