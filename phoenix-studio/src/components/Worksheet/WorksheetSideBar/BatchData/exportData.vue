@@ -137,7 +137,7 @@ export default defineComponent({
       state.spinLoading = true
       try {
         const exportFunc = props.exportFromBasic ? exportTable : exportSearchTable
-        const resp = await exportFunc(props.schemaName, state.selectedRowKeys)
+        const resp = await exportFunc(state.selectedRowKeys, props.exportFromBasic ? props.schemaName : null)
         if (!resp.data) {
           message.error('导出失败')
           return

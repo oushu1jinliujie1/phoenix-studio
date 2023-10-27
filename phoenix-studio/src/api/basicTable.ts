@@ -120,7 +120,7 @@ export const getSqlForCreateTable = (
 // export const exportTable = (schemaName: string, tableListStr: string): Promise<any> => {
 //   return http.get(`basic_table/export?schemaName=${schemaName}${tableListStr ? `&tableNames=${tableListStr}` : ''}`, { responseType: 'blob' })
 // }
-export const exportTable = (schemaName: string, tableNames: string[]): Promise<any> => {
+export const exportTable = (tableNames: string[], schemaName: string): Promise<any> => {
   return http.post('basic_table/export', { schemaName, tableNames }, { responseType: 'blob' })
 }
 
