@@ -64,16 +64,31 @@ export function parseBasicTableFromExcel(schemaName: string, fileBuffer: any) {
     tableInfo.saltBuckets = Number(tableInfo.saltBuckets) || 0
     Object.assign(basicTable, tableInfo)
     if (!basicTable.tableName) continue
-    const columnInfo: any[] = xlsx.utils.sheet_to_json(sheet, {
+    const _columnInfo: any[] = xlsx.utils.sheet_to_json(sheet, {
       range: 3,
       header: ['columnName', 'comment', 'familyName', 'dataType', 'scale', 'precision', 'pk'],
     })
-    for (const col of columnInfo) {
-      col.pk = col.pk === true || toLower(col.pk) === 'true' || false
-      col.scale = (col.scale !== 0 && !col.scale) ? undefined : (Number(col.scale) || 0)
-      col.precision = (col.precision !== 0 && !col.precision) ? undefined : (Number(col.precision) || 0)
+    const columnInfo: any[] = []
+    const secondaryIndexList: any[] = []
+    let _secondary = false
+    for (const col of _columnInfo) {
+      if (col.columnName === '索引名') {
+        _secondary = true
+      }
+      if (_secondary) {
+        secondaryIndexList.push({
+          name: col.columnName,
+          columns: col.comment ? col.comment.split(',') : [],
+          extra: col.familyName ? col.familyName.split(',') : [],
+        })
+      } else {
+        col.pk = col.pk === true || toLower(col.pk) === 'true' || false
+        col.scale = (col.scale !== 0 && !col.scale) ? undefined : (Number(col.scale) || 0)
+        col.precision = (col.precision !== 0 && !col.precision) ? undefined : (Number(col.precision) || 0)
+        columnInfo.push(col)
+      }
     }
-    Object.assign(basicTable, { columns: columnInfo })
+    Object.assign(basicTable, { columns: columnInfo, secondaryIndexList: secondaryIndexList })
     basicTableList.push(basicTable)
   }
   return basicTableList

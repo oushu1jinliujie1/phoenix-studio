@@ -399,10 +399,12 @@ export default defineComponent({
           width: 50%;
           
           .smartui-checkbox {
+            flex-shrink: 0;
             margin-right: 5px;
           }
 
           .icon {
+            flex-shrink: 0;
             margin-right: 5px;
           }
         }
@@ -415,6 +417,7 @@ export default defineComponent({
           white-space: nowrap;
 
           .icon {
+            flex-shrink: 0;
             margin-right: 5px;
           }
         }

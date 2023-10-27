@@ -132,6 +132,43 @@
             <a-checkbox disabled v-model:checked="record.pk"/>
           </template>
         </x-table>
+        <div class="upload-preview-table-info-title">二级索引</div>
+        <x-table
+          :columns="secondary_columns"
+          :data-source="currentTable?.secondaryIndexList"
+          :divider="true"
+          :pagination="false"
+          :scroll="{ x: 920, y: null }"
+          class="v-oushudb-add-table-form-column-table"
+          edit-table
+          row-key="name"
+        >
+          <!-- 列名 -->
+          <template #name="{ record }">
+            <div>
+              <x-tooltip
+                :overlayStyle="{ 'pointer-events': 'none' }"
+              >
+                <template #title>
+                  <div>{{ record.name }}</div>
+                </template>
+                <div>{{ record.name || '--' }}</div>
+              </x-tooltip>
+            </div>
+          </template>
+          <!-- 索引列 -->
+          <template #columns="{ record }">
+            <div class="v-secondary-index-columns">
+              <x-tag v-for="column of record.columns" :key="column" color-type="gray">{{ column }}</x-tag>
+            </div>
+          </template>
+          <!-- 额外列 -->
+          <template #extra="{ record }">
+            <div class="v-secondary-index-columns">
+              <x-tag v-for="column of record.extra" :key="column" color-type="gray">{{ column }}</x-tag>
+            </div>
+          </template>
+        </x-table>
       </div>
       <div v-else class="upload-preview-table-info">
         <div class="upload-preview-table-info-title">基本信息</div>
@@ -194,10 +231,11 @@ import { computed, defineComponent, onMounted, onUnmounted, PropType, reactive, 
 import XSpin from '@/smart-ui-vue/XSpin.vue'
 import XButton from '@/smart-ui-vue/XButton.vue'
 import XTable from '@/smart-ui-vue/XTable.vue'
+import XTag from '@/smart-ui-vue/XTag.vue'
 import Icon from '@/smart-ui-vue/helper/Icon.vue'
 import { parseBasicTableFromExcel, parseSearchTableFromExcel } from '@/lib/common'
 import { message } from 'ant-design-vue-3'
-import { COLUMNS } from '../constant'
+import { COLUMNS, SECONDARY_COLUMNS } from '../constant'
 import { uploadBasicTable, uploadSearchTable } from '@/api'
 
 
@@ -207,6 +245,7 @@ export default defineComponent({
     XSpin,
     XButton,
     XTable,
+    XTag,
     Icon,
   },
   props: {
@@ -354,6 +393,7 @@ export default defineComponent({
       removeFile,
       selectCurrentTable,
       columns: COLUMNS.slice(0, -1),
+      secondary_columns: SECONDARY_COLUMNS,
       handleSubmit,
       handleCancel,
       connectionTableData,
@@ -365,6 +405,18 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+.v-secondary-index-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .x-tag:not(.raw).antv-tag.x-tag-gray {
+    margin: 0;
+    color: #85888c;
+    background-color: #e5e5e5;
+    border-color: #e5e5e5;
+  }
+}
 .antv-drawer-body {
   height: calc(100% - 74px);
   .antv-spin-nested-loading {

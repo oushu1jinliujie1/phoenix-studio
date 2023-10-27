@@ -1091,7 +1091,9 @@ export default defineComponent({
               table: column.TABLE_NAME,
               column_family: column.COLUMN_FAMILY,
               order: column.ORDINAL_POSITION,
-              primary: Boolean(column.KEY_SEQ)
+              primary: Boolean(column.KEY_SEQ),
+              scale: column.COLUMN_SIZE,
+              precision: column.DECIMAL_DIGITS,
             }
           }) : []
         } else {
@@ -1189,7 +1191,9 @@ export default defineComponent({
                 table: column.TABLE_NAME,
                 column_family: column.COLUMN_FAMILY,
                 order: column.ORDINAL_POSITION,
-                primary: Boolean(column.KEY_SEQ)
+                primary: Boolean(column.KEY_SEQ),
+                scale: column.COLUMN_SIZE,
+                precision: column.DECIMAL_DIGITS,
               }
             }) : []
           } else {

@@ -870,7 +870,9 @@ export default defineComponent({
             table: column.TABLE_NAME,
             column_family: column.COLUMN_FAMILY,
             order: column.ORDINAL_POSITION,
-            primary: Boolean(column.KEY_SEQ)
+            primary: Boolean(column.KEY_SEQ),
+            scale: column.COLUMN_SIZE || 0,
+            precision: column.DECIMAL_DIGITS || 0,
           }
         }) : []
       } else {
@@ -897,8 +899,8 @@ export default defineComponent({
           columnFamily: column.column_family,
           // 是否允许为空
           isPrimary: column.primary,
-          scale: column.scale || 10,
-          precision: column.precision || 2,
+          scale: column.scale || 0,
+          precision: column.precision || 0,
         }
       }))
 

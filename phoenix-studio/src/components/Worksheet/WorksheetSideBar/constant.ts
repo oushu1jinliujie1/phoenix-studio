@@ -173,6 +173,36 @@ export const COLUMNS = [
   },
 ]
 
+/**
+ * table secondaryIndex table 的 column 定义 二级索引
+ */
+export const SECONDARY_COLUMNS = [
+  {
+    title: '索引名',
+    dataIndex: 'name',
+    width: '120px',
+    key: 'name',
+  },
+  {
+    title: '索引列',
+    dataIndex: 'name',
+    key: 'columns',
+    width: '240px',
+    slots: {
+      customRender: 'columns'
+    }
+  },
+  {
+    title: '额外列',
+    dataIndex: 'name',
+    key: 'extra',
+    width: '240px',
+    slots: {
+      customRender: 'extra'
+    }
+  },
+]
+
 export const STORAGE_FORMAT_LIST = [
   // 暂未有支持计划
   // {
