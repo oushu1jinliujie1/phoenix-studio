@@ -368,10 +368,9 @@ export default defineComponent({
   .v-secondary-index-columns {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
 
     .x-tag:not(.raw).antv-tag.x-tag-gray {
-      margin: 0;
+      margin: 0 8px 8px 0;
       color: #85888c;
       background-color: #e5e5e5;
       border-color: #e5e5e5;

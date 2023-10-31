@@ -88,7 +88,7 @@ export function parseBasicTableFromExcel(schemaName: string, fileBuffer: any) {
         columnInfo.push(col)
       }
     }
-    Object.assign(basicTable, { columns: columnInfo, secondaryIndexList: secondaryIndexList })
+    Object.assign(basicTable, { columns: columnInfo, secondaryIndexList: secondaryIndexList.slice(1) })
     basicTableList.push(basicTable)
   }
   return basicTableList
