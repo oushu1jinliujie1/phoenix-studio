@@ -39,6 +39,7 @@
                     </x-menu-item>
                     <x-menu-divider/>
                     <x-menu-item
+                      :disabled="!isSuperUser"
                       data-test-id="oushudb-worksheet-resource-schema-add-menu-item"
                       @click="handleAddSchemaIconClick"
                     >
@@ -46,7 +47,7 @@
                       新建模式
                     </x-menu-item>
                     <x-menu-item
-                      :disabled="schemaSelectedName === undefined"
+                      :disabled="(schemaSelectedName === undefined) || !isSuperUser"
                       data-test-id="oushudb-worksheet-resource-schema-delete-menu-item"
                       @click="handleDeleteSchemaIconClick"
                     >
@@ -758,6 +759,8 @@ export default defineComponent({
       detailTableData: {} as any,
     })
 
+    const isSuperUser = computed(() => store.state.global.data?.userInfo.isSuperUser)
+
     const recourseIconName = computed(() => {
       if (state.sidebarActiveKey === 'resource') {
         return 'worksheet/resource_blue_fill'
@@ -1355,6 +1358,8 @@ export default defineComponent({
 
     return {
       ...toRefs(state),
+      // 是否超级用户
+      isSuperUser,
 
       // 动态 icon
       recourseIconName,
