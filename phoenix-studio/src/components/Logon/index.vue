@@ -73,7 +73,7 @@ export default {
             id: 0,
             name_remark: '用户名',
             username: resp.data.userName || 'oushu',
-            isSuperUser: resp.data.isSuperUser === false ? false : true,
+            isSuperUser: resp.data.isSuperUser,
             userType: 'rootuser'
           }))
           // 将用户信息同步到 GlobalState
@@ -82,7 +82,7 @@ export default {
               id: 0,
               name_remark: '用户名',
               username: resp.data.userName || 'oushu',
-              isSuperUser: resp.data.isSuperUser === false ? false : true,
+              isSuperUser: resp.data.isSuperUser,
               userType: 'rootuser'
             }
           })

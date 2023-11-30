@@ -55,13 +55,15 @@ export default defineComponent({
     basicTable: {
       type: Object as PropType<any>,
       default: () => {
-        return {}
+        let data:any
+        return data
       }
     },
     searchTable: {
       type: Object as PropType<any>,
       default: () => {
-        return {}
+        let data:any
+        return data
       }
     }
   },
@@ -112,8 +114,11 @@ export default defineComponent({
       const filterFunc = isEmpty(props.basicTable) ? filterData : filterDataFromBasic
       const tableInfo: { schemaName: any, tableName: any } = { schemaName: undefined, tableName: undefined }
       if (isEmpty(props.basicTable)) {
-        const searchTablePrimaryInfo = props.searchTable.connections[0] ? props.searchTable.connections[0][0] : null
-        if (!searchTablePrimaryInfo) message.error('查询表关联信息错误')
+        const searchTablePrimaryInfo:any = props.searchTable.connections[0] ? props.searchTable.connections[0][0] : null
+        if (!searchTablePrimaryInfo) {
+          message.error('查询表关联信息错误')
+          return
+        }
         tableInfo.schemaName = searchTablePrimaryInfo.schemaName
         tableInfo.tableName = searchTablePrimaryInfo.tableName
       } else {

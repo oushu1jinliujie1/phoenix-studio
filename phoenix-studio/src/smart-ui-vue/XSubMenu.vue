@@ -16,7 +16,7 @@
 </a-sub-menu>
 </template>
 <script lang="ts">
-import { computed, defineComponent, PropType, SlotsType } from 'vue'
+import { computed, defineComponent, PropType } from 'vue'
 // @ts-ignore
 import Icon from '@/smart-ui-vue/helper/Icon.vue'
 import { Menu } from 'ant-design-vue'
@@ -47,11 +47,7 @@ export default defineComponent({
      */
     title: String,
   },
-  slots: {} as SlotsType<{
-    icon: Record<string, never>,
-    title: Record<string, never>,
-    expandIcon: Record<string, never>,
-  }>,
+  slots: {} as any,
   emits: ['titleClick'],
   setup(props, context) {
     return {

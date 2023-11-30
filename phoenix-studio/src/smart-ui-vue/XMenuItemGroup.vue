@@ -9,16 +9,14 @@
   </a-menu-item-group>
 </template>
 <script lang="ts">
-import { defineComponent, SlotsType } from 'vue'
+import { defineComponent } from 'vue'
 import { Menu as AMenu } from 'ant-design-vue'
 
 export default defineComponent({
   name: 'XMenuItemGroup',
   // eslint-disable-next-line vue/no-unused-components
   components: { AMenu, AMenuItemGroup: AMenu.ItemGroup },
-  slots: {} as SlotsType<{
-    title: Record<string, never>
-  }>,
+  slots: {} as any,
   props: {
     title: String
   }

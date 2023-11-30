@@ -7,7 +7,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, PropType, SlotsType } from 'vue'
+import { computed, defineComponent, PropType } from 'vue'
 import { MenuTheme, Menu as AMenu } from 'ant-design-vue'
 import { MenuMode } from 'ant-design-vue/es/menu/src/interface'
 
@@ -68,10 +68,7 @@ export default defineComponent({
     'update:selectedKeys',
     'click',
   ],
-  slots: {} as SlotsType<{
-    expandIcon: Record<string, never>,
-    overflowedIndicator: Record<string, never>,
-  }>,
+  slots: {} as any,
   setup(props, context) {
     return {
       slots: computed(() => Object.keys(context.slots))

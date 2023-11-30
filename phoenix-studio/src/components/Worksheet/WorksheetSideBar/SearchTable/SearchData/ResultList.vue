@@ -84,7 +84,8 @@ export default defineComponent({
       const tags: any[] = []
       if (props.filterOptions.limit) tags.push({ type: 'limit', value: props.filterOptions.limit, key: '行数限制', color: '#CCA236', icon: 'worksheet/limit' })
       for (const column of props.filterOptions.returnColumns) {
-        tags.push({ type: 'column', value: column.option.key, key: '返回列', color: '#CE7FFF', icon: 'worksheet/column' })
+        const item:any = column
+        tags.push({ type: 'column', value: item.option.key, key: '返回列', color: '#CE7FFF', icon: 'worksheet/column' })
       }
       if (props.filterOptions.secondaryIndex) tags.push({ type: 'index', value: props.filterOptions.secondaryIndex, key: '二级索引', color: '#A0D744', icon: 'worksheet/secondary_index_new' })
       if (props.filterOptions.searchMode === 'primaryKey') tags.push({ type: 'mode', value: '', key: '主键检索', color: '#A0D744', icon: 'worksheet/column' })

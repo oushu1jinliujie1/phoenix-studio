@@ -111,7 +111,13 @@ export default defineComponent({
     searchTable: {
       type: Object as PropType<any>,
       default: () => {
-        return {}
+        return {
+          connections: [],
+          name: "",
+          comment: "",
+          description: "",
+          tables: "",
+        }
       }
     },
     execLoading: Boolean
